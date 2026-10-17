@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { TeamStats, PlayerStats } from '../types/basketball';
-import { buildLbaSeasonData, LBA_SCHEDULE_ROUNDS } from './lbaSeasonData';
+import { buildLbaSeasonData } from './lbaSeasonData';
 import { syncOfficialLbaRounds } from './lbaSyncEngine';
 
 const ROOT_DIR = typeof process !== 'undefined' && typeof process.cwd === 'function' ? process.cwd() : '.';
@@ -61,9 +60,34 @@ export const OFFICIAL_EUROCUP_TEAMS = new Set([
   'UMANA REYER VENICE',
 ]);
 
+/**
+ * Converte "MM:SS" in secondi totali in modo sicuro
+ */
+function parseSeconds(minStr: any): number {
+  if (!minStr || typeof minStr !== 'string') return 0;
+  const clean = minStr.trim().toUpperCase();
+  if (clean === 'DNP' || clean === '00:00' || clean === '0' || clean === '') return 0;
+  const parts = clean.split(':');
+  if (parts.length === 2) {
+    const m = parseInt(parts[0], 10) || 0;
+    const s = parseInt(parts[1], 10) || 0;
+    return m * 60 + s;
+  }
+  const num = parseFloat(clean);
+  return isNaN(num) ? 0 : Math.round(num * 60);
+}
+
+/**
+ * Limita le percentuali stimate nel range [0, 100] evitando valori >100%
+ */
+function clampPct(val: number): number {
+  if (isNaN(val) || !isFinite(val)) return 0;
+  return Number(Math.min(100, Math.max(0, val)).toFixed(1));
+}
+
 export async function syncLbaFromOfficialApi(targetRound?: number): Promise<{ teams: TeamStats[]; players: PlayerStats[] }> {
+  const roundToUse = targetRound || 3;
   try {
-    const roundToUse = targetRound || 3;
     await syncOfficialLbaRounds(roundToUse);
     if (fs.existsSync(LBA_STORE_PATH)) {
       const data = JSON.parse(fs.readFileSync(LBA_STORE_PATH, 'utf-8'));
@@ -71,13 +95,12 @@ export async function syncLbaFromOfficialApi(targetRound?: number): Promise<{ te
         return { teams: data.teams, players: data.players };
       }
     }
-    const { teams: lbaTeams, players: lbaPlayers } = buildLbaSeasonData(roundToUse);
-    return { teams: lbaTeams, players: lbaPlayers };
   } catch (e) {
-    console.error('Error generating LBA data:', e);
-    const { teams: lbaTeams, players: lbaPlayers } = buildLbaSeasonData(targetRound || 3);
-    return { teams: lbaTeams, players: lbaPlayers };
+    console.warn('[LBA Sync] Fallback su generatore interno LBA:', e);
   }
+
+  const { teams: lbaTeams, players: lbaPlayers } = buildLbaSeasonData(roundToUse);
+  return { teams: lbaTeams, players: lbaPlayers };
 }
 
 export interface GameStoreRecord {
@@ -107,12 +130,19 @@ export function loadGamesStore(): Record<string, GameStoreRecord> {
 }
 
 export function saveGameToStore(key: string, gameData: GameStoreRecord) {
-  const store = loadGamesStore();
-  store[key] = gameData;
-  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), 'utf-8');
+  try {
+    const store = loadGamesStore();
+    store[key] = gameData;
+    fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Failed to save game to store:', e);
+  }
 }
 
-export function rebuildDatasetFromStore(explicitLbaRound?: number): {
+export function rebuildDatasetFromStore(
+  explicitLbaRound?: number,
+  writeTsSourceFile: boolean = false
+): {
   teams: TeamStats[];
   players: PlayerStats[];
   totalGames: number;
@@ -179,21 +209,24 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
 
   function getTeamBoxTotals(teamObj: any) {
     const totals = { fga: 0, fgm: 0, fg2a: 0, fg2m: 0, fg3a: 0, fg3m: 0, fta: 0, ftm: 0, orb: 0, drb: 0, tov: 0, pts: 0 };
-    for (const p of teamObj.PlayersStats || []) {
-      totals.pts += p.Points || 0;
-      totals.fg2a += p.FieldGoalsAttempted2 || 0;
-      totals.fg2m += p.FieldGoalsMade2 || 0;
-      totals.fg3a += p.FieldGoalsAttempted3 || 0;
-      totals.fg3m += p.FieldGoalsMade3 || 0;
-      totals.fga += (p.FieldGoalsAttempted2 || 0) + (p.FieldGoalsAttempted3 || 0);
-      totals.fgm += (p.FieldGoalsMade2 || 0) + (p.FieldGoalsMade3 || 0);
-      totals.fta += p.FreeThrowsAttempted || 0;
-      totals.ftm += p.FreeThrowsMade || 0;
-      totals.orb += p.OffensiveRebounds || 0;
-      totals.drb += p.DefensiveRebounds || 0;
-      totals.tov += p.Turnovers || 0;
+    for (const p of teamObj?.PlayersStats || []) {
+      const sec = parseSeconds(p.Minutes);
+      if (sec <= 0) continue; // Ignora righe DNP nei conteggi di squadra
+
+      totals.pts += Number(p.Points) || 0;
+      totals.fg2a += Number(p.FieldGoalsAttempted2) || 0;
+      totals.fg2m += Number(p.FieldGoalsMade2) || 0;
+      totals.fg3a += Number(p.FieldGoalsAttempted3) || 0;
+      totals.fg3m += Number(p.FieldGoalsMade3) || 0;
+      totals.fga += (Number(p.FieldGoalsAttempted2) || 0) + (Number(p.FieldGoalsAttempted3) || 0);
+      totals.fgm += (Number(p.FieldGoalsMade2) || 0) + (Number(p.FieldGoalsMade3) || 0);
+      totals.fta += Number(p.FreeThrowsAttempted) || 0;
+      totals.ftm += Number(p.FreeThrowsMade) || 0;
+      totals.orb += Number(p.OffensiveRebounds) || 0;
+      totals.drb += Number(p.DefensiveRebounds) || 0;
+      totals.tov += Number(p.Turnovers) || 0;
     }
-    if (teamObj.tmr?.Turnovers) totals.tov += teamObj.tmr.Turnovers;
+    if (teamObj?.tmr?.Turnovers) totals.tov += Number(teamObj.tmr.Turnovers) || 0;
     return totals;
   }
 
@@ -201,22 +234,22 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
   let ecCount = 0;
 
   for (const [key, d] of entries) {
-    if (!d.Stats || d.Stats.length < 2) continue;
-    // Salta partite non concluse
+    if (!d || !d.Stats || d.Stats.length < 2) continue;
     if (d.Live) continue;
 
     const isEuroCup = key.startsWith('U2026');
     if (isEuroCup) {
       const gNum = parseInt(key.split('_')[1], 10);
-      if (gNum > 40) continue; // Copre fino al 4° turno di EuroCup
+      if (gNum > 48) continue;
     }
     const league = isEuroCup ? 'EuroCup' : 'EuroLeague';
-    if (isEuroCup) ecCount++; else elCount++;
 
     const t0 = d.Stats[0];
     const t1 = d.Stats[1];
-    const t0Name = t0?.Team?.trim().toUpperCase();
-    const t1Name = t1?.Team?.trim().toUpperCase();
+    const t0Name = (t0?.Team || '').trim().toUpperCase();
+    const t1Name = (t1?.Team || '').trim().toUpperCase();
+
+    if (!t0Name || !t1Name) continue;
 
     if (isEuroCup) {
       if (!OFFICIAL_EUROCUP_TEAMS.has(t0Name) || !OFFICIAL_EUROCUP_TEAMS.has(t1Name)) {
@@ -231,22 +264,23 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
     const tot0 = getTeamBoxTotals(t0);
     const tot1 = getTeamBoxTotals(t1);
 
-    // Se la partita non ha punti registrati, salta
     if (tot0.pts === 0 && tot1.pts === 0) continue;
 
-    const poss0 = tot0.fga + 0.44 * tot0.fta - tot0.orb + tot0.tov;
-    const poss1 = tot1.fga + 0.44 * tot1.fta - tot1.orb + tot1.tov;
+    if (isEuroCup) ecCount++;
+    else elCount++;
+
+    const poss0 = Math.max(1, tot0.fga + 0.44 * tot0.fta - tot0.orb + tot0.tov);
+    const poss1 = Math.max(1, tot1.fga + 0.44 * tot1.fta - tot1.orb + tot1.tov);
 
     for (let i = 0; i < 2; i++) {
       const t = d.Stats[i];
-      const opp = d.Stats[1 - i];
       const myTot = i === 0 ? tot0 : tot1;
       const oppTot = i === 0 ? tot1 : tot0;
       const myPoss = i === 0 ? poss0 : poss1;
       const oppPoss = i === 0 ? poss1 : poss0;
 
       const isWin = myTot.pts > oppTot.pts;
-      const tName = t.Team.trim();
+      const tName = (t.Team || '').trim();
       const teamAggKey = `${league}___${tName}`;
 
       let tEntry = teamAgg.get(teamAggKey);
@@ -284,7 +318,8 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
       }
 
       tEntry.gp += 1;
-      if (isWin) tEntry.wins += 1; else tEntry.losses += 1;
+      if (isWin) tEntry.wins += 1;
+      else tEntry.losses += 1;
       tEntry.ptsScored += myTot.pts;
       tEntry.ptsAllowed += oppTot.pts;
       tEntry.possTotal += myPoss;
@@ -310,16 +345,20 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
       tEntry.oppDrb += oppTot.drb;
       tEntry.oppTov += oppTot.tov;
 
-      // Aggrega singoli giocatori
+      // Aggrega singoli giocatori (Controlla i minuti PRIMA di creare il record!)
       for (const p of t.PlayersStats || []) {
-        if (!p.Minutes || p.Minutes === '00:00' || p.Minutes === '0') continue;
-        const pId = p.Player_ID.trim();
+        const sec = parseSeconds(p.Minutes);
+        if (sec <= 60) continue; // Salta rigorosamente DNP o < 1 minuto giocato
+
+        const pId = (p.Player_ID || '').trim();
+        if (!pId || pId.toUpperCase() === 'TEAM') continue;
+
         const playerAggKey = `${league}___${pId}`;
         let pEntry = playerAgg.get(playerAggKey);
         if (!pEntry) {
           pEntry = {
             id: pId,
-            rawName: p.Player,
+            rawName: p.Player || 'Unknown',
             team: tName,
             league,
             number: parseInt(p.Dorsal, 10) || 0,
@@ -348,33 +387,27 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
           playerAgg.set(playerAggKey, pEntry);
         }
 
-        const minParts = (p.Minutes || '').split(':');
-        const sec = minParts.length === 2 ? parseInt(minParts[0], 10) * 60 + parseInt(minParts[1], 10) : 0;
-        // Audit DNP / Minuti minimi: bloccare a zero chiunque abbia un minuto o meno (< 60s) o DNP
-        if (sec <= 60 || p.Minutes === 'DNP' || p.Minutes === '00:00' || p.Minutes === '0' || !p.Minutes) {
-          continue;
-        }
         pEntry.gp += 1;
         pEntry.totalSec += sec;
-        pEntry.pts += p.Points || 0;
-        pEntry.reb += p.TotalRebounds || 0;
-        pEntry.ast += p.Assistances || 0;
-        pEntry.stl += p.Steals || 0;
-        pEntry.blk += p.BlocksFavour || 0;
-        pEntry.tov += p.Turnovers || 0;
-        pEntry.pf += p.FoulsCommited || 0;
-        pEntry.fga += (p.FieldGoalsAttempted2 || 0) + (p.FieldGoalsAttempted3 || 0);
-        pEntry.fgm += (p.FieldGoalsMade2 || 0) + (p.FieldGoalsMade3 || 0);
-        pEntry.fg2a += p.FieldGoalsAttempted2 || 0;
-        pEntry.fg2m += p.FieldGoalsMade2 || 0;
-        pEntry.fg3a += p.FieldGoalsAttempted3 || 0;
-        pEntry.fg3m += p.FieldGoalsMade3 || 0;
-        pEntry.fta += p.FreeThrowsAttempted || 0;
-        pEntry.ftm += p.FreeThrowsMade || 0;
-        pEntry.pir += p.Valuation || 0;
-        pEntry.plusMinus += p.Plusminus || 0;
-        pEntry.orb += p.OffensiveRebounds || 0;
-        pEntry.drb += p.DefensiveRebounds || 0;
+        pEntry.pts += Number(p.Points) || 0;
+        pEntry.reb += Number(p.TotalRebounds) || 0;
+        pEntry.ast += Number(p.Assistances) || 0;
+        pEntry.stl += Number(p.Steals) || 0;
+        pEntry.blk += Number(p.BlocksFavour) || 0;
+        pEntry.tov += Number(p.Turnovers) || 0;
+        pEntry.pf += Number(p.FoulsCommited) || 0;
+        pEntry.fga += (Number(p.FieldGoalsAttempted2) || 0) + (Number(p.FieldGoalsAttempted3) || 0);
+        pEntry.fgm += (Number(p.FieldGoalsMade2) || 0) + (Number(p.FieldGoalsMade3) || 0);
+        pEntry.fg2a += Number(p.FieldGoalsAttempted2) || 0;
+        pEntry.fg2m += Number(p.FieldGoalsMade2) || 0;
+        pEntry.fg3a += Number(p.FieldGoalsAttempted3) || 0;
+        pEntry.fg3m += Number(p.FieldGoalsMade3) || 0;
+        pEntry.fta += Number(p.FreeThrowsAttempted) || 0;
+        pEntry.ftm += Number(p.FreeThrowsMade) || 0;
+        pEntry.pir += Number(p.Valuation) || 0;
+        pEntry.plusMinus += Number(p.Plusminus) || 0;
+        pEntry.orb += Number(p.OffensiveRebounds) || 0;
+        pEntry.drb += Number(p.DefensiveRebounds) || 0;
       }
     }
   }
@@ -391,21 +424,20 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
     const drtg = t.oppPossTotal > 0 ? Number(((t.ptsAllowed / t.oppPossTotal) * 100).toFixed(1)) : 110.0;
     const netRtg = Number((ortg - drtg).toFixed(1));
 
-    const efgOff = t.fga > 0 ? Number((((t.fgm + 0.5 * t.fg3m) / t.fga) * 100).toFixed(1)) : 52.0;
-    const tovOff = t.possTotal > 0 ? Number(((t.tov / t.possTotal) * 100).toFixed(1)) : 13.0;
-    const orbOff = (t.orb + t.oppDrb) > 0 ? Number(((t.orb / (t.orb + t.oppDrb)) * 100).toFixed(1)) : 30.0;
-    const ftrOff = t.fga > 0 ? Number((t.fta / t.fga).toFixed(3)) : 0.280;
+    const efgOff = t.fga > 0 ? clampPct(((t.fgm + 0.5 * t.fg3m) / t.fga) * 100) : 52.0;
+    const tovOff = t.possTotal > 0 ? clampPct((t.tov / t.possTotal) * 100) : 13.0;
+    const orbOff = t.orb + t.oppDrb > 0 ? clampPct((t.orb / (t.orb + t.oppDrb)) * 100) : 30.0;
+    const ftrOff = t.fga > 0 ? Number((t.fta / t.fga).toFixed(3)) : 0.28;
 
-    const efgDef = t.oppFga > 0 ? Number((((t.oppFgm + 0.5 * t.oppFg3m) / t.oppFga) * 100).toFixed(1)) : 50.0;
-    const tovDef = t.oppPossTotal > 0 ? Number(((t.oppTov / t.oppPossTotal) * 100).toFixed(1)) : 14.0;
-    const orbDef = (t.oppOrb + t.drb) > 0 ? Number(((t.oppOrb / (t.oppOrb + t.drb)) * 100).toFixed(1)) : 26.0;
-    const ftrDef = t.oppFga > 0 ? Number((t.oppFta / t.oppFga).toFixed(3)) : 0.260;
+    const efgDef = t.oppFga > 0 ? clampPct(((t.oppFgm + 0.5 * t.oppFg3m) / t.oppFga) * 100) : 50.0;
+    const tovDef = t.oppPossTotal > 0 ? clampPct((t.oppTov / t.oppPossTotal) * 100) : 14.0;
+    const orbDef = t.oppOrb + t.drb > 0 ? clampPct((t.oppOrb / (t.oppOrb + t.drb)) * 100) : 26.0;
+    const ftrDef = t.oppFga > 0 ? Number((t.oppFta / t.oppFga).toFixed(3)) : 0.26;
 
-    const moreyball = t.fga > 0 ? Math.round(((t.fg2a * 0.6 + t.fg3a) / t.fga) * 100) : 85;
+    const moreyball = t.fga > 0 ? Math.min(100, Math.round(((t.fg2a * 0.6 + t.fg3a) / t.fga) * 100)) : 76;
 
     const actualName = t.name || tName;
-    const baseId = actualName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    const teamId = baseId;
+    const teamId = actualName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
     const color = teamColorMap[actualName] || '#4f46e5';
 
     builtEuroTeams.push({
@@ -430,22 +462,22 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
       fourFactorsDefense: { efgPct: efgDef, tovPct: tovDef, orbPct: orbDef, ftr: ftrDef },
       shotSelection: {
         rimPct: 38,
-        rimFgPct: t.fg2a > 0 ? Number(((t.fg2m / t.fg2a) * 100 * 1.15).toFixed(1)) : 67.0,
+        rimFgPct: t.fg2a > 0 ? clampPct((t.fg2m / t.fg2a) * 100 * 1.12) : 62.0,
         midRangePct: 14,
         midRangeFgPct: 42.0,
         corner3Pct: 15,
-        corner3FgPct: t.fg3a > 0 ? Number(((t.fg3m / t.fg3a) * 100 * 1.1).toFixed(1)) : 42.0,
+        corner3FgPct: t.fg3a > 0 ? clampPct((t.fg3m / t.fg3a) * 100 * 1.08) : 39.0,
         aboveBreak3Pct: 33,
-        aboveBreak3FgPct: t.fg3a > 0 ? Number(((t.fg3m / t.fg3a) * 100 * 0.95).toFixed(1)) : 38.0,
+        aboveBreak3FgPct: t.fg3a > 0 ? clampPct((t.fg3m / t.fg3a) * 100 * 0.96) : 35.0,
         moreyballRate: moreyball,
         ftr: ftrOff,
-        pps: t.fga > 0 ? Number(((t.ptsScored / t.fga)).toFixed(2)) : 1.20,
+        pps: t.fga > 0 ? Number((t.ptsScored / t.fga).toFixed(2)) : 1.2,
       },
       playStyle: `Stagione 2026/27 (${t.gp} gare): ${ortg} ORtg (Pts/100p), ${drtg} DRtg, Pace: ${pace} poss/gara.`,
     });
   }
 
-  // Aggiungi squadre e giocatori LBA Serie A ufficiali 2026/27 da data_lba_store.json
+  // Aggiungi squadre e giocatori LBA Serie A ufficiali 2026/27
   let lbaTeams: TeamStats[] = [];
   let lbaPlayers: PlayerStats[] = [];
   const targetRound = explicitLbaRound || 3;
@@ -459,9 +491,7 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
           lbaData.teams &&
           lbaData.teams.length === 16 &&
           lbaData.round >= targetRound &&
-          lbaData.season === '2026/2027' &&
-          lbaData.teams.some((t: any) => t.name === 'Virtus Costa Bologna') &&
-          lbaData.players.some((p: any) => p.name === 'Nicola Akele')
+          lbaData.season === '2026/2027'
         ) {
           lbaTeams = lbaData.teams;
           lbaPlayers = lbaData.players;
@@ -473,7 +503,6 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
     }
 
     if (needRegenerate) {
-      console.log(`[LBA Engine] Generazione statistiche ufficiali LBA Serie A 2026/27 (Turno ${targetRound})...`);
       const generated = buildLbaSeasonData(targetRound);
       lbaTeams = generated.teams;
       lbaPlayers = generated.players;
@@ -501,45 +530,46 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
   // Costruisci giocatori EuroLeague ed EuroCup
   const builtEuroPlayers: PlayerStats[] = [];
   for (const [pId, p] of playerAgg) {
-    const isDnp = p.gp === 0 || p.totalSec <= 60;
-    const gp = isDnp ? 0 : Math.max(1, p.gp);
-    const mpg = isDnp ? 0 : Number(((p.totalSec / 60) / gp).toFixed(1));
-    const pts = isDnp ? 0 : Number((p.pts / gp).toFixed(1));
-    const reb = isDnp ? 0 : Number((p.reb / gp).toFixed(1));
-    const ast = isDnp ? 0 : Number((p.ast / gp).toFixed(1));
-    const stl = isDnp ? 0 : Number((p.stl / gp).toFixed(1));
-    const blk = isDnp ? 0 : Number((p.blk / gp).toFixed(1));
-    const tov = isDnp ? 0 : Number((p.tov / gp).toFixed(1));
-    const pf = isDnp ? 0 : Number((p.pf / gp).toFixed(1));
+    if (p.gp === 0 || p.totalSec <= 60) continue;
 
-    const fga = isDnp ? 0 : Number((p.fga / gp).toFixed(1));
-    const fgm = isDnp ? 0 : Number((p.fgm / gp).toFixed(1));
-    const fg2a = isDnp ? 0 : Number((p.fg2a / gp).toFixed(1));
-    const fg2m = isDnp ? 0 : Number((p.fg2m / gp).toFixed(1));
-    const fg3a = isDnp ? 0 : Number((p.fg3a / gp).toFixed(1));
-    const fg3m = isDnp ? 0 : Number((p.fg3m / gp).toFixed(1));
-    const fta = isDnp ? 0 : Number((p.fta / gp).toFixed(1));
-    const ftm = isDnp ? 0 : Number((p.ftm / gp).toFixed(1));
+    const gp = Math.max(1, p.gp);
+    const mpg = Number((p.totalSec / 60 / gp).toFixed(1));
+    const pts = Number((p.pts / gp).toFixed(1));
+    const reb = Number((p.reb / gp).toFixed(1));
+    const ast = Number((p.ast / gp).toFixed(1));
+    const stl = Number((p.stl / gp).toFixed(1));
+    const blk = Number((p.blk / gp).toFixed(1));
+    const tov = Number((p.tov / gp).toFixed(1));
+    const pf = Number((p.pf / gp).toFixed(1));
+
+    const fga = Number((p.fga / gp).toFixed(1));
+    const fgm = Number((p.fgm / gp).toFixed(1));
+    const fg2a = Number((p.fg2a / gp).toFixed(1));
+    const fg2m = Number((p.fg2m / gp).toFixed(1));
+    const fg3a = Number((p.fg3a / gp).toFixed(1));
+    const fg3m = Number((p.fg3m / gp).toFixed(1));
+    const fta = Number((p.fta / gp).toFixed(1));
+    const ftm = Number((p.ftm / gp).toFixed(1));
 
     const tsDenom = 2 * (p.fga + 0.44 * p.fta);
-    const tsPct = !isDnp && tsDenom > 0 ? Number(((p.pts / tsDenom) * 100).toFixed(1)) : 0;
-    const efgPct = !isDnp && p.fga > 0 ? Number((((p.fgm + 0.5 * p.fg3m) / p.fga) * 100).toFixed(1)) : 0;
-    const ftr = !isDnp && p.fga > 0 ? Number((p.fta / p.fga).toFixed(3)) : 0.25;
-    const threeAttemptRate = !isDnp && p.fga > 0 ? Number(((p.fg3a / p.fga) * 100).toFixed(1)) : 0;
-    const moreyball = !isDnp && p.fga > 0 ? Math.round(((p.fg2a * 0.6 + p.fg3a) / p.fga) * 100) : 0;
+    const tsPct = tsDenom > 0 ? clampPct((p.pts / tsDenom) * 100) : 0;
+    const efgPct = p.fga > 0 ? clampPct(((p.fgm + 0.5 * p.fg3m) / p.fga) * 100) : 0;
+    const ftr = p.fga > 0 ? Number((p.fta / p.fga).toFixed(3)) : 0;
+    const threeAttemptRate = p.fga > 0 ? clampPct((p.fg3a / p.fga) * 100) : 0;
+    const moreyball = p.fga > 0 ? Math.min(100, Math.round(((p.fg2a * 0.6 + p.fg3a) / p.fga) * 100)) : 70;
 
-    const pir = isDnp ? 0 : Math.round(p.pir / gp);
-    const plusMinus = isDnp ? 0 : Number((p.plusMinus / gp).toFixed(1));
+    const pir = Math.round(p.pir / gp);
+    const plusMinus = Number((p.plusMinus / gp).toFixed(1));
 
-    const tTeam = builtEuroTeams.find((t) => t.name === p.team);
+    const tTeam = builtEuroTeams.find((t) => t.name === p.team && t.league === p.league);
     const teamPace = tTeam ? tTeam.pace : 75.0;
 
-    const ptsPer100 = !isDnp && mpg > 0 ? Number(((pts * 40 * 100) / (mpg * teamPace)).toFixed(1)) : 0;
-    const rebPer100 = !isDnp && mpg > 0 ? Number(((reb * 40 * 100) / (mpg * teamPace)).toFixed(1)) : 0;
-    const astPer100 = !isDnp && mpg > 0 ? Number(((ast * 40 * 100) / (mpg * teamPace)).toFixed(1)) : 0;
+    const ptsPer100 = mpg > 0 ? Number(((pts * 40 * 100) / (mpg * teamPace)).toFixed(1)) : 0;
+    const rebPer100 = mpg > 0 ? Number(((reb * 40 * 100) / (mpg * teamPace)).toFixed(1)) : 0;
+    const astPer100 = mpg > 0 ? Number(((ast * 40 * 100) / (mpg * teamPace)).toFixed(1)) : 0;
 
-    const nameParts = p.rawName.split(',').map((s: string) => s.trim());
-    let formattedName = p.rawName;
+    const nameParts = (p.rawName || '').split(',').map((s: string) => s.trim());
+    let formattedName = p.rawName || 'Unknown';
     if (nameParts.length === 2) {
       const first = nameParts[1]
         .split(' ')
@@ -552,10 +582,8 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
       formattedName = `${first} ${last}`.trim();
     }
 
-    const baseTeamId = p.team.toLowerCase().replace(/[^a-z0-9]/g, '-');
-    const teamId = baseTeamId;
+    const teamId = p.team.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 
-    // Mappa corrispondenza tra club europei e club LBA per le squadre italiane che giocano la coppa
     const euroToLbaClubMap: Record<string, string> = {
       'armani-olimpia-milan': 'Armani Olimpia Milano',
       'virtus-bologna': 'Virtus Costa Bologna',
@@ -570,15 +598,14 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
       (lp) => lp.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normEuro
     );
 
+    const isItalianEuroClub = Boolean(euroToLbaClubMap[teamId]);
     const isLegitItalianEuroClubPlayer =
       lbaMatch &&
-      euroToLbaClubMap[teamId] &&
+      isItalianEuroClub &&
       lbaMatch.team.toLowerCase().includes(euroToLbaClubMap[teamId].toLowerCase());
 
-    // Se il giocatore appartiene a una squadra LBA ma NON a questo specifico club europeo
-    // (es. gioca a Verona, Varese, Roma, Tortona, o ha cambiato squadra),
-    // rimuoviamo il vecchio record europeo per eliminare tutti i doppioni e le presenze errate.
-    if (lbaMatch && !isLegitItalianEuroClubPlayer) {
+    // Escludi solo se il club è italiano ma il giocatore gioca in un'altra squadra LBA
+    if (isItalianEuroClub && lbaMatch && !isLegitItalianEuroClubPlayer) {
       continue;
     }
 
@@ -591,8 +618,6 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
     let number = p.number;
     let heightCm = position === 'PF' ? 204 : position === 'PG' ? 188 : 196;
 
-    // Per i giocatori delle squadre italiane che giocano SIA LBA che la Coppa (Milano, Virtus, Venezia, Trento nello stesso club),
-    // sincronizziamo con nome, ruolo, numero e altezza ufficiali
     if (lbaMatch && isLegitItalianEuroClubPlayer) {
       finalName = lbaMatch.name;
       position = lbaMatch.position;
@@ -600,7 +625,24 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
       if (lbaMatch.heightCm) heightCm = lbaMatch.heightCm;
     }
 
-    const gs = Number((pts + 0.4 * fgm - 0.7 * fga - 0.4 * (fta - ftm) + 0.7 * (p.orb / gp) + 0.3 * (p.drb / gp) + stl + 0.7 * ast - 0.4 * pf - tov).toFixed(1));
+    const gs = Number(
+      (
+        pts +
+        0.4 * fgm -
+        0.7 * fga -
+        0.4 * (fta - ftm) +
+        0.7 * (p.orb / gp) +
+        0.3 * (p.drb / gp) +
+        stl +
+        0.7 * ast -
+        0.4 * pf -
+        tov
+      ).toFixed(1)
+    );
+
+    const playerPlaysPerGame = fga + 0.44 * fta + tov;
+    const estimatedUsg =
+      mpg > 0 ? clampPct((100 * (playerPlaysPerGame * (40 / mpg))) / (teamPace * 1.05)) : 18.0;
 
     builtEuroPlayers.push({
       id: pId,
@@ -611,7 +653,7 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
       position,
       number,
       heightCm,
-      gamesPlayed: isDnp ? 0 : p.gp,
+      gamesPlayed: gp,
       mpg,
       pts,
       reb,
@@ -632,41 +674,46 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
       plusMinus,
       tsPct,
       efgPct,
-      usgPct: isDnp ? 0 : Number(((fga + 0.44 * fta + tov) * 2).toFixed(1)),
-      astPct: isDnp ? 0 : Number((ast * 4).toFixed(1)),
+      usgPct: estimatedUsg,
+      astPct: mpg > 0 ? clampPct((ast / (mpg * 0.75)) * 100) : 0,
       astToRatio: tov > 0 ? Number((ast / tov).toFixed(2)) : ast,
-      tovPct: isDnp ? 0 : 12.0,
-      orbPct: isDnp ? 0 : 4.0,
-      drbPct: isDnp ? 0 : 14.0,
-      trbPct: isDnp ? 0 : 9.0,
-      ortg: isDnp ? 0 : (tTeam ? tTeam.ortg : 115),
-      drtg: isDnp ? 0 : (tTeam ? tTeam.drtg : 110),
-      netRtg: isDnp ? 0 : (tTeam ? tTeam.netRtg : 5.0),
-      gameScore: isDnp ? 0 : gs,
-      bpm: isDnp ? 0 : 4.5,
+      tovPct: playerPlaysPerGame > 0 ? clampPct((tov / playerPlaysPerGame) * 100) : 10.0,
+      orbPct: 4.0,
+      drbPct: 14.0,
+      trbPct: 9.0,
+      ortg: tTeam ? tTeam.ortg : 114,
+      drtg: tTeam ? tTeam.drtg : 110,
+      netRtg: tTeam ? tTeam.netRtg : 4.0,
+      gameScore: gs,
+      bpm: 4.0,
       ptsPer100,
       rebPer100,
       astPer100,
-      shotSelection: isDnp ? {
-        rim: { fgaPct: 0, fgPct: 0, pps: 0, leagueAvgFgPct: 62 },
-        paintNonRim: { fgaPct: 0, fgPct: 0, pps: 0, leagueAvgFgPct: 41 },
-        midRange: { fgaPct: 0, fgPct: 0, pps: 0, leagueAvgFgPct: 40 },
-        corner3: { fgaPct: 0, fgPct: 0, pps: 0, leagueAvgFgPct: 39 },
-        aboveBreak3: { fgaPct: 0, fgPct: 0, pps: 0, leagueAvgFgPct: 36 },
-        ftr: 0,
-        threePointAttemptRate: 0,
-        moreyballRate: 0,
-        shotStyleNotes: 'DNP / Riserva a referto (< 1 min effettivo)',
-      } : {
-        rim: { fgaPct: 36, fgPct: p.fg2a > 0 ? Number(((p.fg2m / p.fg2a) * 100 * 1.15).toFixed(1)) : 66, pps: 1.32, leagueAvgFgPct: 62 },
+      shotSelection: {
+        rim: {
+          fgaPct: 36,
+          fgPct: p.fg2a > 0 ? clampPct((p.fg2m / p.fg2a) * 100 * 1.1) : 60,
+          pps: 1.32,
+          leagueAvgFgPct: 62,
+        },
         paintNonRim: { fgaPct: 14, fgPct: 44, pps: 0.88, leagueAvgFgPct: 41 },
-        midRange: { fgaPct: 8, fgPct: 40, pps: 0.80, leagueAvgFgPct: 40 },
-        corner3: { fgaPct: 14, fgPct: p.fg3a > 0 ? Number(((p.fg3m / p.fg3a) * 100 * 1.1).toFixed(1)) : 42, pps: 1.26, leagueAvgFgPct: 39 },
-        aboveBreak3: { fgaPct: 28, fgPct: p.fg3a > 0 ? Number(((p.fg3m / p.fg3a) * 100 * 0.95).toFixed(1)) : 38, pps: 1.14, leagueAvgFgPct: 36 },
+        midRange: { fgaPct: 8, fgPct: 40, pps: 0.8, leagueAvgFgPct: 40 },
+        corner3: {
+          fgaPct: 14,
+          fgPct: p.fg3a > 0 ? clampPct((p.fg3m / p.fg3a) * 100 * 1.05) : 38,
+          pps: 1.26,
+          leagueAvgFgPct: 39,
+        },
+        aboveBreak3: {
+          fgaPct: 28,
+          fgPct: p.fg3a > 0 ? clampPct((p.fg3m / p.fg3a) * 100 * 0.95) : 35,
+          pps: 1.14,
+          leagueAvgFgPct: 36,
+        },
         ftr,
         threePointAttemptRate: threeAttemptRate,
         moreyballRate: moreyball,
-        shotStyleNotes: `Stagione 2026/27 (${p.gp} gare): ${ptsPer100} Pts/100 poss (${tsPct}% TS).`,
+        shotStyleNotes: `Stagione 2026/27 (${gp} gare): ${ptsPer100} Pts/100 poss (${tsPct}% TS).`,
       },
     });
   }
@@ -675,7 +722,6 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
   const finalPlayers = [...builtEuroPlayers, ...lbaPlayers];
   const totalGames = elCount + ecCount;
 
-  // Salva sia data_cache.json sia src/data/basketballData.ts
   const cacheObj = {
     lastUpdated: new Date().toISOString(),
     totalGames,
@@ -686,17 +732,20 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
 
   try {
     fs.writeFileSync(CACHE_FILE, JSON.stringify(cacheObj, null, 2), 'utf-8');
-    const fileContent =
-      'import { PlayerStats, TeamStats } from "../types/basketball";\n\n' +
-      'export const TEAMS_DATA: TeamStats[] = ' +
-      JSON.stringify(finalTeams, null, 2) +
-      ';\n\n' +
-      'export const PLAYERS_DATA: PlayerStats[] = ' +
-      JSON.stringify(finalPlayers, null, 2) +
-      ';\n';
-    fs.writeFileSync(DATA_FILE, fileContent, 'utf-8');
+    // Sovrascrive basketballData.ts SOLO se richiesto esplicitamente (evita il riavvio forzato di Vite durante le chiamate API!)
+    if (writeTsSourceFile) {
+      const fileContent =
+        'import { PlayerStats, TeamStats } from "../types/basketball";\n\n' +
+        'export const TEAMS_DATA: TeamStats[] = ' +
+        JSON.stringify(finalTeams, null, 2) +
+        ';\n\n' +
+        'export const PLAYERS_DATA: PlayerStats[] = ' +
+        JSON.stringify(finalPlayers, null, 2) +
+        ';\n';
+      fs.writeFileSync(DATA_FILE, fileContent, 'utf-8');
+    }
   } catch (err) {
-    console.error('Error writing dataset files:', err);
+    console.error('Error writing dataset cache:', err);
   }
 
   return {
@@ -708,6 +757,10 @@ export function rebuildDatasetFromStore(explicitLbaRound?: number): {
   };
 }
 
+/**
+ * Sincronizza rapidamente solo le gare mancanti con "Early-Stop"
+ * (Se trova 4 gare consecutive non ancora disputate, interrompe la scansione evitando 40 secondi di attesa inutile!)
+ */
 export async function syncOnlyMissingGames(): Promise<{
   newGamesSynced: number;
   totalGames: number;
@@ -719,11 +772,18 @@ export async function syncOnlyMissingGames(): Promise<{
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // Scansiona solo gare mancanti o Live in EuroLeague (1..60, copre fino al 6° turno)
+  // 1. Scansiona EuroLeague con uscita intelligente (Early-Stop)
+  let consecutiveEmptyEL = 0;
   for (let g = 1; g <= 60; g++) {
     const key = `E2026_${g}`;
     if (store[key] && !store[key].Live) {
-      continue; // Già scaricata e conclusa, non serve risollecitare Cloudflare!
+      consecutiveEmptyEL = 0;
+      continue;
+    }
+
+    if (consecutiveEmptyEL >= 4) {
+      // Abbiamo raggiunto i turni futuri non ancora disputati: inutile continuare!
+      break;
     }
 
     try {
@@ -732,30 +792,49 @@ export async function syncOnlyMissingGames(): Promise<{
           'User-Agent': 'Mozilla/5.0 (EuroBasketAnalytics/2.0)',
           Accept: 'application/json, text/plain, */*',
         },
-        signal: AbortSignal.timeout(3500),
+        signal: AbortSignal.timeout(2500),
       });
-      const text = await res.text();
-      if (text.startsWith('{')) {
-        const d = JSON.parse(text);
-        if (d.Stats && d.Stats.length >= 2) {
-          const t0 = d.Stats[0]?.Team?.trim().toUpperCase();
-          const t1 = d.Stats[1]?.Team?.trim().toUpperCase();
-          if (OFFICIAL_EUROLEAGUE_TEAMS.has(t0) && OFFICIAL_EUROLEAGUE_TEAMS.has(t1)) {
-            store[key] = d;
-            newGamesCount++;
-            console.log(`[Auto-Sync Engine] Nuova gara EuroLeague scaricata: ${key}`);
+      if (res.ok) {
+        const text = await res.text();
+        if (text.startsWith('{')) {
+          const d = JSON.parse(text);
+          if (d.Stats && d.Stats.length >= 2) {
+            const t0 = (d.Stats[0]?.Team || '').trim().toUpperCase();
+            const t1 = (d.Stats[1]?.Team || '').trim().toUpperCase();
+            if (OFFICIAL_EUROLEAGUE_TEAMS.has(t0) && OFFICIAL_EUROLEAGUE_TEAMS.has(t1)) {
+              store[key] = d;
+              newGamesCount++;
+              consecutiveEmptyEL = 0;
+              console.log(`[Auto-Sync Engine] Nuova gara EuroLeague scaricata: ${key}`);
+            } else {
+              consecutiveEmptyEL++;
+            }
+          } else {
+            consecutiveEmptyEL++;
           }
+        } else {
+          consecutiveEmptyEL++;
         }
+      } else {
+        consecutiveEmptyEL++;
       }
-    } catch (err) {}
-    await sleep(600);
+    } catch (err) {
+      consecutiveEmptyEL++;
+    }
+    await sleep(180);
   }
 
-  // Scansiona gare dei primi 4 turni di EuroCup (1..40)
-  for (let g = 1; g <= 40; g++) {
+  // 2. Scansiona EuroCup con uscita intelligente (Early-Stop)
+  let consecutiveEmptyEC = 0;
+  for (let g = 1; g <= 48; g++) {
     const key = `U2026_${g}`;
     if (store[key] && !store[key].Live) {
-      continue; // Già scaricata e conclusa!
+      consecutiveEmptyEC = 0;
+      continue;
+    }
+
+    if (consecutiveEmptyEC >= 4) {
+      break;
     }
 
     try {
@@ -764,26 +843,39 @@ export async function syncOnlyMissingGames(): Promise<{
           'User-Agent': 'Mozilla/5.0 (EuroBasketAnalytics/2.0)',
           Accept: 'application/json, text/plain, */*',
         },
-        signal: AbortSignal.timeout(3500),
+        signal: AbortSignal.timeout(2500),
       });
-      const text = await res.text();
-      if (text.startsWith('{')) {
-        const d = JSON.parse(text);
-        if (d.Stats && d.Stats.length >= 2) {
-          const t0 = d.Stats[0]?.Team?.trim().toUpperCase();
-          const t1 = d.Stats[1]?.Team?.trim().toUpperCase();
-          if (OFFICIAL_EUROCUP_TEAMS.has(t0) && OFFICIAL_EUROCUP_TEAMS.has(t1)) {
-            store[key] = d;
-            newGamesCount++;
-            console.log(`[Auto-Sync Engine] Nuova gara EuroCup scaricata: ${key}`);
+      if (res.ok) {
+        const text = await res.text();
+        if (text.startsWith('{')) {
+          const d = JSON.parse(text);
+          if (d.Stats && d.Stats.length >= 2) {
+            const t0 = (d.Stats[0]?.Team || '').trim().toUpperCase();
+            const t1 = (d.Stats[1]?.Team || '').trim().toUpperCase();
+            if (OFFICIAL_EUROCUP_TEAMS.has(t0) && OFFICIAL_EUROCUP_TEAMS.has(t1)) {
+              store[key] = d;
+              newGamesCount++;
+              consecutiveEmptyEC = 0;
+              console.log(`[Auto-Sync Engine] Nuova gara EuroCup scaricata: ${key}`);
+            } else {
+              consecutiveEmptyEC++;
+            }
+          } else {
+            consecutiveEmptyEC++;
           }
+        } else {
+          consecutiveEmptyEC++;
         }
+      } else {
+        consecutiveEmptyEC++;
       }
-    } catch (err) {}
-    await sleep(600);
+    } catch (err) {
+      consecutiveEmptyEC++;
+    }
+    await sleep(180);
   }
 
-  // Sincronizza anche la LBA Serie A ufficiale da legabasket.it
+  // 3. Sincronizza LBA Serie A
   try {
     await syncLbaFromOfficialApi();
   } catch (err) {
@@ -792,10 +884,8 @@ export async function syncOnlyMissingGames(): Promise<{
 
   if (newGamesCount > 0) {
     fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), 'utf-8');
-    const { totalGames } = rebuildDatasetFromStore();
-    return { newGamesSynced: newGamesCount, totalGames };
   }
 
   const { totalGames } = rebuildDatasetFromStore();
-  return { newGamesSynced: 0, totalGames };
+  return { newGamesSynced: newGamesCount, totalGames };
 }

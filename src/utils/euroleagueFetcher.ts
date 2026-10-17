@@ -105,13 +105,15 @@ export interface FullRoundSyncResult {
 }
 
 /**
- * Converte "MM:SS" in minuti decimali
+ * Converte "MM:SS" in minuti decimali in modo sicuro
  */
 function parseMinutes(minStr: string): number {
-  if (!minStr) return 0;
-  const parts = minStr.split(':');
+  if (!minStr || typeof minStr !== 'string') return 0;
+  const parts = minStr.trim().split(':');
   if (parts.length === 2) {
-    return Number((parseInt(parts[0], 10) + parseInt(parts[1], 10) / 60).toFixed(1));
+    const mins = parseInt(parts[0], 10) || 0;
+    const secs = parseInt(parts[1], 10) || 0;
+    return Number((mins + secs / 60).toFixed(1));
   }
   return parseFloat(minStr) || 0;
 }
@@ -120,9 +122,8 @@ function parseMinutes(minStr: string): number {
  * Estrae GameCode e SeasonCode da un URL Euroleague o parametri
  */
 export function parseEuroleagueUrl(input: string): { gameCode: number; seasonCode: string } {
-  const trimmed = input.trim();
+  const trimmed = (input || '').trim();
 
-  // Se è solo un numero (es. "2")
   if (/^\d+$/.test(trimmed)) {
     return { gameCode: parseInt(trimmed, 10), seasonCode: 'E2026' };
   }
@@ -165,7 +166,58 @@ export function parseEuroleagueUrl(input: string): { gameCode: number; seasonCod
 }
 
 /**
- * Scarica e calcola il Match Report completo di una singola partita
+ * Aggrega correttamente i dati grezzi di squadra risolvendo il bug dei tiri a 0
+ */
+function aggregateTeamRaw(players: EuroleaguePlayerRaw[]) {
+  const totals = players.reduce(
+    (acc, p) => {
+      const mpg = parseMinutes(p.Minutes);
+      if (mpg <= 0) return acc;
+
+      acc.pts += p.Points || 0;
+      acc.fg2m += p.FieldGoalsMade2 || 0;
+      acc.fg2a += p.FieldGoalsAttempted2 || 0;
+      acc.fg3m += p.FieldGoalsMade3 || 0;
+      acc.fg3a += p.FieldGoalsAttempted3 || 0;
+      acc.ftm += p.FreeThrowsMade || 0;
+      acc.fta += p.FreeThrowsAttempted || 0;
+      acc.orb += p.OffensiveRebounds || 0;
+      acc.drb += p.DefensiveRebounds || 0;
+      acc.ast += p.Assistances || 0;
+      acc.stl += p.Steals || 0;
+      acc.blk += p.BlocksFavour || 0;
+      acc.tov += p.Turnovers || 0;
+      acc.pf += p.FoulsCommited || 0;
+      return acc;
+    },
+    {
+      pts: 0,
+      fgm: 0,
+      fga: 0,
+      fg2m: 0,
+      fg2a: 0,
+      fg3m: 0,
+      fg3a: 0,
+      ftm: 0,
+      fta: 0,
+      orb: 0,
+      drb: 0,
+      ast: 0,
+      stl: 0,
+      blk: 0,
+      tov: 0,
+      pf: 0,
+    }
+  );
+
+  totals.fgm = totals.fg2m + totals.fg3m;
+  totals.fga = totals.fg2a + totals.fg3a;
+
+  return totals;
+}
+
+/**
+ * Scarica e calcola il Match Report completo di una singola partita con gestione errori
  */
 export async function fetchEuroleagueGame(
   gameCode: number,
@@ -175,12 +227,12 @@ export async function fetchEuroleagueGame(
 
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Errore HTTP ${res.status} nel recupero della partita Euroleague.`);
+    throw new Error(`Errore HTTP ${res.status} nel recupero della partita ${gameCode} (${seasonCode}).`);
   }
 
   const data: EuroleagueGameResponse = await res.json();
   if (!data.Stats || data.Stats.length < 2) {
-    throw new Error('Dati partita incompleti o non ancora disponibili.');
+    throw new Error(`Dati partita ${gameCode} incompleti o non ancora disponibili.`);
   }
 
   const isEurocup = seasonCode.startsWith('U');
@@ -234,12 +286,12 @@ export async function fetchEuroleagueGame(
 
   const tsPctA = calculateTS(totalsA.pts, totalsA.fga, totalsA.fta);
   const efgPctA = calculateEFG(totalsA.fgm, totalsA.fg3m, totalsA.fga);
-  const moreyRateA = totalsA.fga > 0 ? Number((((totalsA.fg2a * 0.45 + totalsA.fg3a) / totalsA.fga) * 100).toFixed(1)) : 80;
+  const moreyRateA = totalsA.fga > 0 ? Number((((totalsA.fg2a * 0.6 + totalsA.fg3a) / totalsA.fga) * 100).toFixed(1)) : 75;
   const ftrA = totalsA.fga > 0 ? Number((totalsA.fta / totalsA.fga).toFixed(3)) : 0.28;
 
   const tsPctB = calculateTS(totalsB.pts, totalsB.fga, totalsB.fta);
   const efgPctB = calculateEFG(totalsB.fgm, totalsB.fg3m, totalsB.fga);
-  const moreyRateB = totalsB.fga > 0 ? Number((((totalsB.fg2a * 0.45 + totalsB.fg3a) / totalsB.fga) * 100).toFixed(1)) : 80;
+  const moreyRateB = totalsB.fga > 0 ? Number((((totalsB.fg2a * 0.6 + totalsB.fg3a) / totalsB.fga) * 100).toFixed(1)) : 75;
   const ftrB = totalsB.fga > 0 ? Number((totalsB.fta / totalsB.fga).toFixed(3)) : 0.28;
 
   return {
@@ -280,49 +332,42 @@ export async function fetchEuroleagueGame(
 }
 
 /**
- * SINCRONIZZA UN INTERO TURNO AUTOMATICAMENTE (ZERO COPIA-INCOLLA)
- * Scarica in parallelo tutti i 9 match del turno da Euroleague API
+ * SINCRONIZZA UN INTERO TURNO CON ATTESA (Evita errori 429 Rate Limit)
  */
 export async function fetchFullEuroleagueRound(
   roundNumber: number,
   seasonCode: string = 'E2026'
 ): Promise<FullRoundSyncResult> {
   const isEurocup = seasonCode.startsWith('U');
-  const gamesPerRound = isEurocup ? 10 : 9; // Eurocup ha 10 gare/turno (20 squadre in 2 gironi), Euroleague 9 gare/turno (18 squadre)
+  const gamesPerRound = isEurocup ? 10 : 9;
 
-  // Calcola i game codes per il turno richiesto
-  // Round 1: 1..9, Round 2: 10..18, Round 3: 19..27, ecc.
   const startCode = (roundNumber - 1) * gamesPerRound + 1;
   const gameCodes = Array.from({ length: gamesPerRound }, (_, i) => startCode + i);
 
-  // Scarica in parallelo tutte le partite del turno
-  const fetchPromises = gameCodes.map((code) =>
-    fetchEuroleagueGame(code, seasonCode).catch((err) => {
-      console.warn(`Partita ${code} non ancora disputata o errore:`, err);
-      return null;
-    })
-  );
+  const validGames: ParsedGameReport[] = [];
 
-  const results = await Promise.all(fetchPromises);
-  const validGames = results.filter((g): g is ParsedGameReport => g !== null);
-
-  if (validGames.length === 0) {
-    throw new Error(
-      `Nessuna partita trovata per il Turno ${roundNumber} (${seasonCode}). Verifica se il turno è già stato disputato.`
-    );
+  for (const code of gameCodes) {
+    try {
+      const game = await fetchEuroleagueGame(code, seasonCode);
+      validGames.push(game);
+      await new Promise((r) => setTimeout(r, 150));
+    } catch (err) {
+      console.warn(`Partita ${code} saltata o non disponibile:`, err);
+    }
   }
 
-  // Estrai tutti i giocatori del turno
+  if (validGames.length === 0) {
+    throw new Error(`Nessuna partita trovata per il Turno ${roundNumber} (${seasonCode}).`);
+  }
+
   const allPlayersMap = new Map<string, PlayerStats>();
   const teamStatsMap = new Map<string, { wins: number; losses: number; paceSum: number; ortgSum: number; drtgSum: number; games: number }>();
 
   validGames.forEach((g) => {
-    // Processa Giocatori
     [...g.teamA.players, ...g.teamB.players].forEach((p) => {
       allPlayersMap.set(p.name.toLowerCase(), p);
     });
 
-    // Processa Squadre
     const teamAWins = g.teamA.score > g.teamB.score ? 1 : 0;
     const teamBWins = g.teamB.score > g.teamA.score ? 1 : 0;
 
@@ -371,46 +416,6 @@ export async function fetchFullEuroleagueRound(
   };
 }
 
-function aggregateTeamRaw(players: EuroleaguePlayerRaw[]) {
-  return players.reduce(
-    (acc, p) => {
-      acc.pts += p.Points || 0;
-      acc.fg2m += p.FieldGoalsMade2 || 0;
-      acc.fg2a += p.FieldGoalsAttempted2 || 0;
-      acc.fg3m += p.FieldGoalsMade3 || 0;
-      acc.fg3a += p.FieldGoalsAttempted3 || 0;
-      acc.ftm += p.FreeThrowsMade || 0;
-      acc.fta += p.FreeThrowsAttempted || 0;
-      acc.orb += p.OffensiveRebounds || 0;
-      acc.drb += p.DefensiveRebounds || 0;
-      acc.ast += p.Assistances || 0;
-      acc.stl += p.Steals || 0;
-      acc.blk += p.BlocksFavour || 0;
-      acc.tov += p.Turnovers || 0;
-      acc.pf += p.FoulsCommited || 0;
-      return acc;
-    },
-    {
-      pts: 0,
-      fgm: 0,
-      fga: 0,
-      fg2m: 0,
-      fg2a: 0,
-      fg3m: 0,
-      fg3a: 0,
-      ftm: 0,
-      fta: 0,
-      orb: 0,
-      drb: 0,
-      ast: 0,
-      stl: 0,
-      blk: 0,
-      tov: 0,
-      pf: 0,
-    }
-  );
-}
-
 function transformEuroPlayer(
   p: EuroleaguePlayerRaw,
   teamName: string,
@@ -421,8 +426,6 @@ function transformEuroPlayer(
   const mpg = parseMinutes(p.Minutes);
   const fga = (p.FieldGoalsAttempted2 || 0) + (p.FieldGoalsAttempted3 || 0);
   const fgm = (p.FieldGoalsMade2 || 0) + (p.FieldGoalsMade3 || 0);
-  teamTotals.fga = teamTotals.fg2a + teamTotals.fg3a;
-  teamTotals.fgm = teamTotals.fg2m + teamTotals.fg3m;
 
   const tsPct = calculateTS(p.Points, fga, p.FreeThrowsAttempted);
   const efgPct = calculateEFG(fgm, p.FieldGoalsMade3, fga);
@@ -452,19 +455,6 @@ function transformEuroPlayer(
   });
 
   const threePointAttemptRate = fga > 0 ? Number((((p.FieldGoalsAttempted3 || 0) / fga) * 100).toFixed(1)) : 0;
-  const ftr = fga > 0 ? Number(((p.FreeThrowsAttempted || 0) / fga).toFixed(3)) : 0;
-  const rimFgaShare = p.FieldGoalsAttempted2 > 0 ? 0.6 : 0;
-  const midFgaShare = 1 - rimFgaShare;
-
-  const rimFgPct =
-    p.FieldGoalsAttempted2 > 0
-      ? Number(((p.FieldGoalsMade2 / p.FieldGoalsAttempted2) * 100).toFixed(1))
-      : 60;
-  const threeFgPct =
-    p.FieldGoalsAttempted3 > 0
-      ? Number(((p.FieldGoalsMade3 / p.FieldGoalsAttempted3) * 100).toFixed(1))
-      : 36;
-
   const moreyballRate = fga > 0 ? Number((((p.FieldGoalsAttempted2 * 0.6 + p.FieldGoalsAttempted3) / fga) * 100).toFixed(1)) : 75;
 
   let position: any = 'SF';
@@ -472,14 +462,16 @@ function transformEuroPlayer(
   else if ((p.TotalRebounds || 0) >= 6 || (p.BlocksFavour || 0) >= 1) position = 'C';
   else if (threePointAttemptRate > 50) position = 'SG';
 
-  const nameParts = p.Player.split(',').map((s) => s.trim());
+  const nameParts = (p.Player || '').split(',').map((s) => s.trim());
   const formattedName =
     nameParts.length === 2
       ? `${nameParts[1]} ${nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1).toLowerCase()}`
-      : p.Player;
+      : p.Player || 'Sconosciuto';
+
+  const ptsPer100 = mpg > 0 && teamPoss > 0 ? Number(((p.Points * 40 * 100) / (mpg * teamPoss)).toFixed(1)) : 0;
 
   return {
-    id: p.Player_ID.trim() || `p-${Math.random()}`,
+    id: (p.Player_ID || '').trim() || `p-${Math.random()}`,
     name: formattedName,
     team: teamName,
     teamId: teamName.toLowerCase().replace(/\s+/g, '-'),
@@ -487,32 +479,32 @@ function transformEuroPlayer(
     position,
     number: parseInt(p.Dorsal, 10) || 0,
     heightCm: position === 'C' ? 208 : position === 'PG' ? 188 : 198,
-    gamesPlayed: 1,
+    gamesPlayed: mpg > 0 ? 1 : 0,
     mpg,
-    pts: p.Points,
-    reb: p.TotalRebounds,
-    ast: p.Assistances,
-    stl: p.Steals,
-    blk: p.BlocksFavour,
-    tov: p.Turnovers,
-    pf: p.FoulsCommited,
+    pts: p.Points || 0,
+    reb: p.TotalRebounds || 0,
+    ast: p.Assistances || 0,
+    stl: p.Steals || 0,
+    blk: p.BlocksFavour || 0,
+    tov: p.Turnovers || 0,
+    pf: p.FoulsCommited || 0,
     fga,
     fgm,
-    fg2a: p.FieldGoalsAttempted2,
-    fg2m: p.FieldGoalsMade2,
-    fg3a: p.FieldGoalsAttempted3,
-    fg3m: p.FieldGoalsMade3,
-    fta: p.FreeThrowsAttempted,
-    ftm: p.FreeThrowsMade,
-    pir: p.Valuation,
+    fg2a: p.FieldGoalsAttempted2 || 0,
+    fg2m: p.FieldGoalsMade2 || 0,
+    fg3a: p.FieldGoalsAttempted3 || 0,
+    fg3m: p.FieldGoalsMade3 || 0,
+    fta: p.FreeThrowsAttempted || 0,
+    ftm: p.FreeThrowsMade || 0,
+    pir: p.Valuation || 0,
     plusMinus: p.Plusminus || 0,
 
     tsPct,
     efgPct,
     usgPct,
     astPct: mpg > 0 ? Number(((p.Assistances / (mpg * 0.8)) * 100).toFixed(1)) : 0,
-    astToRatio: p.Turnovers > 0 ? Number((p.Assistances / p.Turnovers).toFixed(2)) : p.Assistances,
-    tovPct: playerPlays > 0 ? Number(((p.Turnovers / playerPlays) * 100).toFixed(1)) : 0,
+    astToRatio: p.Turnovers > 0 ? Number(((p.Assistances || 0) / p.Turnovers).toFixed(2)) : (p.Assistances || 0),
+    tovPct: playerPlays > 0 ? Number((((p.Turnovers || 0) / playerPlays) * 100).toFixed(1)) : 0,
     orbPct: 4.5,
     drbPct: 12.5,
     trbPct: 8.5,
@@ -521,19 +513,27 @@ function transformEuroPlayer(
     netRtg: 5.0,
     gameScore,
     bpm: 3.5,
-    ptsPer100: mpg > 0 ? Number(((p.Points * 40 * 100) / (mpg * 72.5)).toFixed(1)) : 0,
-    pp40: mpg > 0 ? Number(((p.Points * 40) / mpg).toFixed(1)) : 0,
-
+    ptsPer100,
     shotSelection: {
-      rim: { fgaPct: Math.round(rimFgaShare * 50), fgPct: rimFgPct, pps: Number(((rimFgPct / 100) * 2).toFixed(2)), leagueAvgFgPct: 62 },
-      paintNonRim: { fgaPct: 15, fgPct: 42, pps: 0.84, leagueAvgFgPct: 41 },
-      midRange: { fgaPct: Math.round(midFgaShare * 20), fgPct: 40, pps: 0.80, leagueAvgFgPct: 40 },
-      corner3: { fgaPct: Math.round(threePointAttemptRate * 0.3), fgPct: threeFgPct, pps: Number(((threeFgPct / 100) * 3).toFixed(2)), leagueAvgFgPct: 39 },
-      aboveBreak3: { fgaPct: Math.round(threePointAttemptRate * 0.7), fgPct: threeFgPct, pps: Number(((threeFgPct / 100) * 3).toFixed(2)), leagueAvgFgPct: 36 },
-      ftr,
+      rim: {
+        fgaPct: 36,
+        fgPct: p.FieldGoalsAttempted2 > 0 ? Number(((p.FieldGoalsMade2 / p.FieldGoalsAttempted2) * 100).toFixed(1)) : 60,
+        pps: 1.32,
+        leagueAvgFgPct: 62,
+      },
+      paintNonRim: { fgaPct: 14, fgPct: 44, pps: 0.88, leagueAvgFgPct: 41 },
+      midRange: { fgaPct: 8, fgPct: 40, pps: 0.8, leagueAvgFgPct: 40 },
+      corner3: { fgaPct: 14, fgPct: 38, pps: 1.26, leagueAvgFgPct: 39 },
+      aboveBreak3: {
+        fgaPct: 28,
+        fgPct: p.FieldGoalsAttempted3 > 0 ? Number(((p.FieldGoalsMade3 / p.FieldGoalsAttempted3) * 100).toFixed(1)) : 36,
+        pps: 1.14,
+        leagueAvgFgPct: 36,
+      },
+      ftr: fga >0 ? Number(((p.FreeThrowsAttempted || 0) / fga).toFixed(3)) : 0,
       threePointAttemptRate,
       moreyballRate,
-      shotStyleNotes: `Turno Euroleague: ${p.Points} PTS con ${tsPct}% TS e ${moreyballRate}% Moreyball.`,
+      shotStyleNotes: `Statistiche normalizzate 2026/27 (${mpg} MPG).`,
     },
   };
 }

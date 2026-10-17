@@ -1,0 +1,6 @@
+{
+  "summary": "Architettura unificata di acquisizione dati per EuroLeague, EuroCup e LBA Serie A con validazione automatica dei minutaggi reali (regola DNP/minuti minimi), audit anti-allucinazione dei tabellini e sincronizzazione automatica a ogni turno completato.",
+  "updatedAt": "2026-10-17T13:59:46.398484097Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

@@ -1,0 +1,6 @@
+{
+  "name": "EuroBasket Advanced Stats Lab",
+  "description": "Piattaforma di statistiche avanzate e analytics per Eurolega, Eurocup e LBA Serie A (TS%, USG%, Ortg/Drtg, Four Factors, Pace, Rebound & Assist Rates).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

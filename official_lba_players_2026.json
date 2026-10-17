@@ -1,0 +1,1982 @@
+[
+  {
+    "id": 45,
+    "name": "Nicola",
+    "surname": "Akele",
+    "code": "AKE-NIC-95",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "sgwgsNL364vhCY9a838fmcKP"
+  },
+  {
+    "id": 75,
+    "name": "Amar",
+    "surname": "Alibegovic",
+    "code": "ALI-AMA-95",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "pZpWxP6Z5UPXzXW79y3aTAYn"
+  },
+  {
+    "id": 76,
+    "name": "Mirza",
+    "surname": "Alibegovic",
+    "code": "ALI-MIR-92",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9332,
+    "name": "Gregorio",
+    "surname": "Allinei",
+    "code": "ALL-GRE-04",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "vcEjLiSLXW6H3CKuNg66TVYJ"
+  },
+  {
+    "id": 9004,
+    "name": "Derrick",
+    "surname": "Alston",
+    "code": "ALS-DER-97",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "aX7pjgftNWGb3T3gG4VtGmgL"
+  },
+  {
+    "id": 97,
+    "name": "Davide",
+    "surname": "Alviti",
+    "code": "ALV-DAV-96",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "CchJHtkhZVSmQAXmhEwFBn4L"
+  },
+  {
+    "id": 106,
+    "name": "Lorenzo",
+    "surname": "Ambrosin",
+    "code": "AMB-LOR",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9341,
+    "name": "Andrew",
+    "surname": "Andrews",
+    "code": "AND-AND-93",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9042,
+    "name": "Ike",
+    "surname": "Anigbogu",
+    "code": "ANI-IKE-98",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "eNePF3FEwau1vBLPUFtEfEBM"
+  },
+  {
+    "id": 9380,
+    "name": "Gerald",
+    "surname": "Ayayi",
+    "code": "AYA-GER-01",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "wdm9w7UexGb9zaSL8ySBKp1b"
+  },
+  {
+    "id": 6797,
+    "name": "Matteo",
+    "surname": "Baiocchi",
+    "code": "BAI-MAT-07",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "YoqZWjvwHFxtTP2FYCUJrKwR"
+  },
+  {
+    "id": 274,
+    "name": "Tommaso",
+    "surname": "Baldasso",
+    "code": "BAL-TOM-88",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "5kd5KzrHbSVjMAmsTc26yUZK"
+  },
+  {
+    "id": 314,
+    "name": "Jaylen",
+    "surname": "Barford",
+    "code": "BAR-JAY-96",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "nySueTP118aEmyoVvUSuePYY"
+  },
+  {
+    "id": 7599,
+    "name": "Antonio",
+    "surname": "Barra",
+    "code": "BAR-ANT-08",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9302,
+    "name": "Raequan",
+    "surname": "Battle",
+    "code": "BAT-RAE-01",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "zWATznYyWedF69cVMWUzkjsh"
+  },
+  {
+    "id": 378,
+    "name": "Jordan",
+    "surname": "Bayehe",
+    "code": "BAY-JOR-99",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "DYCLbGWxcn1tYAGcwAnkwiDR"
+  },
+  {
+    "id": 9366,
+    "name": "Rasheed",
+    "surname": "Bello",
+    "code": "BEL-RAS-03",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "eAfakPWZm4ZS8erwohue77Eb"
+  },
+  {
+    "id": 425,
+    "name": "Eimantas",
+    "surname": "Bendzius",
+    "code": "BEN-EIM-90",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "zYhMyR6geJRhsSQ6uPijcVEo"
+  },
+  {
+    "id": 439,
+    "name": "Alessandro",
+    "surname": "Bertini",
+    "code": "BER-ALE-02",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "5Nah8ve2kQC8mmHS3cJBmKJ4"
+  },
+  {
+    "id": 9327,
+    "name": "Isaiah",
+    "surname": "Bigelow",
+    "code": "BIG-ISA-00",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "YTGi3N6SkKHUz96bGzHbQ4q3"
+  },
+  {
+    "id": 536,
+    "name": "Miro",
+    "surname": "Bilan",
+    "code": "BIL-MIR-89",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9360,
+    "name": "Enoch",
+    "surname": "Boakye",
+    "code": "BOA-ENO-03",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "qeE6kNqAdcdun8CE3hqoAW4F"
+  },
+  {
+    "id": 7405,
+    "name": "Leandro",
+    "surname": "Bolmaro",
+    "code": "BOL-LEA-00",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "iQmPPoEkYqFtmzd9YoQWyn2m"
+  },
+  {
+    "id": 625,
+    "name": "Federico",
+    "surname": "Bonacini",
+    "code": "BON-FED",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9007,
+    "name": "Devin",
+    "surname": "Booker",
+    "code": "BOO-DEV-91",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "MrZ5KTzEnp9Dr7jfsJVrA1hk"
+  },
+  {
+    "id": 656,
+    "name": "Giordano",
+    "surname": "Bortolani",
+    "code": "BOR-GIO",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "EYnqsAcTHcLjw8nY76gxQe1Q"
+  },
+  {
+    "id": 6648,
+    "name": "Ky",
+    "surname": "Bowman",
+    "code": "BOW-KY-97",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "W8jGLruAPoUHE9CytD56HuBn"
+  },
+  {
+    "id": 7420,
+    "name": "Luka",
+    "surname": "Brajkovic",
+    "code": "BRA-LUK-99",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "udcmGrJDF4zWwbp49Kj7KL49"
+  },
+  {
+    "id": 7617,
+    "name": "Lorenzo",
+    "surname": "Bregant",
+    "code": "BRE-LOR-07",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7222,
+    "name": "Andrea",
+    "surname": "Bresciani",
+    "code": "BRE-AND-08",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9339,
+    "name": "Izaiah",
+    "surname": "Brockington",
+    "code": "BRO-IZA-99",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 774,
+    "name": "John",
+    "surname": "Brown",
+    "code": "BRO-JHO-92",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 6605,
+    "name": "Markel",
+    "surname": "Brown",
+    "code": "BRO-MAR-92",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9329,
+    "name": "Charles",
+    "surname": "Brown",
+    "code": "BRO-CHA-97",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "4t8U5uPzSKpYj1Wxynp6teNx"
+  },
+  {
+    "id": 9330,
+    "name": "Darius",
+    "surname": "Brown",
+    "code": "BRO-DAR-99",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "kC9Wxt6qoaNJKfwksDWshs9M"
+  },
+  {
+    "id": 9343,
+    "name": "Chad",
+    "surname": "Brown",
+    "code": "BRO-CHA-96",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "akusdDTh5aockSzULejg6c6X"
+  },
+  {
+    "id": 821,
+    "name": "Lorenzo",
+    "surname": "Bucarelli",
+    "code": "BUC-LOR",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "W4L2HziW63chvWFuKWZ29aCh"
+  },
+  {
+    "id": 854,
+    "name": "Jason",
+    "surname": "Burnell",
+    "code": "BUR-JAS-97",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "Ns3LrxMsg7Ybwb9pA9EvEf1s"
+  },
+  {
+    "id": 9030,
+    "name": "Andrea",
+    "surname": "Calzavara",
+    "code": "CAL-AND-01",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "kDS1ZGddGx6eAbVqTq4AyBq8"
+  },
+  {
+    "id": 934,
+    "name": "Gora",
+    "surname": "Camara",
+    "code": "CAM-GOR-18",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 954,
+    "name": "Leonardo",
+    "surname": "Candi",
+    "code": "CAN-LEO-97",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "dvfNpELi62yCzHf6XpeZCDav"
+  },
+  {
+    "id": 949,
+    "name": "Francesco",
+    "surname": "Candussi",
+    "code": "CAN-FRA-94",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "NsuYQ72j4mRrpCUu5DB8B4ef"
+  },
+  {
+    "id": 9005,
+    "name": "Abramo",
+    "surname": "Canka",
+    "code": "CAN-ABR-02",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "UM6KJ2wGm2zah5Bt6xiynzTd"
+  },
+  {
+    "id": 969,
+    "name": "Alessandro",
+    "surname": "Cappelletti",
+    "code": "CAP-ALE-95",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "gBKiHTMzKiQajAAfFGjxAssf"
+  },
+  {
+    "id": 9409,
+    "name": "Francesco",
+    "surname": "Carnevale",
+    "code": "CAR-FRA-XX",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9368,
+    "name": "Marcus",
+    "surname": "Carr",
+    "code": "CAR-MAR-99",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "ok8Kowe8LjSMqk8fVRkcztAA"
+  },
+  {
+    "id": 9331,
+    "name": "Chico",
+    "surname": "Carter",
+    "code": "CAR-CHI-00",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "mpQjC9hV7L5inFXjehStGVCL"
+  },
+  {
+    "id": 6186,
+    "name": "Guglielmo",
+    "surname": "Caruso",
+    "code": "CAR-GUG-99",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 1051,
+    "name": "Davide",
+    "surname": "Casarin",
+    "code": "CAS-DAV-03",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "7Pzsjry9anUUeU69cN37puYx"
+  },
+  {
+    "id": 7119,
+    "name": "Federico",
+    "surname": "Cattapan",
+    "code": "CAT-FED-08",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "Vp5giUZr11dJofeKvdBWaLHk"
+  },
+  {
+    "id": 6562,
+    "name": "Matteo",
+    "surname": "Cavallero",
+    "code": "CAV-MAT-03",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "GnJWz72a7gzKjfTenJd9qNZk"
+  },
+  {
+    "id": 1142,
+    "name": "Marco",
+    "surname": "Ceron",
+    "code": "CER-MAR-92",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9041,
+    "name": "Brekkott",
+    "surname": "Chapman",
+    "code": "CHA-BRE-96",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "S1uWwNcEGSshYtUYapiymE7M"
+  },
+  {
+    "id": 7541,
+    "name": "Baptiste",
+    "surname": "Chauveau",
+    "code": "CHA-BAP-08",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9333,
+    "name": "Valentine",
+    "surname": "Chery",
+    "code": "CHE-VAL-97",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "qqa5d8y7Vwz71EqHDvKEY6CK"
+  },
+  {
+    "id": 1189,
+    "name": "Matteo",
+    "surname": "Chillo",
+    "code": "CHI-MAT-93",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "c8iKZf1v4Sf3hmtApxDZk6op"
+  },
+  {
+    "id": 1205,
+    "name": "Semaj",
+    "surname": "Christon",
+    "code": "CHR-SEM-91",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "4KVSZAXKqBZHLtdnYQ5aYJGi"
+  },
+  {
+    "id": 9031,
+    "name": "R.J.",
+    "surname": "Cole",
+    "code": "COL-RJ-99",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "idZAVeN3sY4ikg2m8nAKcvbU"
+  },
+  {
+    "id": 7614,
+    "name": "Mattia",
+    "surname": "Cossutta",
+    "code": "COS-MAT-07",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "MK2SkbFmn4WuxtpC1zEkNhFm"
+  },
+  {
+    "id": 9014,
+    "name": "Ed",
+    "surname": "Croswell",
+    "code": "CRO-ED-99",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 6258,
+    "name": "Corey",
+    "surname": "Davis",
+    "code": "DAV-COR-97",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "XwU2DCwZL39ig5cWm6sXZMnz"
+  },
+  {
+    "id": 1592,
+    "name": "Lodovico",
+    "surname": "Deangeli",
+    "code": "DEA-LUD-18",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "vhLmiReYzdx5qeFXsxB9j2SW"
+  },
+  {
+    "id": 1617,
+    "name": "Amedeo",
+    "surname": "Della Valle",
+    "code": "DEL-AME-93",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "DNJUWG65QQScc7DeaK4JWZRE"
+  },
+  {
+    "id": 1670,
+    "name": "Giovanni",
+    "surname": "De Nicolao",
+    "code": "DEN-GIO-96",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "XkqWPEKJ9vQ4uvqPNdzeDfBn"
+  },
+  {
+    "id": 9043,
+    "name": "Aliou",
+    "surname": "Diarra",
+    "code": "DIA-ALI-01",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "oioc8kMkf3KCkFURutWYhJmK"
+  },
+  {
+    "id": 7537,
+    "name": "Edoardo",
+    "surname": "Di Meo",
+    "code": "DIM-EDO-08",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "vBmUD5PyaeFDr6PbBs9wVHnt"
+  },
+  {
+    "id": 1775,
+    "name": "Ousmane",
+    "surname": "Diop",
+    "code": "DIO-OUS-00",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "HtXm1JB6KjhC3kAELyemtM97"
+  },
+  {
+    "id": 1774,
+    "name": "Mouhamet Rassoul",
+    "surname": "Diouf",
+    "code": "DIO-MOU-18",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "Q4VDUg4q9FgbJ6kbGXGzSeyE"
+  },
+  {
+    "id": 9356,
+    "name": "Jeff",
+    "surname": "Dowtin",
+    "code": "DOW-JEF-97",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9337,
+    "name": "David",
+    "surname": "Duke",
+    "code": "DUK-DAV-99",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "6N1Ks6yy9KPwWkcFbXVcJZcg"
+  },
+  {
+    "id": 9009,
+    "name": "Aljami",
+    "surname": "Durham",
+    "code": "DUR-ALJ-98",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "A1UBeAsvmVU6VFYS3yJyotBw"
+  },
+  {
+    "id": 1875,
+    "name": "Paul",
+    "surname": "Eboua",
+    "code": "EBO-PAU-00",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "sKRbrm95mc2qW8D2BSrzvq7D"
+  },
+  {
+    "id": 9036,
+    "name": "Jaime",
+    "surname": "Echenique",
+    "code": "ECH-JAI-97",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "KaMUJc74LDHSUNt8pjpyXa4V"
+  },
+  {
+    "id": 9352,
+    "name": "Rob",
+    "surname": "Edwards",
+    "code": "EDW-ROB-97",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "GBQfcrRwFvvvzHoDzRNQj8Xw"
+  },
+  {
+    "id": 9371,
+    "name": "Kessler",
+    "surname": "Edwards",
+    "code": "EVA-KES-00",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "3zLkYxEk68q1M2KLvGJUm7L5"
+  },
+  {
+    "id": 9379,
+    "name": "Giovanni",
+    "surname": "Emejuru",
+    "code": "EME-GIO-02",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "9vxuiFQUP6xd9SS43WnhZfQE"
+  },
+  {
+    "id": 1965,
+    "name": "Leonardo",
+    "surname": "Faggian",
+    "code": "FAG-LEO-04",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 6887,
+    "name": "Elhadji",
+    "surname": "Fainke",
+    "code": "FAI-ELH-05",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "2GaURqCxY7iRNyTm5wTKKGrK"
+  },
+  {
+    "id": 7132,
+    "name": "Francesco",
+    "surname": "Ferrari",
+    "code": "FER-FRA-05",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "fDQLs3UmqxARS86DjVLTFVZX"
+  },
+  {
+    "id": 2103,
+    "name": "Diego",
+    "surname": "Flaccadori",
+    "code": "FLA-DIE-96",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "bp1Vbf5bpNRCxcQ7t6PeWnkR"
+  },
+  {
+    "id": 9012,
+    "name": "Savion",
+    "surname": "Flagg",
+    "code": "FLA-SAV-99",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "yKap6EmwVwjru7Ccexuo9eeR"
+  },
+  {
+    "id": 9381,
+    "name": "Trentyn",
+    "surname": "Flowers",
+    "code": "FLO-TRE-05",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "U4uXhnCptPYSDQ7s1qe2kmkz"
+  },
+  {
+    "id": 2148,
+    "name": "Toto",
+    "surname": "Forray",
+    "code": "FOR-TOT-86",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "xirWmWKiMXPkDgV59BswW4Zx"
+  },
+  {
+    "id": 9367,
+    "name": "Trent",
+    "surname": "Frazier",
+    "code": "FRA-TRE-98",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "4A3karAwtP3sR62Sw4ukiZgd"
+  },
+  {
+    "id": 9121,
+    "name": "Gabriele",
+    "surname": "Furfaro",
+    "code": "FUR-GAB-10",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 6993,
+    "name": "Langston",
+    "surname": "Galloway",
+    "code": "GAL-LAN-91",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "ZdZ2XVRewy738qb2tbn44e2X"
+  },
+  {
+    "id": 2313,
+    "name": "Giulio",
+    "surname": "Gazzotti",
+    "code": "GAZ-GIU-91",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "4sSjqjdatgxUNevx6qSNrgCH"
+  },
+  {
+    "id": 7431,
+    "name": "Justin",
+    "surname": "Gorham",
+    "code": "GOR-JUS-98",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "v3SESWf5Yj8ncKKyhBWE4PAL"
+  },
+  {
+    "id": 6994,
+    "name": "Sasha",
+    "surname": "Grant",
+    "code": "GRA-SAH-02",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "A5BU5AkkNDo2SKaHNgyAJPDL"
+  },
+  {
+    "id": 7539,
+    "name": "Mattia",
+    "surname": "Grassi",
+    "code": "GRA-MAT-07",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "rjq6up2td4jWUZPB3xBUg5tQ"
+  },
+  {
+    "id": 9342,
+    "name": "Hassani",
+    "surname": "Gravett",
+    "code": "GRA-HAS-96",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "dRFZCHPgTXDE5KjiQAg3Somy"
+  },
+  {
+    "id": 2494,
+    "name": "Andrejs",
+    "surname": "Grazulis",
+    "code": "GRA-AND-93",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "nmU4ZUXXcTmqGjRERRibRa5K"
+  },
+  {
+    "id": 2534,
+    "name": "Erick",
+    "surname": "Green",
+    "code": "GRE-ERI-91",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "pd557HNaZsB6KXUWnnXsBPje"
+  },
+  {
+    "id": 9008,
+    "name": "Marko",
+    "surname": "Guduric",
+    "code": "GUD-MAR-95",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "mZMhWkLTBWvrkDPkbK1i4FwQ"
+  },
+  {
+    "id": 2608,
+    "name": "Daniel",
+    "surname": "Hackett",
+    "code": "HAC-DAN-87",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "6b3SitiBrogi3xdxv9LuuFXa"
+  },
+  {
+    "id": 7565,
+    "name": "Arseniy",
+    "surname": "Hadzhyiev",
+    "code": "HAD-ARS-08",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9334,
+    "name": "Hunter",
+    "surname": "Hale",
+    "code": "HAL-HUN-97",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "HHLnP5nvmRq1VdFN6JTFJaaW"
+  },
+  {
+    "id": 6156,
+    "name": "Devon",
+    "surname": "Hall",
+    "code": "HAL-DEV-95",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "K98G2vQTv1AHRd5gCMmWD1Vm"
+  },
+  {
+    "id": 7452,
+    "name": "Patrick",
+    "surname": "Hassan",
+    "code": "HAS-PAT-07",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "NX8oGnBKP3saSz4Uopxrpj3v"
+  },
+  {
+    "id": 9374,
+    "name": "Aaron",
+    "surname": "Holiday",
+    "code": "HOL-AAR-96",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9345,
+    "name": "Ithiel",
+    "surname": "Horton",
+    "code": "HOR-ITH-00",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7048,
+    "name": "Prentiss",
+    "surname": "Hubb",
+    "code": "HUB-PRE-99",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "zu5vpuhH1T7Lzr4hQAB5hDvu"
+  },
+  {
+    "id": 2770,
+    "name": "Antonio",
+    "surname": "Iannuzzi",
+    "code": "IAN-ANT-91",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7607,
+    "name": "Antonio",
+    "surname": "Iaquinta",
+    "code": "IAQ-ANT-08",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 2790,
+    "name": "Iris",
+    "surname": "Ikangi",
+    "code": "IKA-IRI-94",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "QJduXmQxJ8Y3B7ysxBqYZ3xk"
+  },
+  {
+    "id": 9383,
+    "name": "Mike",
+    "surname": "Iuzzolino",
+    "code": "IUZ-MIK-02",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "hv1d9NioB2oHDzjXLkyFxUEz"
+  },
+  {
+    "id": 9026,
+    "name": "Andrej",
+    "surname": "Jakimovski",
+    "code": "JAK-AND-01",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9006,
+    "name": "Karim",
+    "surname": "Jallow",
+    "code": "JAL-KAR-97",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "47AL9CqS5Zr5NiQCtLKskrSs"
+  },
+  {
+    "id": 2852,
+    "name": "Giga",
+    "surname": "Janelidze",
+    "code": "JAN-GIG-95",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "dD2sgNi64TDfHLp634dC8Jqe"
+  },
+  {
+    "id": 9346,
+    "name": "Brandon",
+    "surname": "Johnson",
+    "code": "JOH-BRA-02",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9390,
+    "name": "Lajae",
+    "surname": "Jones",
+    "code": "JON-LAJ-04",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "mQ2aa3guQt7wJxrzPg3WEWsW"
+  },
+  {
+    "id": 7014,
+    "name": "Ismael",
+    "surname": "Kamagate",
+    "code": "KAM-ISM-01",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "LEit4KTfrYneexx3nS1AgwtF"
+  },
+  {
+    "id": 7626,
+    "name": "Robert",
+    "surname": "Kangur",
+    "code": "KAN-ROB-09",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "SyL6ab1vjsZRSZSMNFPQXukC"
+  },
+  {
+    "id": 9372,
+    "name": "Bo",
+    "surname": "Klintman",
+    "code": "KLI-BO-03",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "nxjHXdX5EQzFEKo8UZNERaUk"
+  },
+  {
+    "id": 9369,
+    "name": "Kevin",
+    "surname": "Kokila",
+    "code": "KOK-KEV-01",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "TgE9srWuwJxYgdC6ZPcBHfvc"
+  },
+  {
+    "id": 3155,
+    "name": "Maximilian",
+    "surname": "Ladurner",
+    "code": "LAU-MAX",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "qGSQ7PxXzzzwKUxv6A4RXpbC"
+  },
+  {
+    "id": 3185,
+    "name": "Brynton",
+    "surname": "Lemar",
+    "code": "LEM-BRY-95",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 3200,
+    "name": "Alessandro",
+    "surname": "Lever",
+    "code": "LEV-ALE",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 3207,
+    "name": "Matteo",
+    "surname": "Librizzi",
+    "code": "LIB-MAT-02",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "Wac698aTf4Jtmp8sSPYcQXKE"
+  },
+  {
+    "id": 6486,
+    "name": "Andrea",
+    "surname": "Loro",
+    "code": "LOR-AND-03",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 6191,
+    "name": "JP",
+    "surname": "Macura",
+    "code": "MAC-JP-95",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "5nKdg3haXGqcT2YHseWm58rK"
+  },
+  {
+    "id": 9351,
+    "name": "Dante",
+    "surname": "Maddox",
+    "code": "MAD-DAN-02",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "nuLR4nhhdbu4HtV1do8PeK8c"
+  },
+  {
+    "id": 9123,
+    "name": "Malick",
+    "surname": "Mane El Hadji Maodo",
+    "code": "MAN-MAL-07",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7195,
+    "name": "Luca",
+    "surname": "Manfredotti",
+    "code": "MAN-LUC-08",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "7dsdfjTeLXaAjVn5EbmvuMuP"
+  },
+  {
+    "id": 7566,
+    "name": "Alessandro",
+    "surname": "Manfredotti",
+    "code": "MAN-ALE-08",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "iVmL8fXJ5TMyc6DfCLA6NEuT"
+  },
+  {
+    "id": 6138,
+    "name": "Niccolò",
+    "surname": "Mannion",
+    "code": "MAN-NIC-01",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "sKXtUh52gUYaPUnWa85A4xbL"
+  },
+  {
+    "id": 6499,
+    "name": "Octavio",
+    "surname": "Maretto",
+    "code": "MAR-OCT-04",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "jLrPKZrpHtAUnFFrvkkWwDkT"
+  },
+  {
+    "id": 7616,
+    "name": "Emanuele",
+    "surname": "Martucci",
+    "code": "MAR-EMA-07",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "aHtkkLTdr79Qsgb3CUjZQ4dz"
+  },
+  {
+    "id": 3526,
+    "name": "Bruno",
+    "surname": "Mascolo",
+    "code": "MAS-BRU-96",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 6616,
+    "name": "C.J.",
+    "surname": "Massinburg",
+    "code": "MAS-CJ",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9388,
+    "name": "Garrison",
+    "surname": "Mathews",
+    "code": "MAT-GAR-96",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "9SZyQYuuwTjaSuVoykadyTav"
+  },
+  {
+    "id": 7449,
+    "name": "Selom",
+    "surname": "Mawugbe",
+    "code": "MAW-SEL-98",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "45fNixmyUEpLVD31pKpUZVt1"
+  },
+  {
+    "id": 7007,
+    "name": "Sean",
+    "surname": "McDermott",
+    "code": "MCD-SEA-96",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "HzwVayVGDMxALc9MBuCcfSJ3"
+  },
+  {
+    "id": 9336,
+    "name": "William",
+    "surname": "McDowell-White",
+    "code": "MCD-WIL-98",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "LCEh9YUj4gTxDrxTK3TjQv6H"
+  },
+  {
+    "id": 9021,
+    "name": "Nick",
+    "surname": "McGlynn",
+    "code": "MCG-NIC-96",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "qHhsrfTCYT1ASk4p6mgGtCav"
+  },
+  {
+    "id": 7319,
+    "name": "Rodney",
+    "surname": "McGruder",
+    "code": "MCG-ROD-91",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9170,
+    "name": "Josè Alfred",
+    "surname": "Medina Bouza",
+    "code": "MED-JOS-07",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "APSkZAmzaoqMhRoC3msL1YBo"
+  },
+  {
+    "id": 9340,
+    "name": "RJ",
+    "surname": "Melendez",
+    "code": "MEL-RJ-02",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 3710,
+    "name": "Andrea",
+    "surname": "Mezzanotte",
+    "code": "MEZ-AND-98",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "s5RKkwDtNUmRNJNazMdMAiA9"
+  },
+  {
+    "id": 3714,
+    "name": "Federico",
+    "surname": "Miaschi",
+    "code": "MIA-FED-16",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "Anb83njddQ88MZWvWdZ4YkJr"
+  },
+  {
+    "id": 9365,
+    "name": "Isaiah",
+    "surname": "Miles",
+    "code": "MIL-ISA-94",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "K894BMc2YxWrUCNbGK6Uukf7"
+  },
+  {
+    "id": 6189,
+    "name": "Joseph",
+    "surname": "Mobio",
+    "code": "MOB-JOS-98",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "yECJAdc65HMQgYPcg8qnN2e8"
+  },
+  {
+    "id": 9375,
+    "name": "Xavier",
+    "surname": "Moon",
+    "code": "MOO-XAV-95",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7030,
+    "name": "Charlie Edward",
+    "surname": "Moore",
+    "code": "MOO-CHA-98",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9370,
+    "name": "Wendell",
+    "surname": "Moore",
+    "code": "MOO-WEN-01",
+    "team_name": "Virtus Costa Bologna",
+    "year": 2026,
+    "player_picture_key": "Ra5AW7vAk8AmAwu9odpifa9d"
+  },
+  {
+    "id": 3880,
+    "name": "Riccardo",
+    "surname": "Moraschini",
+    "code": "MOR-RIC",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "z2eUfLNaS71r6Hod1dS94o7s"
+  },
+  {
+    "id": 3855,
+    "name": "Davide",
+    "surname": "Moretti",
+    "code": "MOR-DAV-98",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "H5Ze34vGXUM1wuhDUktKkNd4"
+  },
+  {
+    "id": 2293,
+    "name": "Garrett",
+    "surname": "Nevels",
+    "code": "GAR-NEV-92",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7279,
+    "name": "Cheickh",
+    "surname": "Niang",
+    "code": "NIA-CHE-08",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "YW5pxWatG5mPHgTnn9NGaXS6"
+  },
+  {
+    "id": 4034,
+    "name": "Stefan",
+    "surname": "Nikolic",
+    "code": "NIK-STE-97",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "Ddi38yCKML7j3mCqu96844bY"
+  },
+  {
+    "id": 9386,
+    "name": "Giannis",
+    "surname": "Odzebe",
+    "code": "ODZ-GIA-08",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "Heu8w7a1pTGsYxQXz5iXAB8g"
+  },
+  {
+    "id": 9347,
+    "name": "Mezie",
+    "surname": "Offurum",
+    "code": "OFF-MEZ-00",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7034,
+    "name": "Derek",
+    "surname": "Ogbeide",
+    "code": "OGB-DER-97",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "uZHhs4fuWrfTUV4AN8UYgS7c"
+  },
+  {
+    "id": 6619,
+    "name": "Leonardo",
+    "surname": "Okeke",
+    "code": "OKE-LEO-03",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "fneE17nhRuinDVL46CR67qwa"
+  },
+  {
+    "id": 9038,
+    "name": "Dominik",
+    "surname": "Olejniczak",
+    "code": "OLE-DOM-96",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "rSUqNXhDQ2VunqZmtfEKLDne"
+  },
+  {
+    "id": 9362,
+    "name": "Louis",
+    "surname": "Olinde",
+    "code": "OLI-LOU-98",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "c7Hcst3QkUSETbJz9Le3jCmM"
+  },
+  {
+    "id": 9328,
+    "name": "Quincy",
+    "surname": "Olivari",
+    "code": "OLI-QUI-01",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": "M541NkCeXQSFq755sjdB8UQ4"
+  },
+  {
+    "id": 9350,
+    "name": "Matteo",
+    "surname": "Oliveri",
+    "code": "OLI-MAT-07",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9348,
+    "name": "Ze'Rik",
+    "surname": "Onyema",
+    "code": "ONY-ZER-01",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7478,
+    "name": "Davide",
+    "surname": "Paiano",
+    "code": "PAI-DAV-XX",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "EMzf8bn44CwKzLoE2QC3z2yF"
+  },
+  {
+    "id": 9408,
+    "name": "Filippo",
+    "surname": "Pantano",
+    "code": "PAN-FIL-XX",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 4214,
+    "name": "Jordan",
+    "surname": "Parks",
+    "code": "PAR-JOR-94",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "ZwsHN2srqiapfYeyNZGvZQRK"
+  },
+  {
+    "id": 4217,
+    "name": "Matteo",
+    "surname": "Parravicini",
+    "code": "PAR-MAT-01",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "KjZdyY3KSNJwLFQ1P6zREFvH"
+  },
+  {
+    "id": 9057,
+    "name": "Alessandro",
+    "surname": "Pavan",
+    "code": "PAV-ALE-XX",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "XoxCb7U8UC9EuqCVLNJhc1R7"
+  },
+  {
+    "id": 4268,
+    "name": "Andrea",
+    "surname": "Pecchia",
+    "code": "PEC-AND-97",
+    "team_name": "Bertram Derthona Tortona",
+    "year": 2026,
+    "player_picture_key": "FPkGAtkTXqkP4wGMzemxFJx8"
+  },
+  {
+    "id": 9344,
+    "name": "Alec",
+    "surname": "Peters",
+    "code": "PET-ALE-95",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "b8fhCHkS8KpSRXqyguNe9FhV"
+  },
+  {
+    "id": 6142,
+    "name": "John",
+    "surname": "Petrucelli",
+    "code": "PET-JOH-92",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7411,
+    "name": "Federico",
+    "surname": "Poser",
+    "code": "POS-FED-99",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9032,
+    "name": "Jahmi'us",
+    "surname": "Ramsey",
+    "code": "RAM-JAH-01",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7428,
+    "name": "Nate",
+    "surname": "Renfro",
+    "code": "REN-NAT-96",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "eJuFYGHN3zB332C9CxptzLo2"
+  },
+  {
+    "id": 4692,
+    "name": "Giampaolo",
+    "surname": "Ricci",
+    "code": "RIC-GIA-91",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "HvssSTdgiq1GZVpW7yLmPob3"
+  },
+  {
+    "id": 9359,
+    "name": "Sir'Jabari",
+    "surname": "Rice",
+    "code": "RIC-SIR-98",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "gLZAyFB1EUVtEfogZzh92czZ"
+  },
+  {
+    "id": 9335,
+    "name": "Isaiah",
+    "surname": "Roby",
+    "code": "ROB-ISA-98",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "p9jAuQ2uJXojNuXug92Ryvig"
+  },
+  {
+    "id": 6604,
+    "name": "Colbey",
+    "surname": "Ross",
+    "code": "ROS-COL-98",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "PnZ6toCqcXNkE23qFzHfchjY"
+  },
+  {
+    "id": 6640,
+    "name": "Riccardo",
+    "surname": "Rossato",
+    "code": "ROSS-RIC-96",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "onz7B4xr365h6t5HL2nooSDR"
+  },
+  {
+    "id": 4879,
+    "name": "DeWayne",
+    "surname": "Russell",
+    "code": "RUS-DEW-94",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "n5PY2w7v73YWQHPNWUNYmuDV"
+  },
+  {
+    "id": 4890,
+    "name": "Michele",
+    "surname": "Ruzzier",
+    "code": "RUZ-MIC-93",
+    "team_name": "Pallacanestro Trieste",
+    "year": 2026,
+    "player_picture_key": "meWDyCCaYy9myY1KTPnzBhJK"
+  },
+  {
+    "id": 9377,
+    "name": "Matt",
+    "surname": "Ryan",
+    "code": "RYA-MAT-97",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9338,
+    "name": "Jermaine",
+    "surname": "Samuels",
+    "code": "SAM-JER-98",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7097,
+    "name": "Assane",
+    "surname": "Sankare",
+    "code": "SAN-ASS-07",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9355,
+    "name": "Zac",
+    "surname": "Seljaas",
+    "code": "ZAC-SEL-97",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 5125,
+    "name": "Luca",
+    "surname": "Severini",
+    "code": "SEV-LUC-96",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "KcLPNDg3oJmb3LD9p4brEEDH"
+  },
+  {
+    "id": 9382,
+    "name": "Marko",
+    "surname": "Simonovic",
+    "code": "SIM-MAR-99",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "trLUuWNG7Argu8egkLDawbFk"
+  },
+  {
+    "id": 9358,
+    "name": "Zan",
+    "surname": "Sisko",
+    "code": "SIS-ZAN-97",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "ocWYP6U3286abaoyWDdscDBd"
+  },
+  {
+    "id": 9353,
+    "name": "Speedy",
+    "surname": "Smith",
+    "code": "SMI-SPE-93",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "pSX4KemBZoUKSCmYaqFHp132"
+  },
+  {
+    "id": 6653,
+    "name": "Skylar",
+    "surname": "Spencer",
+    "code": "SPE-SKY-94",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "G9g2q5JSxRAhUAQrejPufRDV"
+  },
+  {
+    "id": 6436,
+    "name": "Francesco",
+    "surname": "Spinelli",
+    "code": "SPI-FRA-05",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 5299,
+    "name": "Marco",
+    "surname": "Spissu",
+    "code": "SPI-MAR-95",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9384,
+    "name": "Erik",
+    "surname": "Stevenson",
+    "code": "STE-ERI-99",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "Q4NUBMCcS5HZyNPfeon9dddi"
+  },
+  {
+    "id": 5369,
+    "name": "Arturs",
+    "surname": "Strautins",
+    "code": "STR-ART",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "sxFTNuxYMuv5ZAunCKKgAvBS"
+  },
+  {
+    "id": 5433,
+    "name": "Kaleb",
+    "surname": "Tarczewski",
+    "code": "TAR-KAL-93",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 6188,
+    "name": "Riccardo",
+    "surname": "Tavernelli",
+    "code": "TAV-RIC-91",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 5481,
+    "name": "Amedeo",
+    "surname": "Tessitori",
+    "code": "TES-AME-94",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "fePWY2Z3vcZgZ6CtYNkcJUjn"
+  },
+  {
+    "id": 5499,
+    "name": "Darius",
+    "surname": "Thompson",
+    "code": "THO-DAR-95",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "u5rP7uVG4LxKMdi6ADnFXrth"
+  },
+  {
+    "id": 9139,
+    "name": "JT",
+    "surname": "Thor",
+    "code": "THO-JT-02",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "BMYtPwxrCs6JNqfcQ8NGiGbj"
+  },
+  {
+    "id": 9349,
+    "name": "Mike",
+    "surname": "Tobey",
+    "code": "TOB-MIK-94",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 5568,
+    "name": "Stefano",
+    "surname": "Tonut",
+    "code": "TON-STE-93",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "GUfmxC6nP5fgKzz2KK7MQwUy"
+  },
+  {
+    "id": 9429,
+    "name": "Lorenzo",
+    "surname": "Toro",
+    "code": "TOR-LOR-09",
+    "team_name": "Longobardi Scafati",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 5594,
+    "name": "Leonardo",
+    "surname": "Totè",
+    "code": "TOT-LEO-97",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7166,
+    "name": "Gabriele",
+    "surname": "Turconi",
+    "code": "TUR-GAB-08",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9391,
+    "name": "Hunter",
+    "surname": "Tyson",
+    "code": "TYS-HUN-00",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 5660,
+    "name": "Liam",
+    "surname": "Udom",
+    "code": "UDO-LIA",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "ZjPJx4hdsXSztHRbXXHptZYf"
+  },
+  {
+    "id": 5663,
+    "name": "Lorenzo",
+    "surname": "Uglietti",
+    "code": "UGL-LOR-94",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "zLE7bJXJWNbaeMr4woXk5WiE"
+  },
+  {
+    "id": 6153,
+    "name": "Scott",
+    "surname": "Ulaneo",
+    "code": "ULA-SCO-94",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7391,
+    "name": "Denzel",
+    "surname": "Valentine",
+    "code": "VAL-DEN-93",
+    "team_name": "APU Old Wild West Udine",
+    "year": 2026,
+    "player_picture_key": "hc8DpKMwet75HSXBqMah9YMC"
+  },
+  {
+    "id": 9073,
+    "name": "Simone",
+    "surname": "Ventura",
+    "code": "VEN-SIM-XX",
+    "team_name": "Acqua S.Bernardo Cantù",
+    "year": 2026,
+    "player_picture_key": "eExtPub7AHViq9J6rcjB9JEk"
+  },
+  {
+    "id": 7600,
+    "name": "Giulio",
+    "surname": "Vergnaghi",
+    "code": "VER-GIU-08",
+    "team_name": "Dolomiti Energia TN",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 5764,
+    "name": "Giovanni",
+    "surname": "Veronesi",
+    "code": "VER-GIO-98",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7606,
+    "name": "Alessandro",
+    "surname": "Vettori",
+    "code": "VET-ALE-08",
+    "team_name": "Nutribullet Treviso",
+    "year": 2026,
+    "player_picture_key": "UDwVtB2MXmQLcSMhGavpBMj3"
+  },
+  {
+    "id": 6556,
+    "name": "Mauro",
+    "surname": "Villa",
+    "code": "VIL-MAU-04",
+    "team_name": "Openjobmetis Varese",
+    "year": 2026,
+    "player_picture_key": "mJYnH6624rUkTGuceNJgVcpG"
+  },
+  {
+    "id": 5823,
+    "name": "Riccardo",
+    "surname": "Visconti",
+    "code": "VIS-RIC",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "4DqyMbVEkSoxG1BpH1163U9s"
+  },
+  {
+    "id": 9363,
+    "name": "Glynn",
+    "surname": "Watson",
+    "code": "WAT-GLY-97",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "j9rpuED7cbvkeqaMrfARdZeB"
+  },
+  {
+    "id": 9385,
+    "name": "Paul",
+    "surname": "Watson",
+    "code": "WAT-PAU-94",
+    "team_name": "BC Roma",
+    "year": 2026,
+    "player_picture_key": "CqeRADxCpckPG13ooEzw2hjc"
+  },
+  {
+    "id": 5913,
+    "name": "Carl",
+    "surname": "Wheatle",
+    "code": "WHE-CAR-98",
+    "team_name": "Maxima Roma",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9357,
+    "name": "Jack",
+    "surname": "White",
+    "code": "WHI-JAC-97",
+    "team_name": "Napoli Basketball",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 7079,
+    "name": "Kyle",
+    "surname": "Wiltjer",
+    "code": "WIL-KYL-92",
+    "team_name": "Umana Reyer Venezia",
+    "year": 2026,
+    "player_picture_key": "MT1XWiNMTLAcS1CLH91WMC5b"
+  },
+  {
+    "id": 6309,
+    "name": "Tomas",
+    "surname": "Woldetensae",
+    "code": "WOL-AND-98",
+    "team_name": "UNA Hotels RE",
+    "year": 2026,
+    "player_picture_key": "tzyCysCGEe468QSigPE4RGsQ"
+  },
+  {
+    "id": 9378,
+    "name": "Moses",
+    "surname": "Wright",
+    "code": "WRI-MOS-98",
+    "team_name": "Armani Olimpia Milano",
+    "year": 2026,
+    "player_picture_key": "o7H9E3HH4mUNwmaytUqWAMNy"
+  },
+  {
+    "id": 7412,
+    "name": "Federico",
+    "surname": "Zampini",
+    "code": "ZAM-FED-99",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  },
+  {
+    "id": 9407,
+    "name": "Matteo",
+    "surname": "Zumerle",
+    "code": "ZUM-MAT-XX",
+    "team_name": "Tezenis Verona",
+    "year": 2026,
+    "player_picture_key": null
+  }
+]

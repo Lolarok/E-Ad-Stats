@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { TeamStats, PlayerStats } from '../types/basketball';
 import { buildLbaSeasonData } from './lbaSeasonData';
-import { syncOfficialLbaRounds } from './lbaSyncEngine';
+import { syncOfficialLbaRounds, buildOfficialLbaDataset } from './lbaSyncEngine';
 
 const ROOT_DIR = typeof process !== 'undefined' && typeof process.cwd === 'function' ? process.cwd() : '.';
 const STORE_PATH = path.join(ROOT_DIR, 'data_games_store.json');
@@ -34,24 +34,40 @@ export const OFFICIAL_EUROLEAGUE_TEAMS = new Set([
 ]);
 
 export const OFFICIAL_EUROCUP_TEAMS = new Set([
-  '7BET-LIETKABELIS PANEVEZYS',
+  'ARIS THESSALONIKI',
   'ARIS MIDEA THESSALONIKI',
+  'BAGLIETTO DERTHONA TORTONA',
   'BAHCESEHIR COLLEGE ISTANBUL',
+  'BALKAN BOTEVGRAD',
   'BESIKTAS FIBABANKA ISTANBUL',
+  'BOSNA BH TELECOM SARAJEVO',
   'BUDUCNOST VOLI PODGORICA',
   'CEDEVITA OLIMPIJA LJUBLJANA',
   'COSEA JL BOURG-EN-BRESSE',
   'DOLOMITI ENERGIA TRENTO',
   'DREAMLAND GRAN CANARIA',
   'HAPOEL BANK YAHAV JERUSALEM',
+  'HAPOEL MIDTOWN JERUSALEM',
   'HAPOEL SHLOMO TEL AVIV',
   'JOVENTUT BADALONA',
+  'KIDS&US MANRESA',
+  'LA LAGUNA TENERIFE',
+  'LE MANS SARTHE BASKET',
+  'LIETKABELIS PANEVEZYS',
+  '7BET-LIETKABELIS PANEVEZYS',
   'LONDON LIONS',
   'MAXIMA ROMA',
+  'NAPOLI BASKETBALL',
   'NEPTUNAS KLAIPEDA',
   'NINERS CHEMNITZ',
+  'PAOK THESSALONIKI',
   'RATIOPHARM ULM',
+  'RECOLETAS SALUD SAN PABLO BURGOS',
+  'RIGA ZELLI',
   'ROMA BASKETBALL',
+  'ROSTOCK SEAWOLVES',
+  'SIAULIAI BASKETBALL',
+  'SKYLINERS FRANKFURT',
   'SLASK WROCLAW',
   'TOFAS BURSA',
   'TREFL SOPOT',
@@ -86,12 +102,12 @@ function clampPct(val: number): number {
 }
 
 export async function syncLbaFromOfficialApi(targetRound?: number): Promise<{ teams: TeamStats[]; players: PlayerStats[] }> {
-  const roundToUse = targetRound || 3;
+  const roundToUse = targetRound || 5;
   try {
     await syncOfficialLbaRounds(roundToUse);
     if (fs.existsSync(LBA_STORE_PATH)) {
       const data = JSON.parse(fs.readFileSync(LBA_STORE_PATH, 'utf-8'));
-      if (data.teams && data.players && data.teams.length >= 16) {
+      if (data.teams && data.players && data.teams.length >= 16 && data.round === roundToUse) {
         return { teams: data.teams, players: data.players };
       }
     }
@@ -99,6 +115,10 @@ export async function syncLbaFromOfficialApi(targetRound?: number): Promise<{ te
     console.warn('[LBA Sync] Fallback su generatore interno LBA:', e);
   }
 
+  const generated = buildOfficialLbaDataset(roundToUse);
+  if (generated.teams && generated.teams.length >= 16) {
+    return { teams: generated.teams, players: generated.players };
+  }
   const { teams: lbaTeams, players: lbaPlayers } = buildLbaSeasonData(roundToUse);
   return { teams: lbaTeams, players: lbaPlayers };
 }
@@ -141,7 +161,7 @@ export function saveGameToStore(key: string, gameData: GameStoreRecord) {
 
 export function rebuildDatasetFromStore(
   explicitLbaRound?: number,
-  writeTsSourceFile: boolean = false
+  writeTsSourceFile: boolean = true
 ): {
   teams: TeamStats[];
   players: PlayerStats[];
@@ -196,6 +216,7 @@ export function rebuildDatasetFromStore(
     'SLASK WROCLAW': '#00843d',
     'TOFAS BURSA': '#00205b',
     'COSEA JL BOURG-EN-BRESSE': '#d9272e',
+    'ARIS THESSALONIKI': '#ffd100',
     'ARIS MIDEA THESSALONIKI': '#ffd100',
     'TREFL SOPOT': '#fed100',
     'VEOLIA TOWERS HAMBURG': '#002d72',
@@ -205,6 +226,19 @@ export function rebuildDatasetFromStore(
     'NEPTUNAS KLAIPEDA': '#003da5',
     'MAXIMA ROMA': '#8a1538',
     'ROMA BASKETBALL': '#c5a059',
+    'BAGLIETTO DERTHONA TORTONA': '#1e293b',
+    'BALKAN BOTEVGRAD': '#006a3b',
+    'BOSNA BH TELECOM SARAJEVO': '#8a1538',
+    'KIDS&US MANRESA': '#dc052d',
+    'LA LAGUNA TENERIFE': '#f39200',
+    'LE MANS SARTHE BASKET': '#e30613',
+    'NAPOLI BASKETBALL': '#00a3e0',
+    'PAOK THESSALONIKI': '#111827',
+    'RECOLETAS SALUD SAN PABLO BURGOS': '#003da5',
+    'RIGA ZELLI': '#f3d03e',
+    'ROSTOCK SEAWOLVES': '#00205b',
+    'SIAULIAI BASKETBALL': '#ffd100',
+    'SKYLINERS FRANKFURT': '#002d72',
   };
 
   function getTeamBoxTotals(teamObj: any) {
@@ -238,10 +272,6 @@ export function rebuildDatasetFromStore(
     if (d.Live) continue;
 
     const isEuroCup = key.startsWith('U2026');
-    if (isEuroCup) {
-      const gNum = parseInt(key.split('_')[1], 10);
-      if (gNum > 48) continue;
-    }
     const league = isEuroCup ? 'EuroCup' : 'EuroLeague';
 
     const t0 = d.Stats[0];
@@ -480,7 +510,7 @@ export function rebuildDatasetFromStore(
   // Aggiungi squadre e giocatori LBA Serie A ufficiali 2026/27
   let lbaTeams: TeamStats[] = [];
   let lbaPlayers: PlayerStats[] = [];
-  const targetRound = explicitLbaRound || 3;
+  const targetRound = explicitLbaRound || 5;
 
   try {
     let needRegenerate = true;
@@ -490,7 +520,7 @@ export function rebuildDatasetFromStore(
         if (
           lbaData.teams &&
           lbaData.teams.length === 16 &&
-          lbaData.round >= targetRound &&
+          lbaData.round === targetRound &&
           lbaData.season === '2026/2027'
         ) {
           lbaTeams = lbaData.teams;
@@ -503,9 +533,15 @@ export function rebuildDatasetFromStore(
     }
 
     if (needRegenerate) {
-      const generated = buildLbaSeasonData(targetRound);
-      lbaTeams = generated.teams;
-      lbaPlayers = generated.players;
+      const generated = buildOfficialLbaDataset(targetRound);
+      if (generated.teams && generated.teams.length >= 16) {
+        lbaTeams = generated.teams;
+        lbaPlayers = generated.players;
+      } else {
+        const fallback = buildLbaSeasonData(targetRound);
+        lbaTeams = fallback.teams;
+        lbaPlayers = fallback.players;
+      }
       fs.writeFileSync(
         LBA_STORE_PATH,
         JSON.stringify(
@@ -584,13 +620,15 @@ export function rebuildDatasetFromStore(
 
     const teamId = p.team.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 
-    const euroToLbaClubMap: Record<string, string> = {
-      'armani-olimpia-milan': 'Armani Olimpia Milano',
-      'virtus-bologna': 'Virtus Costa Bologna',
-      'umana-reyer-venice': 'Umana Reyer Venezia',
-      'dolomiti-energia-trento': 'Dolomiti Energia Trentino',
-      'maxima-roma': 'Maxima Roma',
-      'roma-basketball': 'BC Roma',
+    const euroToLbaKeywords: Record<string, string[]> = {
+      'armani-olimpia-milan': ['milano', 'milan'],
+      'virtus-bologna': ['virtus', 'bologna'],
+      'umana-reyer-venice': ['reyer', 'venezia', 'venice'],
+      'dolomiti-energia-trento': ['trent', 'tn'],
+      'maxima-roma': ['maxima'],
+      'roma-basketball': ['bc roma', 'roma basketball'],
+      'baglietto-derthona-tortona': ['derthona', 'tortona'],
+      'napoli-basketball': ['napoli'],
     };
 
     const normEuro = formattedName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -598,11 +636,12 @@ export function rebuildDatasetFromStore(
       (lp) => lp.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normEuro
     );
 
-    const isItalianEuroClub = Boolean(euroToLbaClubMap[teamId]);
+    const clubKeywords = euroToLbaKeywords[teamId];
+    const isItalianEuroClub = Boolean(clubKeywords);
     const isLegitItalianEuroClubPlayer =
       lbaMatch &&
       isItalianEuroClub &&
-      lbaMatch.team.toLowerCase().includes(euroToLbaClubMap[teamId].toLowerCase());
+      clubKeywords.some((kw) => lbaMatch.team.toLowerCase().includes(kw));
 
     // Escludi solo se il club è italiano ma il giocatore gioca in un'altra squadra LBA
     if (isItalianEuroClub && lbaMatch && !isLegitItalianEuroClubPlayer) {
@@ -772,9 +811,9 @@ export async function syncOnlyMissingGames(): Promise<{
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // 1. Scansiona EuroLeague con uscita intelligente (Early-Stop)
+  // 1. Scansiona EuroLeague con uscita intelligente (Early-Stop su tutta la regular season da 34 turni)
   let consecutiveEmptyEL = 0;
-  for (let g = 1; g <= 60; g++) {
+  for (let g = 1; g <= 306; g++) {
     const key = `E2026_${g}`;
     if (store[key] && !store[key].Live) {
       consecutiveEmptyEL = 0;
@@ -824,9 +863,9 @@ export async function syncOnlyMissingGames(): Promise<{
     await sleep(180);
   }
 
-  // 2. Scansiona EuroCup con uscita intelligente (Early-Stop)
+  // 2. Scansiona EuroCup con uscita intelligente (Early-Stop su tutta la stagione da 18 turni)
   let consecutiveEmptyEC = 0;
-  for (let g = 1; g <= 48; g++) {
+  for (let g = 1; g <= 288; g++) {
     const key = `U2026_${g}`;
     if (store[key] && !store[key].Live) {
       consecutiveEmptyEC = 0;

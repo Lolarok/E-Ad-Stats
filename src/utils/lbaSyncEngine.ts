@@ -29,6 +29,16 @@ function mapOfficialRole(role: string): string {
   }
 }
 
+export function normalizeLbaTeamName(name: string): string {
+  if (!name) return '';
+  const n = name.trim();
+  if (n === 'Dolomiti Energia TN') return 'Dolomiti Energia Trentino';
+  if (n === 'UNA Hotels RE') return 'UNA Hotels Reggio Emilia';
+  if (n === 'Nutribullet Treviso') return 'Nutribullet Treviso Basket';
+  if (n === 'Longobardi Scafati') return 'Longobardi Scafati Basket';
+  return n;
+}
+
 const TEAM_METADATA: Record<string, { id: string; shortName: string; color: string }> = {
   'Armani Olimpia Milano': { id: 'lba-armani-olimpia-milano', shortName: 'Milano', color: '#c8102e' },
   'Virtus Costa Bologna': { id: 'lba-virtus-costa-bologna', shortName: 'Virtus', color: '#000000' },
@@ -51,7 +61,7 @@ const TEAM_METADATA: Record<string, { id: string; shortName: string; color: stri
 /**
  * Recupera da legabasket.it o dai file locali le partite concluse fino al turno richiesto.
  */
-export async function syncOfficialLbaRounds(maxDaysToScan: number = 4): Promise<LbaSyncResult> {
+export async function syncOfficialLbaRounds(maxDaysToScan: number = 5): Promise<LbaSyncResult> {
   const allMatches: any[] = [];
   let newMatchesSynced = 0;
   let maxCompletedRound = 1;
@@ -60,17 +70,21 @@ export async function syncOfficialLbaRounds(maxDaysToScan: number = 4): Promise<
     const cachedFilePath = path.join(ROOT_DIR, `official_round_${day}_completed.json`);
     let dayMatches: any[] = [];
 
-    // Se esiste la cache locale completata, usala prima
+    // Se esiste la cache locale completata (con tutte le 8 gare), usala prima
     if (fs.existsSync(cachedFilePath)) {
       try {
-        dayMatches = JSON.parse(fs.readFileSync(cachedFilePath, 'utf-8'));
+        const parsed = JSON.parse(fs.readFileSync(cachedFilePath, 'utf-8'));
+        if (Array.isArray(parsed) && parsed.length === 8) {
+          dayMatches = parsed;
+        }
       } catch (e) {}
     }
 
-    // Se la cache non ha 8 gare o stiamo cercando aggiornamenti live
+    // Se la cache non ha 8 gare, cerca aggiornamenti live
     if (!dayMatches || dayMatches.length < 8) {
       try {
-        const calUrl = `https://www.legabasket.it/api/championships/get-championships-calendar-by-id?id=602&day=${day}`;
+        // Parametro ufficiale API legabasket.it: "d" (es. &d=5)
+        const calUrl = `https://www.legabasket.it/api/championships/get-championships-calendar-by-id?id=602&d=${day}`;
         const calRes = await fetch(calUrl);
         if (calRes.ok) {
           const calData = await calRes.json();
@@ -78,7 +92,13 @@ export async function syncOfficialLbaRounds(maxDaysToScan: number = 4): Promise<
           const fetchedMatches: any[] = [];
 
           for (const m of matches) {
-            // Se la partita è terminata (game_status === "2")
+            // Verifica di integrità: il match deve appartenere ESATTAMENTE alla giornata "day" richiesta
+            const matchDay = m.day_serial || m.number || (m.day_code ? parseInt(m.day_code, 10) : undefined);
+            if (matchDay && matchDay !== day) {
+              continue;
+            }
+
+            // Se la partita è terminata (game_status === "2" o 2)
             if (m.game_status === '2' || m.game_status === 2) {
               const sHome = m.h_team_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
               const sAway = m.v_team_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -105,9 +125,12 @@ export async function syncOfficialLbaRounds(maxDaysToScan: number = 4): Promise<
             }
           }
 
-          if (fetchedMatches.length > 0) {
+          // Salva in cache come completato SOLO se tutte le 8 gare della giornata sono concluse
+          if (fetchedMatches.length === 8) {
             dayMatches = fetchedMatches;
             fs.writeFileSync(cachedFilePath, JSON.stringify(dayMatches, null, 2), 'utf-8');
+          } else if (fetchedMatches.length > 0) {
+            dayMatches = fetchedMatches;
           }
         }
       } catch (e) {
@@ -115,9 +138,11 @@ export async function syncOfficialLbaRounds(maxDaysToScan: number = 4): Promise<
       }
     }
 
-    if (dayMatches && dayMatches.length > 0) {
+    if (dayMatches && dayMatches.length === 8) {
       allMatches.push(...dayMatches);
       maxCompletedRound = day;
+    } else if (dayMatches && dayMatches.length > 0) {
+      allMatches.push(...dayMatches);
     }
   }
 
@@ -137,7 +162,7 @@ export async function syncOfficialLbaRounds(maxDaysToScan: number = 4): Promise<
 /**
  * Calcola e restituisce sincronicamente il dataset LBA ufficiale a partire dalle partite completate.
  */
-export function buildOfficialLbaDataset(roundNumber: number = 3): {
+export function buildOfficialLbaDataset(roundNumber: number = 5): {
   teams: TeamStats[];
   players: PlayerStats[];
   round: number;
@@ -148,7 +173,9 @@ export function buildOfficialLbaDataset(roundNumber: number = 3): {
     if (fs.existsSync(cachedFilePath)) {
       try {
         const matches = JSON.parse(fs.readFileSync(cachedFilePath, 'utf-8'));
-        allMatches.push(...matches);
+        if (Array.isArray(matches) && matches.length === 8) {
+          allMatches.push(...matches);
+        }
       } catch (e) {}
     }
   }
@@ -218,8 +245,8 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
   });
 
   allMatches.forEach((m) => {
-    const h = m.homeTeam;
-    const a = m.awayTeam;
+    const h = normalizeLbaTeamName(m.homeTeam);
+    const a = normalizeLbaTeamName(m.awayTeam);
     const teH = teamAgg.get(h);
     const teA = teamAgg.get(a);
     if (!teH || !teA) return;
@@ -443,9 +470,10 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
       plusMinus: 0,
     };
 
-    const tInfo = TEAM_METADATA[op.team_name] || {
-      id: 'lba-' + op.team_name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-      shortName: op.team_name,
+    const canonicalTeamName = normalizeLbaTeamName(op.team_name);
+    const tInfo = TEAM_METADATA[canonicalTeamName] || {
+      id: 'lba-' + canonicalTeamName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+      shortName: canonicalTeamName,
     };
     const pos = mapOfficialRole(op.player_role) as any;
     const num = op.player_number && !isNaN(parseInt(op.player_number, 10)) ? parseInt(op.player_number, 10) : 0;

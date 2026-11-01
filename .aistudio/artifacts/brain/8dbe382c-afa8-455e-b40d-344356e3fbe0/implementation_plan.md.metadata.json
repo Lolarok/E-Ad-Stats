@@ -1,6 +1,6 @@
 {
-  "summary": "Architettura unificata di acquisizione dati per EuroLeague, EuroCup e LBA Serie A con validazione automatica dei minutaggi reali (regola DNP/minuti minimi), audit anti-allucinazione dei tabellini e sincronizzazione automatica a ogni turno completato.",
-  "updatedAt": "2026-10-17T13:59:46.398484097Z",
-  "requestFeedback": true,
-  "userFacing": true
+  "summary":  "Piano di implementazione per la Match Preview Card esportabile, stampabile ed embeddabile con analisi analitica dei punti di forza, grafici radar SVG a 6 assi, Four Factors, snippet iframe e visualizzatore dedicato sia nei tabellini che nello Studio Preview.",
+  "updatedAt":  "2026-10-23T08:24:26.111160343Z",
+  "requestFeedback":  true,
+  "userFacing":  true
 }

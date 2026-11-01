@@ -42,22 +42,22 @@ type TabView =
   | 'calculator'
   | 'round_updater';
 
-const STORAGE_PREFIX = 'eurobasket_2026_27_v44';
+const STORAGE_PREFIX = 'eurobasket_2026_27_v46';
 const STORAGE_PLAYERS_KEY = `${STORAGE_PREFIX}_players`;
 const STORAGE_TEAMS_KEY = `${STORAGE_PREFIX}_teams`;
 const STORAGE_SYNC_KEY = `${STORAGE_PREFIX}_last_sync`;
 
-// Garantisce univocità delle squadre eliminando duplicati, squadre spurie e assicurando che Valencia Basket sia esclusivamente in EuroLeague e EuroCup conti le sue 24 squadre
+// Garantisce univocità delle squadre eliminando duplicati, squadre spurie e assicurando che Valencia Basket sia esclusivamente in EuroLeague e EuroCup conti le sue 32 squadre ufficiali
 function sanitizeTeamsList(teams: TeamStats[]): TeamStats[] {
   if (!Array.isArray(teams)) return [];
   const map = new Map<string, TeamStats>();
   for (const t of teams) {
     if (!t || !t.id) continue;
     // Rimuovi eventuali squadre spurie o Alba Berlino (sostituita ufficialmente da Valencia Basket in EuroLeague)
-    if (t.id === 'kids-us-manresa' || t.id === 'bosna-bh-telecom-sarajevo' || t.id === 'valencia-basket-eurocup') continue;
+    if (t.id === 'valencia-basket-eurocup') continue;
     if (t.id === 'alba-berlin' || t.name === 'ALBA BERLIN') continue;
 
-    // Valencia Basket disputa esclusivamente l'EuroLeague (20 squadre) e NON l'EuroCup (24 squadre)
+    // Valencia Basket disputa esclusivamente l'EuroLeague (20 squadre) e NON l'EuroCup
     if (t.name === 'VALENCIA BASKET' && t.league === 'EuroCup') continue;
 
     const cleanId = t.id;
@@ -99,12 +99,18 @@ export default function App() {
     setIsAutoSyncing(true);
     try {
       let syncMessage = '';
-      // 1. Chiamata all'endpoint di sincronizzazione gare ufficiali
+      // 1. Chiamata all'endpoint del demone background server-side
       try {
-        const triggerRes = await fetch('/api/sync/trigger', { method: 'POST' });
-        if (triggerRes.ok) {
-          const syncJson = await triggerRes.json();
-          if (syncJson.message) syncMessage = syncJson.message;
+        const daemonRes = await fetch('/api/daemon/trigger', { method: 'POST' });
+        if (daemonRes.ok) {
+          const daemonJson = await daemonRes.json();
+          if (daemonJson.message) syncMessage = daemonJson.message;
+        } else {
+          const triggerRes = await fetch('/api/sync/trigger', { method: 'POST' });
+          if (triggerRes.ok) {
+            const syncJson = await triggerRes.json();
+            if (syncJson.message) syncMessage = syncJson.message;
+          }
         }
       } catch (e) {}
 
@@ -121,7 +127,7 @@ export default function App() {
             localStorage.setItem(STORAGE_TEAMS_KEY, JSON.stringify(cleanTeams));
             localStorage.setItem(STORAGE_SYNC_KEY, serverData.lastUpdated || new Date().toISOString());
           } catch (e) {}
-          showToast(syncMessage || `⚡ Database 2026/27 aggiornato: ${cleanTeams.length} squadre e ${serverData.players.length} giocatori (EuroCup & LBA 3ª Giornata completate)!`);
+          showToast(syncMessage || `⚡ Database 2026/27 sincronizzato dal demone: ${cleanTeams.length} squadre e ${serverData.players.length} giocatori (LBA 4ª Giornata consolidata)!`);
         }
       }
     } catch (err) {
@@ -174,7 +180,7 @@ export default function App() {
   const [playersList, setPlayersList] = useState<PlayerStats[]>(() => {
     try {
       // Pulisci TUTTE le vecchie chiavi di versioni precedenti per forzare dati coerenti e privi di anomalie
-      ['v31', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43'].forEach((v) => {
+      ['v31', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45'].forEach((v) => {
         try {
           localStorage.removeItem(`eurobasket_2026_27_${v}_players`);
           localStorage.removeItem(`eurobasket_2026_27_${v}_teams`);
@@ -685,7 +691,7 @@ export default function App() {
               }`}
             >
               <BarChart2 className="w-4 h-4" />
-              <span>Scatter Plot Explorer</span>
+              <span>Scatter & Hoopology Studio</span>
             </button>
 
             <button
@@ -721,7 +727,7 @@ export default function App() {
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                EuroLeague (20 squadre) · EuroCup (24 squadre incl. Roma Basketball e Maxima Roma) · LBA Serie A (16 squadre)
+                EuroLeague (18 squadre) · EuroCup (32 squadre in 4 gironi: Tortona, Venezia, Trento, Napoli, Roma, Maxima Roma, Bourg, Manresa...) · LBA Serie A (16 squadre)
               </p>
             </div>
           </div>

@@ -339,7 +339,7 @@ export async function fetchFullEuroleagueRound(
   seasonCode: string = 'E2026'
 ): Promise<FullRoundSyncResult> {
   const isEurocup = seasonCode.startsWith('U');
-  const gamesPerRound = isEurocup ? 10 : 9;
+  const gamesPerRound = isEurocup ? 16 : 9;
 
   const startCode = (roundNumber - 1) * gamesPerRound + 1;
   const gameCodes = Array.from({ length: gamesPerRound }, (_, i) => startCode + i);

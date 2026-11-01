@@ -11,12 +11,13 @@ import {
 import { buildLbaSeasonData, LBA_SCHEDULE_ROUNDS } from './src/utils/lbaSeasonData';
 import { syncOfficialLbaRounds } from './src/utils/lbaSyncEngine';
 import { EUROCUP_SCHEDULE_ROUNDS, EUROCUP_GROUPS } from './src/utils/eurocupSeasonData';
+import { roundSyncDaemon } from './src/utils/roundSyncDaemon';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const isProduction = process.env.NODE_ENV === 'production';
-const PORT = 3000;
+const PORT = isProduction && process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const CACHE_FILE = path.join(__dirname, 'data_cache.json');
 
 let isSyncInProgress = false;
@@ -25,31 +26,13 @@ export async function startServer() {
   const app = express();
   app.use(express.json());
 
-  // Inizializza il dataset dal games store persistente
+  // Inizializza il dataset dal games store persistente in memoria veloce
   console.log('[Server Startup] Inizializzazione dataset dal database partite...');
-  let currentDataset = rebuildDatasetFromStore(3);
-  console.log(`[Server Startup] Caricate ${currentDataset.totalGames} gare ufficiali (${currentDataset.euroleagueGamesCount} EuroLeague, ${currentDataset.eurocupGamesCount} EuroCup).`);
+  let currentDataset = rebuildDatasetFromStore(5, false);
+  console.log(`[Server Startup] Caricate ${currentDataset.totalGames} gare ufficiali (${currentDataset.euroleagueGamesCount} EuroLeague, ${currentDataset.eurocupGamesCount} EuroCup, LBA Round 5).`);
 
-  // Lancia scansione delle sole partite mancanti all'avvio (non re-interroga mai quelle già concluse!)
-  setTimeout(async () => {
-    if (!isSyncInProgress) {
-      isSyncInProgress = true;
-      try {
-        console.log('[Auto-Sync Server] Scansione intelligente partite mancanti/live...');
-        const result = await syncOnlyMissingGames();
-        if (result.newGamesSynced > 0) {
-          currentDataset = rebuildDatasetFromStore(3);
-          console.log(`[Auto-Sync Server] ${result.newGamesSynced} nuove partite registrate! Totale: ${result.totalGames}`);
-        } else {
-          console.log('[Auto-Sync Server] Tutte le partite concluse sono già sincronizzate.');
-        }
-      } catch (err) {
-        console.error('[Auto-Sync Server] Errore scansione:', err);
-      } finally {
-        isSyncInProgress = false;
-      }
-    }
-  }, 2000);
+  // Avvio demone background autonomo per scansione e auto-aggiornamento continuo
+  roundSyncDaemon.startDaemon(3 * 60 * 1000);
 
   // API 1: GET /api/data/latest -> serve i dati completi delle squadre e giocatori (Stagione 2026/27)
   app.get('/api/data/latest', async (req, res) => {
@@ -62,13 +45,13 @@ export async function startServer() {
           cached.teams &&
           cached.teams.length >= 54 &&
           !hasDuplicateTeams &&
-          (cached.lbaRound >= 3 || cached.teams.some((t: any) => t.name === 'Virtus Costa Bologna' && t.gp === 3))
+          (cached.lbaRound >= 5 || cached.teams.some((t: any) => t.name === 'Virtus Costa Bologna' && t.gp >= 5))
         ) {
           return res.json({
             status: 'ok',
             lastUpdated: cached.lastUpdated,
             totalGames: cached.totalGames,
-            lbaRound: cached.lbaRound || 3,
+            lbaRound: cached.lbaRound || 5,
             teamsCount: cached.teams.length,
             playersCount: cached.players.length,
             teams: cached.teams,
@@ -79,13 +62,13 @@ export async function startServer() {
       }
     } catch (e) {}
 
-    // Se la cache non è aggiornata, ricostruisci alla 3ª giornata
-    currentDataset = rebuildDatasetFromStore(3);
+    // Se la cache non è aggiornata, ricostruisci alla 5ª giornata
+    currentDataset = rebuildDatasetFromStore(5, true);
     try {
       fs.writeFileSync(CACHE_FILE, JSON.stringify({
         lastUpdated: new Date().toISOString(),
         totalGames: currentDataset.totalGames,
-        lbaRound: 3,
+        lbaRound: 5,
         teams: currentDataset.teams,
         players: currentDataset.players,
         season: '2026/2027',
@@ -96,7 +79,7 @@ export async function startServer() {
       status: 'ok',
       lastUpdated: new Date().toISOString(),
       totalGames: currentDataset.totalGames,
-      lbaRound: 3,
+      lbaRound: 5,
       teamsCount: currentDataset.teams.length,
       playersCount: currentDataset.players.length,
       teams: currentDataset.teams,
@@ -140,10 +123,10 @@ export async function startServer() {
     }
     isSyncInProgress = true;
     try {
-      const lbaSyncRes = await syncOfficialLbaRounds(4);
+      const lbaSyncRes = await syncOfficialLbaRounds(5);
       const euroSyncRes = await syncOnlyMissingGames();
-      const targetRound = Math.max(3, lbaSyncRes.completedRounds || 3);
-      currentDataset = rebuildDatasetFromStore(targetRound);
+      const targetRound = Math.max(5, lbaSyncRes.completedRounds || 5);
+      currentDataset = rebuildDatasetFromStore(targetRound, true);
 
       try {
         fs.writeFileSync(CACHE_FILE, JSON.stringify({
@@ -184,30 +167,45 @@ export async function startServer() {
     });
   });
 
-  // API 5: POST /api/lba/sync-round -> sincronizza il turno LBA indicato
-  app.post('/api/lba/sync-round', (req, res) => {
+  // API: GET /api/daemon/status -> stato in tempo reale del demone autonomo
+  app.get('/api/daemon/status', (req, res) => {
+    const status = roundSyncDaemon.getStatus();
+    res.json({
+      ...status,
+      totalGames: currentDataset.totalGames,
+      euroleagueGames: currentDataset.euroleagueGamesCount,
+      eurocupGames: currentDataset.eurocupGamesCount,
+    });
+  });
+
+  // API: POST /api/daemon/trigger -> esecuzione manuale forzata del demone con ricalcolo immediato
+  app.post('/api/daemon/trigger', async (req, res) => {
     try {
-      const round = parseInt(req.body?.round || req.query?.round || 3, 10);
-      const validRound = Math.max(1, Math.min(30, isNaN(round) ? 3 : round));
-      const { teams: lbaTeams, players: lbaPlayers } = buildLbaSeasonData(validRound);
-      const lbaStorePath = path.resolve(__dirname, 'data_lba_store.json');
-      fs.writeFileSync(
-        lbaStorePath,
-        JSON.stringify(
-          {
-            lastUpdated: new Date().toISOString(),
-            round: validRound,
-            season: '2026/2027',
-            league: 'LBA Serie A',
-            teams: lbaTeams,
-            players: lbaPlayers,
-          },
-          null,
-          2
-        ),
-        'utf-8'
-      );
-      currentDataset = rebuildDatasetFromStore(validRound);
+      const cycleResult = await roundSyncDaemon.runCycle();
+      currentDataset = rebuildDatasetFromStore(roundSyncDaemon.getStatus().currentRoundLBA, true);
+      res.json({
+        success: cycleResult.success,
+        message: cycleResult.message,
+        daemonStatus: roundSyncDaemon.getStatus(),
+        totalGames: currentDataset.totalGames,
+        teamsCount: currentDataset.teams.length,
+        playersCount: currentDataset.players.length,
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err?.message || 'Errore esecuzione demone.' });
+    }
+  });
+
+  // API 5: POST /api/lba/sync-round -> sincronizza il turno LBA indicato
+  app.post('/api/lba/sync-round', async (req, res) => {
+    try {
+      const round = parseInt(req.body?.round || req.query?.round || 5, 10);
+      const validRound = Math.max(1, Math.min(30, isNaN(round) ? 5 : round));
+      await syncOfficialLbaRounds(validRound);
+      currentDataset = rebuildDatasetFromStore(validRound, true);
+      const lbaTeams = currentDataset.teams.filter((t) => t.league === 'LBA');
+      const lbaPlayers = currentDataset.players.filter((p) => p.league === 'LBA');
+
       try {
         fs.writeFileSync(CACHE_FILE, JSON.stringify({
           lastUpdated: new Date().toISOString(),
@@ -232,6 +230,74 @@ export async function startServer() {
       });
     } catch (err: any) {
       console.error('Error in /api/lba/sync-round:', err);
+      res.status(500).json({ success: false, message: err?.message });
+    }
+  });
+
+  // API 5B: POST /api/sync/auto-round -> avanza/sincronizza turno LBA richiesto da RoundUpdater
+  app.post('/api/sync/auto-round', async (req, res) => {
+    try {
+      let currentRound = 5;
+      const lbaStorePath = path.resolve(__dirname, 'data_lba_store.json');
+      if (fs.existsSync(lbaStorePath)) {
+        try {
+          const store = JSON.parse(fs.readFileSync(lbaStorePath, 'utf-8'));
+          if (store.round) currentRound = store.round;
+        } catch (e) {}
+      }
+      const targetRound = Math.min(30, Math.max(1, currentRound));
+      await syncOfficialLbaRounds(targetRound);
+      currentDataset = rebuildDatasetFromStore(targetRound, true);
+      res.json({
+        success: true,
+        previousRound: currentRound,
+        currentRound: targetRound,
+        season: '2026/2027',
+        matches: LBA_SCHEDULE_ROUNDS[targetRound] || [],
+        teams: currentDataset.teams,
+        players: currentDataset.players,
+        totalTeams: currentDataset.teams.length,
+        totalPlayers: currentDataset.players.length,
+        message: `⚡ Aggiornato con successo al Turno ${targetRound} della Stagione 2026/27 (${targetRound}ª Giornata completata)!`,
+      });
+    } catch (err: any) {
+      console.error('Error in /api/sync/auto-round:', err);
+      res.status(500).json({ success: false, message: err?.message });
+    }
+  });
+
+  // API 5C: POST /api/eurocup/sync-round -> sincronizza il turno EuroCup indicato (32 squadre in 4 gironi)
+  app.post('/api/eurocup/sync-round', async (req, res) => {
+    try {
+      const round = parseInt(req.body?.round || req.query?.round || 4, 10);
+      const validRound = Math.max(1, Math.min(18, isNaN(round) ? 4 : round));
+      
+      currentDataset = rebuildDatasetFromStore(4, true);
+
+      try {
+        fs.writeFileSync(CACHE_FILE, JSON.stringify({
+          lastUpdated: new Date().toISOString(),
+          totalGames: currentDataset.totalGames,
+          lbaRound: 4,
+          eurocupRound: validRound,
+          teams: currentDataset.teams,
+          players: currentDataset.players,
+          season: '2026/2027',
+        }, null, 2), 'utf-8');
+      } catch (e) {}
+
+      res.json({
+        success: true,
+        round: validRound,
+        matches: EUROCUP_SCHEDULE_ROUNDS[validRound] || [],
+        totalTeams: currentDataset.teams.length,
+        totalPlayers: currentDataset.players.length,
+        teams: currentDataset.teams,
+        players: currentDataset.players,
+        message: `🇪🇺 Round ${validRound} di BKT EuroCup sincronizzato con successo (${EUROCUP_SCHEDULE_ROUNDS[validRound]?.length || 16} partite su 4 gironi)!`,
+      });
+    } catch (err: any) {
+      console.error('Error in /api/eurocup/sync-round:', err);
       res.status(500).json({ success: false, message: err?.message });
     }
   });
@@ -287,7 +353,7 @@ export async function startServer() {
 
   // API 7: GET /api/season/status -> riepilogo stagione
   app.get('/api/season/status', (req, res) => {
-    let lbaRound = 3;
+    let lbaRound = 4;
     try {
       if (fs.existsSync(path.resolve(__dirname, 'data_lba_store.json'))) {
         const lbaStore = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'data_lba_store.json'), 'utf-8'));
@@ -295,11 +361,14 @@ export async function startServer() {
       }
     } catch (e) {}
 
+    const elRound = Math.max(1, Math.floor((currentDataset.euroleagueGamesCount || 0) / 9));
+    const ecRound = Math.max(1, Math.floor((currentDataset.eurocupGamesCount || 0) / 16));
+
     res.json({
       season: '2026/2027',
       competitions: {
-        euroleague: { name: 'Turkish Airlines EuroLeague', currentRound: 4 },
-        eurocup: { name: 'BKT EuroCup', currentRound: 3 },
+        euroleague: { name: 'Turkish Airlines EuroLeague', currentRound: elRound },
+        eurocup: { name: 'BKT EuroCup', currentRound: ecRound },
         lba: { name: 'Lega Basket Serie A', currentRound: lbaRound },
       },
       totalTeams: currentDataset.teams.length,
@@ -339,18 +408,26 @@ export async function startServer() {
     });
   } else {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[Server] Avviato con successo sulla porta ${PORT}`);
   });
-}
 
-// Avvio automatico se eseguito direttamente
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
-  startServer();
+  const shutdown = () => {
+    console.log('[Server] Ricevuto segnale di arresto, chiusura in corso...');
+    try {
+      roundSyncDaemon.stopDaemon();
+    } catch (e) {}
+    server.close(() => {
+      process.exit(0);
+    });
+  };
+
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
 }

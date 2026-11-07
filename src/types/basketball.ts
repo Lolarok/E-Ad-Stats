@@ -73,6 +73,52 @@ export interface PlayerStats {
 
   // Selezione di tiro specifica
   shotSelection: PlayerShotSelection;
+
+  // Statistiche Avanzate Granulari (Synergy, Shot Quality, Clutch, Score Origin)
+  playTypes?: PlayTypeBreakdown;
+  scoreOrigin?: ScoreOriginStats;
+  clutchStats?: ClutchStats;
+  shotQuality?: ShotQualityStats;
+}
+
+export interface PlayTypeStat {
+  freqPct: number;    // % sul totale possessi (es. 28.5%)
+  ppp: number;        // Punti Per Possesso (es. 0.98)
+  scorePct?: number;  // % possessi conclusi con punti
+  fgPct?: number;     // FG% dal campo
+}
+
+export interface PlayTypeBreakdown {
+  pnrBallHandler: PlayTypeStat;
+  pnrRollMan: PlayTypeStat;
+  spotUp: PlayTypeStat;
+  isolation: PlayTypeStat;
+  transition: PlayTypeStat;
+  postUp: PlayTypeStat;
+  cutOffScreen?: PlayTypeStat;
+}
+
+export interface ScoreOriginStats {
+  pointsInPaint: number;      // PITP (Punti nel Pitturato)
+  pointsOffTurnovers: number; // POT (Punti da Palle Perse)
+  fastbreakPoints: number;    // Fastbreak (Contropiede)
+  secondChancePoints: number; // Second Chance (Seconda Opportunità)
+  pitpRatio?: number;         // % PITP sul totale punti segnati
+}
+
+export interface ClutchStats {
+  clutchNetRtg: number;       // Net Rating negli ultimi 5 min con scarto <= 5 punti
+  clutchEfgPct: number;       // eFG% nei finali punto a punto
+  clutchPts: number;          // Punti medi segnati in clutch
+  clutchUsgPct?: number;      // Usg% nel clutch
+  clutchRecord?: { wins: number; losses: number };
+}
+
+export interface ShotQualityStats {
+  xefgPct: number;            // Expected eFG% in base a zone e contestazione
+  shotMakingDiff: number;     // eFG% - xeFG% (Shot Making over expectation)
+  shotQualityRating: number;  // Valutazione qualità dei tiri generati (0 - 100)
+  rimFrequencyPct: number;    // % di tiri presi al ferro (<1.5m)
 }
 
 export interface TeamShotSelection {
@@ -126,4 +172,10 @@ export interface TeamStats {
 
   // Stile di gioco
   playStyle: string;
+
+  // Statistiche Avanzate Granulari (Synergy, Shot Quality, Clutch, Score Origin)
+  playTypes?: PlayTypeBreakdown;
+  scoreOrigin?: ScoreOriginStats;
+  clutchStats?: ClutchStats;
+  shotQuality?: ShotQualityStats;
 }

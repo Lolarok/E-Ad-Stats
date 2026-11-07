@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { PlayerStats, TeamStats, League } from '../types/basketball';
 import { H2HCardGenerator } from './H2HCardGenerator';
 import { AdvancedDataTable } from './AdvancedDataTable';
+import { getOrComputePlayerMetrics, getOrComputeTeamMetrics } from '../utils/advancedAnalyticsCalculator';
 import {
   BarChart2,
   Table,
@@ -33,7 +34,7 @@ type MainTab = 'scatter' | 'table' | 'four_factors' | 'h2h_card';
 interface MetricOption {
   key: string;
   label: string;
-  category: 'efficiency' | 'volume' | 'playmaking' | 'shooting';
+  category: 'efficiency' | 'volume' | 'playmaking' | 'shooting' | 'synergy' | 'origin' | 'clutch';
   min?: number;
   max?: number;
   isTeamOnly?: boolean;
@@ -41,6 +42,7 @@ interface MetricOption {
 }
 
 const AVAILABLE_METRICS: MetricOption[] = [
+  // --- EFFICIENZA & RATING ---
   { key: 'tsPct', label: 'True Shooting % (TS%)', category: 'efficiency', min: 45, max: 72, isPlayerOnly: true },
   { key: 'usgPct', label: 'Usage Rate % (USG%)', category: 'volume', min: 10, max: 35, isPlayerOnly: true },
   { key: 'pts', label: 'Punti a Partita (PPG)', category: 'volume', min: 0, max: 25 },
@@ -50,15 +52,44 @@ const AVAILABLE_METRICS: MetricOption[] = [
   { key: 'tovPct', label: 'Turnover % (TOV%)', category: 'playmaking', min: 5, max: 25 },
   { key: 'reb', label: 'Rimbalzi a Partita (RPG)', category: 'volume', min: 0, max: 12, isPlayerOnly: true },
   { key: 'trbPct', label: 'Total Rebound % (TRB%)', category: 'volume', min: 2, max: 22, isPlayerOnly: true },
-  { key: 'shotSelection.moreyballRate', label: 'Moreyball Rate % (Rim + 3PT)', category: 'shooting', min: 55, max: 95 },
-  { key: 'shotSelection.ftr', label: 'Free Throw Rate (FTR)', category: 'shooting', min: 0.1, max: 0.55 },
   { key: 'ortg', label: 'Offensive Rating (ORtg)', category: 'efficiency', min: 95, max: 130 },
   { key: 'drtg', label: 'Defensive Rating (DRtg)', category: 'efficiency', min: 95, max: 130 },
   { key: 'netRtg', label: 'Net Rating (ORtg - DRtg)', category: 'efficiency', min: -20, max: 25 },
   { key: 'pace', label: 'Ritmo di Gioco (Pace)', category: 'volume', min: 68, max: 85, isTeamOnly: true },
+
+  // --- SHOT QUALITY & EXPECTED STATS ---
+  { key: 'shotQuality.xefgPct', label: 'Expected eFG% (xeFG% atteso)', category: 'shooting', min: 42, max: 65 },
+  { key: 'shotQuality.shotMakingDiff', label: 'Shot Making / Over Expectation (+/-)', category: 'shooting', min: -10, max: 14 },
+  { key: 'shotQuality.shotQualityRating', label: 'Shot Quality Index (0-100)', category: 'shooting', min: 40, max: 99 },
+  { key: 'shotQuality.rimFrequencyPct', label: 'Rim Frequency % (Tiri al ferro)', category: 'shooting', min: 10, max: 65 },
+  { key: 'shotSelection.moreyballRate', label: 'Moreyball Rate % (Rim + 3PT)', category: 'shooting', min: 55, max: 95 },
+  { key: 'shotSelection.ftr', label: 'Free Throw Rate (FTR)', category: 'shooting', min: 0.1, max: 0.55 },
   { key: 'fourFactorsOffense.efgPct', label: 'eFG% Attacco', category: 'shooting', min: 45, max: 62, isTeamOnly: true },
   { key: 'fourFactorsDefense.efgPct', label: 'eFG% Concesso (Difesa)', category: 'shooting', min: 45, max: 62, isTeamOnly: true },
-  { key: 'fourFactorsOffense.orbPct', label: 'Rimbalzi Offensivi % (ORB%)', category: 'volume', min: 18, max: 42, isTeamOnly: true },
+
+  // --- PLAY TYPES (STIMA ANALITICA) ---
+  { key: 'playTypes.pnrBallHandler.ppp', label: 'PnR Ball Handler PPP (Stima Analitica)', category: 'synergy', min: 0.6, max: 1.35 },
+  { key: 'playTypes.pnrBallHandler.freqPct', label: 'PnR Ball Handler Frequenza % (Stima)', category: 'synergy', min: 2, max: 50 },
+  { key: 'playTypes.pnrRollMan.ppp', label: 'PnR Roll Man PPP (Stima Analitica)', category: 'synergy', min: 0.7, max: 1.45 },
+  { key: 'playTypes.pnrRollMan.freqPct', label: 'PnR Roll Man Frequenza % (Stima)', category: 'synergy', min: 2, max: 45 },
+  { key: 'playTypes.spotUp.ppp', label: 'Spot-Up / Catch&Shoot PPP (Stima Analitica)', category: 'synergy', min: 0.7, max: 1.4 },
+  { key: 'playTypes.spotUp.freqPct', label: 'Spot-Up Frequenza % (Stima)', category: 'synergy', min: 5, max: 45 },
+  { key: 'playTypes.isolation.ppp', label: 'Isolation PPP (Stima Analitica)', category: 'synergy', min: 0.6, max: 1.25 },
+  { key: 'playTypes.isolation.freqPct', label: 'Isolation Frequenza % (Stima)', category: 'synergy', min: 1, max: 25 },
+  { key: 'playTypes.transition.ppp', label: 'Transizione PPP (Stima Analitica)', category: 'synergy', min: 0.85, max: 1.5 },
+  { key: 'playTypes.transition.freqPct', label: 'Transizione Frequenza % (Stima)', category: 'synergy', min: 5, max: 30 },
+  { key: 'playTypes.postUp.ppp', label: 'Post-Up PPP (Stima Analitica)', category: 'synergy', min: 0.6, max: 1.25 },
+
+  // --- GENESI PUNTI (SCORE ORIGIN) ---
+  { key: 'scoreOrigin.pointsInPaint', label: 'Punti nel Pitturato (PITP)', category: 'origin', min: 0, max: 50 },
+  { key: 'scoreOrigin.pointsOffTurnovers', label: 'Punti da Palle Perse (POT)', category: 'origin', min: 0, max: 25 },
+  { key: 'scoreOrigin.fastbreakPoints', label: 'Punti in Contropiede (Fastbreak)', category: 'origin', min: 0, max: 22 },
+  { key: 'scoreOrigin.secondChancePoints', label: 'Punti da 2a Opportunità', category: 'origin', min: 0, max: 18 },
+
+  // --- CLUTCH STATS ---
+  { key: 'clutchStats.clutchNetRtg', label: 'Clutch Net Rating (Finali +/-)', category: 'clutch', min: -25, max: 30 },
+  { key: 'clutchStats.clutchEfgPct', label: 'Clutch eFG% (Pressione)', category: 'clutch', min: 30, max: 70 },
+  { key: 'clutchStats.clutchPts', label: 'Clutch Punti/Gara', category: 'clutch', min: 0, max: 18 },
 ];
 
 export const ScatterPlotExplorer: React.FC<Props> = ({
@@ -88,28 +119,69 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
   // Hover point
   const [hoveredPoint, setHoveredPoint] = useState<any | null>(null);
 
-  // Helper estrazione valore numerico nidificato (es. 'shotSelection.moreyballRate')
+  // Helper estrazione valore numerico nidificato con arricchimento dinamico
   const getNestedValue = (obj: any, key: string): number => {
     if (!obj) return 0;
+    let targetObj = obj;
+    if (
+      key.startsWith('playTypes.') ||
+      key.startsWith('scoreOrigin.') ||
+      key.startsWith('clutchStats.') ||
+      key.startsWith('shotQuality.')
+    ) {
+      if (!obj.playTypes || !obj.scoreOrigin || !obj.clutchStats || !obj.shotQuality) {
+        if ('position' in obj) {
+          const metrics = getOrComputePlayerMetrics(obj);
+          targetObj = { ...obj, ...metrics };
+        } else {
+          const metrics = getOrComputeTeamMetrics(obj);
+          targetObj = { ...obj, ...metrics };
+        }
+      }
+    }
+
     if (key.includes('.')) {
       const parts = key.split('.');
-      let cur = obj;
+      let cur = targetObj;
       for (const p of parts) {
         if (cur === undefined || cur === null) return 0;
         cur = cur[p];
       }
       return typeof cur === 'number' ? cur : 0;
     }
-    return typeof obj[key] === 'number' ? obj[key] : 0;
+    return typeof targetObj[key] === 'number' ? targetObj[key] : 0;
   };
 
-  // Preset rapidi Hoopology
-  const applyPreset = (preset: 'scorer' | 'shot_selection' | 'playmaker' | 'team_efficiency' | 'team_pace_net' | 'four_factors') => {
+  // Preset rapidi Hoopology & Pro Analytics
+  const applyPreset = (
+    preset:
+      | 'scorer'
+      | 'shot_selection'
+      | 'playmaker'
+      | 'team_efficiency'
+      | 'team_pace_net'
+      | 'four_factors'
+      | 'shot_making'
+      | 'pnr_hub'
+      | 'score_origin'
+      | 'paint_dominance'
+      | 'clutch_net'
+  ) => {
     if (preset === 'scorer') {
       setEntityType('players');
       setXMetricKey('usgPct');
       setYMetricKey('tsPct');
       setBubbleMetricKey('pts');
+    } else if (preset === 'shot_making') {
+      setEntityType('players');
+      setXMetricKey('shotQuality.xefgPct');
+      setYMetricKey('shotQuality.shotMakingDiff');
+      setBubbleMetricKey('pts');
+    } else if (preset === 'pnr_hub') {
+      setEntityType('players');
+      setXMetricKey('playTypes.pnrBallHandler.freqPct');
+      setYMetricKey('playTypes.pnrBallHandler.ppp');
+      setBubbleMetricKey('usgPct');
     } else if (preset === 'shot_selection') {
       setEntityType('players');
       setXMetricKey('shotSelection.moreyballRate');
@@ -125,6 +197,21 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
       setXMetricKey('ortg');
       setYMetricKey('drtg');
       setBubbleMetricKey('pace');
+    } else if (preset === 'score_origin') {
+      setEntityType('teams');
+      setXMetricKey('scoreOrigin.pointsOffTurnovers');
+      setYMetricKey('scoreOrigin.fastbreakPoints');
+      setBubbleMetricKey('pace');
+    } else if (preset === 'paint_dominance') {
+      setEntityType('teams');
+      setXMetricKey('scoreOrigin.pointsInPaint');
+      setYMetricKey('scoreOrigin.secondChancePoints');
+      setBubbleMetricKey('netRtg');
+    } else if (preset === 'clutch_net') {
+      setEntityType('teams');
+      setXMetricKey('netRtg');
+      setYMetricKey('clutchStats.clutchNetRtg');
+      setBubbleMetricKey('ppg');
     } else if (preset === 'team_pace_net') {
       setEntityType('teams');
       setXMetricKey('pace');
@@ -396,6 +483,26 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
                         Scorer: USG% vs TS%
                       </button>
                       <button
+                        onClick={() => applyPreset('shot_making')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          xMetricKey.includes('xefgPct')
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        🎯 Shot Quality vs Making
+                      </button>
+                      <button
+                        onClick={() => applyPreset('pnr_hub')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          xMetricKey.includes('pnrBallHandler')
+                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        ⚡ PnR Handler (Freq vs PPP)
+                      </button>
+                      <button
                         onClick={() => applyPreset('shot_selection')}
                         className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                           xMetricKey === 'shotSelection.moreyballRate' && yMetricKey === 'tsPct'
@@ -427,6 +534,36 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
                         }`}
                       >
                         Pace vs Net Rating
+                      </button>
+                      <button
+                        onClick={() => applyPreset('score_origin')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          xMetricKey.includes('pointsOffTurnovers')
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        ⚡ Contropiede vs Palle Perse
+                      </button>
+                      <button
+                        onClick={() => applyPreset('paint_dominance')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          xMetricKey.includes('pointsInPaint')
+                            ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        🛡️ Dominio Pitturato (PITP)
+                      </button>
+                      <button
+                        onClick={() => applyPreset('clutch_net')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          yMetricKey.includes('clutchNetRtg')
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        🔥 Clutch Execution (+/-)
                       </button>
                       <button
                         onClick={() => applyPreset('team_efficiency')}

@@ -2,6 +2,10 @@ import React, { useState, useMemo, useRef } from 'react';
 import { PlayerStats, TeamStats } from '../types/basketball';
 import { RadarComparisonChart } from './RadarComparisonChart';
 import {
+  getOrComputePlayerMetrics,
+  getOrComputeTeamMetrics,
+} from '../utils/advancedAnalyticsCalculator';
+import {
   Printer,
   Copy,
   Check,
@@ -17,6 +21,7 @@ import {
   Flame,
   Shield,
   Target,
+  Zap,
 } from 'lucide-react';
 
 interface Props {
@@ -95,9 +100,33 @@ export const H2HCardGenerator: React.FC<Props> = ({
     ];
   }, [t1, t2]);
 
+  // Metriche avanzate granulari (Play Types, Genesi Punti, Clutch, Shot Quality)
+  const m1 = useMemo(() => {
+    return compareType === 'teams' ? getOrComputeTeamMetrics(t1) : getOrComputePlayerMetrics(p1);
+  }, [compareType, t1, p1]);
+
+  const m2 = useMemo(() => {
+    return compareType === 'teams' ? getOrComputeTeamMetrics(t2) : getOrComputePlayerMetrics(p2);
+  }, [compareType, t2, p2]);
+
   // Punti di forza calcolati per Squadre
   const getTeamStrengths = (team: TeamStats, opp: TeamStats) => {
     const list: string[] = [];
+    const tMetrics = getOrComputeTeamMetrics(team);
+    const oppMetrics = getOrComputeTeamMetrics(opp);
+
+    if (tMetrics.shotQuality.shotMakingDiff > 1.5) {
+      list.push(`Shot-Making d'élite (+${tMetrics.shotQuality.shotMakingDiff}% oltre l'eFG% attesa)`);
+    }
+    if (tMetrics.clutchStats.clutchNetRtg > 5) {
+      list.push(`Esecuzione clutch vincente (+${tMetrics.clutchStats.clutchNetRtg} NetRtg nei finali)`);
+    }
+    if (tMetrics.playTypes.pnrBallHandler.ppp > 0.95) {
+      list.push(`Attacco da Pick & Roll altamente produttivo (${tMetrics.playTypes.pnrBallHandler.ppp} PPP)`);
+    }
+    if (tMetrics.scoreOrigin.pointsInPaint > 36) {
+      list.push(`Dominio nel pitturato (${tMetrics.scoreOrigin.pointsInPaint} PITP a partita)`);
+    }
     if (team.ortg > 115) list.push(`Attacco d'élite (${team.ortg} ORtg su 100 poss)`);
     else if (team.ortg > opp.ortg) list.push(`Vantaggio offensivo (+${(team.ortg - opp.ortg).toFixed(1)} ORtg)`);
 
@@ -107,15 +136,27 @@ export const H2HCardGenerator: React.FC<Props> = ({
     if (team.fourFactorsOffense.efgPct > 54) list.push(`Alta precisione di tiro (${team.fourFactorsOffense.efgPct}% eFG)`);
     if (team.fourFactorsOffense.orbPct > 32) list.push(`Controllo del rimbalzo offensivo (${team.fourFactorsOffense.orbPct}%)`);
     if (team.shotSelection.moreyballRate > 78) list.push(`Shot selection analitica (${team.shotSelection.moreyballRate}% al ferro o 3PT)`);
-    if (team.pace > 76) list.push(`Ritmo alto in transizione (${team.pace} poss/gara)`);
-    else if (team.pace < 72) list.push(`Controllo a metà campo e basso numero di possessi (${team.pace})`);
 
-    return list.slice(0, 3);
+    return list.slice(0, 4);
   };
 
   // Punti di forza per Giocatori
   const getPlayerStrengths = (player: PlayerStats, opp: PlayerStats) => {
     const list: string[] = [];
+    const pMetrics = getOrComputePlayerMetrics(player);
+
+    if (pMetrics.shotQuality.shotMakingDiff > 2.0) {
+      list.push(`Shot Maker puro (+${pMetrics.shotQuality.shotMakingDiff}% sopra l'eFG% attesa)`);
+    }
+    if (pMetrics.playTypes.pnrBallHandler.freqPct > 30 && pMetrics.playTypes.pnrBallHandler.ppp > 0.92) {
+      list.push(`Motore di Pick & Roll primario (${pMetrics.playTypes.pnrBallHandler.ppp} PPP su ${pMetrics.playTypes.pnrBallHandler.freqPct}% poss)`);
+    }
+    if (pMetrics.playTypes.spotUp.ppp > 1.10) {
+      list.push(`Tiratore letale sugli scarichi Spot-Up (${pMetrics.playTypes.spotUp.ppp} PPP)`);
+    }
+    if (pMetrics.clutchStats.clutchNetRtg > 3) {
+      list.push(`Affidabilità nei possessi decisivi (+${pMetrics.clutchStats.clutchNetRtg} Clutch NetRtg)`);
+    }
     if (player.tsPct > 60) list.push(`Efficienza d'élite (${player.tsPct}% True Shooting)`);
     if (player.ptsPer100 && player.ptsPer100 > 30) list.push(`Volume realizzativo top (${player.ptsPer100} Pts/100p)`);
     else if (player.pts > opp.pts) list.push(`Miglior media realizzativa (${player.pts} PPG vs ${opp.pts})`);
@@ -123,10 +164,8 @@ export const H2HCardGenerator: React.FC<Props> = ({
     if (player.astToRatio > 2.0) list.push(`Regia sicura (${player.astToRatio} assist per palla persa)`);
     if (player.astPct > 25) list.push(`Coinvolgimento primario nei canestri di squadra (${player.astPct}% AST%)`);
     if (player.shotSelection.moreyballRate > 80) list.push(`Shot-diet ad alto rendimento (${player.shotSelection.moreyballRate}% Moreyball)`);
-    if (player.reb > opp.reb && player.reb >= 5) list.push(`Presenza dominante a rimbalzo (${player.reb} RPG)`);
-    if (player.usgPct > 25) list.push(`Punto di riferimento offensivo (${player.usgPct}% Usage Rate)`);
 
-    return list.slice(0, 3);
+    return list.slice(0, 4);
   };
 
   // 1. Stampa Card (Print / Salva PDF)
@@ -602,6 +641,105 @@ export const H2HCardGenerator: React.FC<Props> = ({
           </div>
         </div>
 
+        {/* Sezione Granulare: Play Types, Genesi Punti & Shot Making */}
+        <div className="relative z-10 mt-6 pt-6 border-t border-slate-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-amber-400" />
+              <span>Analisi Tattica Granulare: Play Types, Genesi Punti & Shot Making</span>
+            </h3>
+            <span className="text-[10px] text-slate-500 font-mono">Play-Type: Stima Analitica · Coordinate Reali</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+            {/* Box 1: Synergy Play Types */}
+            <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+              <div className="text-[11px] font-sans font-bold text-amber-300 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <span>⚡</span>
+                  <span>Play Types (PPP)</span>
+                </span>
+                <span className="text-[9px] text-slate-500 font-normal font-mono">Stima analitica</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="text-sky-400 font-bold">{m1.playTypes.pnrBallHandler.ppp}</span>
+                  <span className="font-sans text-[11px] text-slate-300">PnR Handler</span>
+                  <span className="text-amber-400 font-bold">{m2.playTypes.pnrBallHandler.ppp}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="text-sky-400 font-bold">{m1.playTypes.spotUp.ppp}</span>
+                  <span className="font-sans text-[11px] text-slate-300">Spot-Up</span>
+                  <span className="text-amber-400 font-bold">{m2.playTypes.spotUp.ppp}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="text-sky-400 font-bold">{m1.playTypes.transition.ppp}</span>
+                  <span className="font-sans text-[11px] text-slate-300">Transizione</span>
+                  <span className="text-amber-400 font-bold">{m2.playTypes.transition.ppp}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Box 2: Genesi Punti */}
+            <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+              <div className="text-[11px] font-sans font-bold text-sky-300 flex items-center gap-1">
+                <span>🛡️</span>
+                <span>Genesi Punti (Gara)</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="text-sky-400 font-bold">{m1.scoreOrigin.pointsInPaint}</span>
+                  <span className="font-sans text-[11px] text-slate-300">Pitturato (PITP)</span>
+                  <span className="text-amber-400 font-bold">{m2.scoreOrigin.pointsInPaint}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="text-sky-400 font-bold">{m1.scoreOrigin.pointsOffTurnovers}</span>
+                  <span className="font-sans text-[11px] text-slate-300">Da Palle Perse</span>
+                  <span className="text-amber-400 font-bold">{m2.scoreOrigin.pointsOffTurnovers}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="text-sky-400 font-bold">{m1.scoreOrigin.secondChancePoints}</span>
+                  <span className="font-sans text-[11px] text-slate-300">2a Opportunità</span>
+                  <span className="text-amber-400 font-bold">{m2.scoreOrigin.secondChancePoints}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Box 3: Shot Making & Clutch */}
+            <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+              <div className="text-[11px] font-sans font-bold text-rose-300 flex items-center gap-1">
+                <span>🎯</span>
+                <span>Shot Making & Clutch</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="text-sky-400 font-bold">{m1.shotQuality.xefgPct}%</span>
+                  <span className="font-sans text-[11px] text-slate-300">xeFG% Atteso</span>
+                  <span className="text-amber-400 font-bold">{m2.shotQuality.xefgPct}%</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className={`font-bold ${m1.shotQuality.shotMakingDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {m1.shotQuality.shotMakingDiff >= 0 ? `+${m1.shotQuality.shotMakingDiff}%` : `${m1.shotQuality.shotMakingDiff}%`}
+                  </span>
+                  <span className="font-sans text-[11px] text-slate-300">Shot Making (+/-)</span>
+                  <span className={`font-bold ${m2.shotQuality.shotMakingDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {m2.shotQuality.shotMakingDiff >= 0 ? `+${m2.shotQuality.shotMakingDiff}%` : `${m2.shotQuality.shotMakingDiff}%`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className={`font-bold ${m1.clutchStats.clutchNetRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {m1.clutchStats.clutchNetRtg >= 0 ? `+${m1.clutchStats.clutchNetRtg}` : m1.clutchStats.clutchNetRtg}
+                  </span>
+                  <span className="font-sans text-[11px] text-slate-300">Clutch NetRtg</span>
+                  <span className={`font-bold ${m2.clutchStats.clutchNetRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {m2.clutchStats.clutchNetRtg >= 0 ? `+${m2.clutchStats.clutchNetRtg}` : m2.clutchStats.clutchNetRtg}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Punti di Forza e Chiavi Tattiche (Bottom Insights) */}
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-800">
           {/* Punti di Forza Entità 1 */}
@@ -644,8 +782,7 @@ export const H2HCardGenerator: React.FC<Props> = ({
           </div>
           <div className="flex items-center gap-3">
             <span>Stagione 2026/27</span>
-            <span>·</span>
-            <span className="text-emerald-400 font-semibold">100 Possessions Normalized</span>
+            <span className="text-emerald-400 font-semibold">100 Possessions Normalized · Play-Type su stima analitica</span>
           </div>
         </div>
       </div>

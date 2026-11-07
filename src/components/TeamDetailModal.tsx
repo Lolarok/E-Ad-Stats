@@ -1,7 +1,8 @@
 import React from 'react';
 import { TeamStats, PlayerStats } from '../types/basketball';
 import { HalfCourtShotChart } from './HalfCourtShotChart';
-import { X, ShieldAlert, Crosshair, Zap, Activity } from 'lucide-react';
+import { getOrComputeTeamMetrics } from '../utils/advancedAnalyticsCalculator';
+import { X, ShieldAlert, Crosshair, Zap, Activity, Flame, Target } from 'lucide-react';
 
 interface Props {
   team: TeamStats | null;
@@ -12,6 +13,8 @@ interface Props {
 
 export const TeamDetailModal: React.FC<Props> = ({ team, players, onClose, onSelectPlayer }) => {
   if (!team) return null;
+
+  const metrics = getOrComputeTeamMetrics(team);
 
   const teamPlayers = players.filter(
     (p) => (p.teamId === team.id || p.team === team.name) && p.league === team.league
@@ -154,6 +157,117 @@ export const TeamDetailModal: React.FC<Props> = ({ team, players, onClose, onSel
                   <div className="flex justify-between items-center">
                     <span className="text-slate-300">4. Opponent FTR (Falli Spesi):</span>
                     <span className="font-bold text-purple-400">{team.fourFactorsDefense.ftr}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* NOVITÀ ANALITICA: Play Types Synergy, Genesi Punti & Shot Making */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-400" /> Profilo Tattico Avanzato: Synergy, Genesi Punti & Clutch
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              {/* Play Types */}
+              <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                <div className="font-bold text-amber-300 text-[11px] flex items-center justify-between">
+                  <span>Play Types (Stima Analitica)</span>
+                  <span className="text-[10px] text-slate-500 font-mono">PPP Squadra</span>
+                </div>
+                <div className="space-y-1 text-slate-300">
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">PnR Ball Handler:</span>
+                    <span className="font-mono font-bold text-amber-300">{metrics.playTypes.pnrBallHandler.ppp} PPP</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">PnR Roll Man:</span>
+                    <span className="font-mono font-bold text-cyan-300">{metrics.playTypes.pnrRollMan.ppp} PPP</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">Spot-Up / Scarichi:</span>
+                    <span className="font-mono font-bold text-emerald-300">{metrics.playTypes.spotUp.ppp} PPP</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">Transizione Primaria:</span>
+                    <span className="font-mono font-bold text-rose-300">{metrics.playTypes.transition.ppp} PPP</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-slate-400">Isolamenti:</span>
+                    <span className="font-mono font-bold text-purple-300">{metrics.playTypes.isolation.ppp} PPP</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Genesi Punti */}
+              <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                <div className="font-bold text-sky-300 text-[11px] flex items-center justify-between">
+                  <span>Genesi dei Punti (PITP)</span>
+                  <span className="text-[10px] text-slate-500 font-mono">Media / Gara</span>
+                </div>
+                <div className="space-y-1 text-slate-300">
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">Nel Pitturato (PITP):</span>
+                    <span className="font-mono font-bold text-sky-400">
+                      {metrics.scoreOrigin.pointsInPaint} <span className="text-slate-500 font-normal">({metrics.scoreOrigin.pitpRatio}%)</span>
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">Da Palle Perse (POT):</span>
+                    <span className="font-mono font-bold text-amber-400">{metrics.scoreOrigin.pointsOffTurnovers} pts</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">In Contropiede:</span>
+                    <span className="font-mono font-bold text-emerald-400">{metrics.scoreOrigin.fastbreakPoints} pts</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-slate-400">2a Opportunità (ORB):</span>
+                    <span className="font-mono font-bold text-indigo-400">{metrics.scoreOrigin.secondChancePoints} pts</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shot Quality & Clutch */}
+              <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                <div className="font-bold text-rose-300 text-[11px] flex items-center justify-between">
+                  <span>Shot Making & Clutch</span>
+                  <span className="text-[10px] text-slate-500 font-mono">Modello Expected</span>
+                </div>
+                <div className="space-y-1 text-slate-300">
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">xeFG% Atteso:</span>
+                    <span className="font-mono font-bold text-slate-300">{metrics.shotQuality.xefgPct}%</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">Shot Making Over Exp:</span>
+                    <span
+                      className={`font-mono font-black ${
+                        metrics.shotQuality.shotMakingDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      {metrics.shotQuality.shotMakingDiff >= 0
+                        ? `+${metrics.shotQuality.shotMakingDiff}%`
+                        : `${metrics.shotQuality.shotMakingDiff}%`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-850">
+                    <span className="text-slate-400">Clutch Net Rating:</span>
+                    <span
+                      className={`font-mono font-bold ${
+                        metrics.clutchStats.clutchNetRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      {metrics.clutchStats.clutchNetRtg >= 0
+                        ? `+${metrics.clutchStats.clutchNetRtg}`
+                        : metrics.clutchStats.clutchNetRtg}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-slate-400">Clutch Record Stima:</span>
+                    <span className="font-mono font-bold text-white">
+                      {metrics.clutchStats.clutchRecord?.wins ?? 0}V - {metrics.clutchStats.clutchRecord?.losses ?? 0}S
+                    </span>
                   </div>
                 </div>
               </div>

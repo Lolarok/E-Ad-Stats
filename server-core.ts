@@ -12,6 +12,7 @@ import { buildLbaSeasonData, LBA_SCHEDULE_ROUNDS } from './src/utils/lbaSeasonDa
 import { syncOfficialLbaRounds } from './src/utils/lbaSyncEngine';
 import { EUROCUP_SCHEDULE_ROUNDS, EUROCUP_GROUPS } from './src/utils/eurocupSeasonData';
 import { roundSyncDaemon } from './src/utils/roundSyncDaemon';
+import { getPbpSyncStatus, syncMissingPlayByPlayBatch } from './src/utils/pbpAnalyticsEngine';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,6 +46,9 @@ export async function startServer() {
           cached.teams &&
           cached.teams.length >= 54 &&
           !hasDuplicateTeams &&
+          cached.teams[0]?.nonGarbage &&
+          cached.teams[0]?.quarterSplits &&
+          cached.teams[0]?.situational &&
           (cached.lbaRound >= 5 || cached.teams.some((t: any) => t.name === 'Virtus Costa Bologna' && t.gp >= 5))
         ) {
           return res.json({
@@ -172,10 +176,45 @@ export async function startServer() {
     const status = roundSyncDaemon.getStatus();
     res.json({
       ...status,
+      pbpStatus: getPbpSyncStatus(),
       totalGames: currentDataset.totalGames,
       euroleagueGames: currentDataset.euroleagueGamesCount,
       eurocupGames: currentDataset.eurocupGamesCount,
     });
+  });
+
+  // API: GET /api/pbp/status -> stato copertura Play-by-Play EuroLeague & EuroCup
+  app.get('/api/pbp/status', (req, res) => {
+    res.json(getPbpSyncStatus());
+  });
+
+  // API: POST /api/pbp/sync -> sincronizza un lotto throttled di Play-by-Play mancanti
+  app.post('/api/pbp/sync', async (req, res) => {
+    try {
+      const maxGames = Math.min(50, Math.max(5, parseInt(req.body?.maxGames || '25', 10) || 25));
+      const result = await syncMissingPlayByPlayBatch(maxGames, 450);
+      if (result.fetched > 0) {
+        currentDataset = rebuildDatasetFromStore(roundSyncDaemon.getStatus().currentRoundLBA || 5, false);
+        try {
+          fs.writeFileSync(CACHE_FILE, JSON.stringify({
+            lastUpdated: new Date().toISOString(),
+            totalGames: currentDataset.totalGames,
+            lbaRound: roundSyncDaemon.getStatus().currentRoundLBA || 5,
+            teams: currentDataset.teams,
+            players: currentDataset.players,
+            season: '2026/2027',
+          }, null, 2), 'utf-8');
+        } catch (e) {}
+      }
+      res.json({
+        success: true,
+        ...result,
+        teams: result.fetched > 0 ? currentDataset.teams : undefined,
+        players: result.fetched > 0 ? currentDataset.players : undefined,
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err?.message || 'Errore sync PBP.' });
+    }
   });
 
   // API: POST /api/daemon/trigger -> esecuzione manuale forzata del demone con ricalcolo immediato

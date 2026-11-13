@@ -20,6 +20,59 @@ export interface PlayerShotSelection {
   shotStyleNotes: string;      // Descrizione tattica selezione tiro
 }
 
+export interface RealOnOffStats {
+  onCourtNetRtg: number;
+  offCourtNetRtg: number;
+  netSwing: number;
+  onCourtOrtg: number;
+  onCourtDrtg: number;
+  onCourtMinutes: number;
+  pbpGamesCount: number;
+  source: 'pbp' | 'estimated';
+}
+
+export interface NonGarbageTimeStats {
+  ortg: number;
+  drtg: number;
+  netRtg: number;
+  orbPct: number;
+  drbPct: number;
+  oppOrbPct: number;
+  efgPct: number;
+  tovPct: number;
+  garbageTimePossPct: number;
+  competitivePossessions: number;
+  totalPossessions: number;
+  gamesWithPbp: number;
+  source: 'pbp' | 'quarter_split';
+}
+
+export interface QuarterSplitsStats {
+  q1Net: number;
+  q2Net: number;
+  q3Net: number;
+  q4Net: number;
+  q1Pts: number;
+  q2Pts: number;
+  q3Pts: number;
+  q4Pts: number;
+  half1Net: number;
+  half2Net: number;
+  q3AdjustmentIndex: number; // Q3 Net - Avg(Q1 Net, Q2 Net)
+}
+
+export interface SituationalTeamStats {
+  killShotsTotal: number;       // Parziali >= 10-0 realizzati
+  killShotsPerGame: number;
+  runsConcededTotal: number;    // Parziali >= 10-0 subiti
+  runsConcededPerGame: number;
+  volatilitySigma: number;      // Deviazione standard Net Rating partita per partita
+  netRtgVsTop500: number;       // Net Rating contro squadre con >= 50% W
+  winsVsTop500: number;
+  lossesVsTop500: number;
+  pbpGamesCount: number;
+}
+
 export interface PlayerStats {
   id: string;
   name: string;
@@ -79,6 +132,10 @@ export interface PlayerStats {
   scoreOrigin?: ScoreOriginStats;
   clutchStats?: ClutchStats;
   shotQuality?: ShotQualityStats;
+
+  // Nuove Metriche Oggettive PBP & Consistenza
+  realOnOff?: RealOnOffStats;
+  volatilitySigma?: number; // Deviazione standard GameScore / rendimento partita per partita
 }
 
 export interface PlayTypeStat {
@@ -112,6 +169,8 @@ export interface ClutchStats {
   clutchPts: number;          // Punti medi segnati in clutch
   clutchUsgPct?: number;      // Usg% nel clutch
   clutchRecord?: { wins: number; losses: number };
+  clutchPossessions?: number;
+  source?: 'pbp' | 'estimated';
 }
 
 export interface ShotQualityStats {
@@ -178,4 +237,10 @@ export interface TeamStats {
   scoreOrigin?: ScoreOriginStats;
   clutchStats?: ClutchStats;
   shotQuality?: ShotQualityStats;
+
+  // Metriche Depurate dal Garbage Time & Analisi Situazionale Reale
+  nonGarbage?: NonGarbageTimeStats;
+  quarterSplits?: QuarterSplitsStats;
+  situational?: SituationalTeamStats;
 }
+

@@ -42,7 +42,7 @@ type TabView =
   | 'calculator'
   | 'round_updater';
 
-const STORAGE_PREFIX = 'eurobasket_2026_27_v46';
+const STORAGE_PREFIX = 'eurobasket_2026_27_v47';
 const STORAGE_PLAYERS_KEY = `${STORAGE_PREFIX}_players`;
 const STORAGE_TEAMS_KEY = `${STORAGE_PREFIX}_teams`;
 const STORAGE_SYNC_KEY = `${STORAGE_PREFIX}_last_sync`;
@@ -89,6 +89,9 @@ export default function App() {
 
   // Paginazione per Tabella Giocatori (evita rendering pesante di 325 righe)
   const [visiblePlayerCount, setVisiblePlayerCount] = useState(25);
+
+  // Toggle Garbage Time su Tabella Squadre
+  const [teamsExcludeGarbageTime, setTeamsExcludeGarbageTime] = useState<boolean>(false);
 
   // Auto-Sync in background con API Ufficiale
   const [isAutoSyncing, setIsAutoSyncing] = useState(false);
@@ -180,7 +183,7 @@ export default function App() {
   const [playersList, setPlayersList] = useState<PlayerStats[]>(() => {
     try {
       // Pulisci TUTTE le vecchie chiavi di versioni precedenti per forzare dati coerenti e privi di anomalie
-      ['v31', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45'].forEach((v) => {
+      ['v31', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46'].forEach((v) => {
         try {
           localStorage.removeItem(`eurobasket_2026_27_${v}_players`);
           localStorage.removeItem(`eurobasket_2026_27_${v}_teams`);
@@ -473,14 +476,22 @@ export default function App() {
         return matchLeague && matchQuery;
       })
       .sort((a, b) => {
-        const valA = (a as any)[teamSortKey];
-        const valB = (b as any)[teamSortKey];
+        const getSortVal = (t: TeamStats): unknown => {
+          if (teamsExcludeGarbageTime && t.nonGarbage) {
+            if (teamSortKey === 'ortg') return t.nonGarbage.ortg;
+            if (teamSortKey === 'drtg') return t.nonGarbage.drtg;
+            if (teamSortKey === 'netRtg') return t.nonGarbage.netRtg;
+          }
+          return (t as any)[teamSortKey];
+        };
+        const valA = getSortVal(a);
+        const valB = getSortVal(b);
         if (typeof valA === 'number' && typeof valB === 'number') {
           return teamSortAsc ? valA - valB : valB - valA;
         }
         return 0;
       });
-  }, [teamsList, selectedLeague, searchQuery, teamSortKey, teamSortAsc]);
+  }, [teamsList, selectedLeague, searchQuery, teamSortKey, teamSortAsc, teamsExcludeGarbageTime]);
 
   // Lista squadre uniche per filtri
   const uniqueTeamsList = useMemo(() => {
@@ -1232,24 +1243,49 @@ export default function App() {
         {/* ============================================================ */}
         {currentTab === 'teams' && (
           <div className="space-y-4">
-            {/* Banner Informativo Parametrizzazione su 100 Possessi */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-md">
+            {/* Banner Informativo Parametrizzazione su 100 Possessi & Toggle Garbage Time */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs shadow-md">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-amber-500 text-slate-950 font-black flex items-center justify-center text-xs shadow">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-amber-500 text-slate-950 font-black flex items-center justify-center text-xs shadow shrink-0">
                   100p
                 </div>
                 <div>
                   <h4 className="font-bold text-white text-sm">
-                    Tutte le Statistiche di Squadra sono Parametrate su 100 Possessi
+                    {teamsExcludeGarbageTime
+                      ? 'Rating & Rimbalzi Escluso Garbage Time (Possessi Competitivi)'
+                      : 'Tutte le Statistiche di Squadra sono Parametrate su 100 Possessi'}
                   </h4>
                   <p className="text-slate-400 text-[11px]">
-                    L'Offensive Rating (ORtg) misura i punti realizzati ogni 100 possessi, il Defensive Rating (DRtg) i punti subiti su 100 possessi. Il Pace indica i possessi medi a partita (senza distorsione per i minuti).
+                    {teamsExcludeGarbageTime
+                      ? 'Esclude i possessi negli ultimi 5 minuti del Q4 con scarto ≥ 15 pt (Play-by-Play EuroLeague/EuroCup) o Q4 con scarto ≥ 20 pt al Q3 (LBA). Mostrate le differenze (+/-) rispetto alla partita intera.'
+                      : 'ORtg (punti segnati ogni 100 possessi), DRtg (punti subiti su 100 possessi), ORB% e DRB% calcolati dai tabellini e dal Play-by-Play ufficiale.'}
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] px-3 py-1.5 rounded-xl bg-slate-950 text-amber-300 font-bold border border-slate-800 self-start sm:self-auto shrink-0">
-                Pace = Possessi / Partita
-              </span>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <div className="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800">
+                  <button
+                    onClick={() => setTeamsExcludeGarbageTime(false)}
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                      !teamsExcludeGarbageTime
+                        ? 'bg-indigo-600 text-white'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Partita Intera
+                  </button>
+                  <button
+                    onClick={() => setTeamsExcludeGarbageTime(true)}
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                      teamsExcludeGarbageTime
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Escludi Garbage Time
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -1265,8 +1301,8 @@ export default function App() {
                         onClick={() => handleTeamSort('pace')}
                         title="Ritmo di gioco: Possessi medi giocati per partita"
                       >
-                        <div className="flex items-center justify-end gap-1 text-amber-400">
-                          Pace (Poss/Gara) <ArrowUpDown className="w-3 h-3" />
+                        <div className="flex items-center justify-end gap-1 text-amber-400 whitespace-nowrap">
+                          Pace <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
                       <th
@@ -1274,8 +1310,8 @@ export default function App() {
                         onClick={() => handleTeamSort('ortg')}
                         title="Offensive Rating: Punti segnati su 100 possessi effettivi"
                       >
-                        <div className="flex items-center justify-end gap-1 text-indigo-400 font-bold">
-                          ORtg (Pts/100p) <ArrowUpDown className="w-3 h-3" />
+                        <div className="flex items-center justify-end gap-1 text-indigo-400 font-bold whitespace-nowrap">
+                          {teamsExcludeGarbageTime ? 'No-G ORtg' : 'ORtg'} <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
                       <th
@@ -1283,8 +1319,8 @@ export default function App() {
                         onClick={() => handleTeamSort('drtg')}
                         title="Defensive Rating: Punti subiti su 100 possessi effettivi"
                       >
-                        <div className="flex items-center justify-end gap-1 text-cyan-400 font-bold">
-                          DRtg (Subiti/100p) <ArrowUpDown className="w-3 h-3" />
+                        <div className="flex items-center justify-end gap-1 text-cyan-400 font-bold whitespace-nowrap">
+                          {teamsExcludeGarbageTime ? 'No-G DRtg' : 'DRtg'} <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
                       <th
@@ -1292,87 +1328,131 @@ export default function App() {
                         onClick={() => handleTeamSort('netRtg')}
                         title="Net Rating: Differenziale su 100 possessi (ORtg - DRtg)"
                       >
-                        <div className="flex items-center justify-end gap-1 text-emerald-400 font-black">
-                          Net Rtg (Diff/100p) <ArrowUpDown className="w-3 h-3" />
+                        <div className="flex items-center justify-end gap-1 text-emerald-400 font-black whitespace-nowrap">
+                          {teamsExcludeGarbageTime ? 'No-G NetRtg' : 'Net Rtg'} <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
-                      <th className="py-3 px-2 text-right">Off. eFG%</th>
-                      <th className="py-3 px-2 text-right">Off. TOV%</th>
-                      <th className="py-3 px-2 text-right">Off. ORB%</th>
-                      <th className="py-3 px-2 text-right">Off. FTR</th>
-                      <th className="py-3 px-3 text-center">Moreyball %</th>
+                      <th className="py-3 px-2 text-right whitespace-nowrap">eFG%</th>
+                      <th className="py-3 px-2 text-right whitespace-nowrap">TOV%</th>
+                      <th className="py-3 px-2 text-right whitespace-nowrap">ORB%</th>
+                      <th className="py-3 px-2 text-right whitespace-nowrap">DRB%</th>
+                      <th className="py-3 px-2 text-right whitespace-nowrap">
+                        {teamsExcludeGarbageTime ? 'Garb.%' : 'FTR'}
+                      </th>
+                      <th className="py-3 px-3 text-center whitespace-nowrap">Moreyball %</th>
                     </tr>
                   </thead>
 
                   <tbody className="divide-y divide-slate-800/60">
-                    {filteredTeams.map((team) => (
-                      <tr
-                        key={`${team.id}-${team.league}`}
-                        onClick={() => setModalTeam(team)}
-                        className="hover:bg-slate-800/60 cursor-pointer transition-colors"
-                      >
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className="w-3 h-3 rounded-full inline-block"
-                              style={{ backgroundColor: team.logoColor }}
-                            ></span>
-                            <span className="font-bold text-white text-sm hover:text-indigo-400 transition-colors">
-                              {team.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-2 text-center">
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                              team.league === 'EuroLeague'
-                                ? 'bg-amber-500/20 text-amber-300'
-                                : team.league === 'EuroCup'
-                                ? 'bg-cyan-500/20 text-cyan-300'
-                                : 'bg-emerald-500/20 text-emerald-300'
-                            }`}
-                          >
-                            {team.league}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 text-center font-medium text-slate-300">
-                          {team.record.wins} - {team.record.losses}
-                        </td>
-                        <td className="py-3 px-2 text-right font-bold text-amber-400">
-                          {team.pace}
-                        </td>
-                        <td className="py-3 px-2 text-right font-bold text-indigo-400">
-                          {team.ortg}
-                        </td>
-                        <td className="py-3 px-2 text-right font-bold text-cyan-400">
-                          {team.drtg}
-                        </td>
-                        <td
-                          className={`py-3 px-2 text-right font-black ${
-                            team.netRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                          }`}
+                    {filteredTeams.map((team) => {
+                      const ng = team.nonGarbage;
+                      const useNg = teamsExcludeGarbageTime && !!ng;
+                      const ortgVal = useNg ? ng.ortg : team.ortg;
+                      const drtgVal = useNg ? ng.drtg : team.drtg;
+                      const netVal = useNg ? ng.netRtg : team.netRtg;
+                      const efgVal = useNg ? ng.efgPct : team.fourFactorsOffense.efgPct;
+                      const tovVal = useNg ? ng.tovPct : team.fourFactorsOffense.tovPct;
+                      const orbVal = useNg ? ng.orbPct : team.fourFactorsOffense.orbPct;
+                      const drbVal = useNg
+                        ? ng.drbPct
+                        : ng?.drbPct ?? Number((100 - team.fourFactorsDefense.orbPct).toFixed(1));
+                      const ortgDiff = useNg ? Number((ng.ortg - team.ortg).toFixed(1)) : 0;
+                      const drtgDiff = useNg ? Number((ng.drtg - team.drtg).toFixed(1)) : 0;
+                      const netDiff = useNg ? Number((ng.netRtg - team.netRtg).toFixed(1)) : 0;
+                      const orbDiff = useNg
+                        ? Number((ng.orbPct - team.fourFactorsOffense.orbPct).toFixed(1))
+                        : 0;
+
+                      return (
+                        <tr
+                          key={`${team.id}-${team.league}`}
+                          onClick={() => setModalTeam(team)}
+                          className="hover:bg-slate-800/60 cursor-pointer transition-colors"
                         >
-                          {team.netRtg >= 0 ? `+${team.netRtg}` : team.netRtg}
-                        </td>
-                        <td className="py-3 px-2 text-right text-slate-300">
-                          {team.fourFactorsOffense.efgPct}%
-                        </td>
-                        <td className="py-3 px-2 text-right text-slate-300">
-                          {team.fourFactorsOffense.tovPct}%
-                        </td>
-                        <td className="py-3 px-2 text-right text-slate-300">
-                          {team.fourFactorsOffense.orbPct}%
-                        </td>
-                        <td className="py-3 px-2 text-right text-slate-300">
-                          {team.fourFactorsOffense.ftr}
-                        </td>
-                        <td className="py-3 px-3 text-center">
-                          <span className="text-[10px] font-semibold bg-slate-800 text-indigo-300 px-2 py-0.5 rounded-full">
-                            {team.shotSelection.moreyballRate}%
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className="w-3 h-3 rounded-full inline-block shrink-0"
+                                style={{ backgroundColor: team.logoColor }}
+                              ></span>
+                              <span className="font-bold text-white text-sm hover:text-indigo-400 transition-colors">
+                                {team.name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                                team.league === 'EuroLeague'
+                                  ? 'bg-amber-500/20 text-amber-300'
+                                  : team.league === 'EuroCup'
+                                  ? 'bg-cyan-500/20 text-cyan-300'
+                                  : 'bg-emerald-500/20 text-emerald-300'
+                              }`}
+                            >
+                              {team.league}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 text-center font-mono tabular-nums font-medium text-slate-300">
+                            {team.record.wins}-{team.record.losses}
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums font-bold text-amber-400">
+                            {team.pace.toFixed(1)}
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums">
+                            <div className="font-bold text-indigo-400">{ortgVal.toFixed(1)}</div>
+                            {useNg && (
+                              <div className={`text-[10px] ${ortgDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {ortgDiff >= 0 ? `+${ortgDiff.toFixed(1)}` : ortgDiff.toFixed(1)}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums">
+                            <div className="font-bold text-cyan-400">{drtgVal.toFixed(1)}</div>
+                            {useNg && (
+                              <div className={`text-[10px] ${drtgDiff <= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {drtgDiff >= 0 ? `+${drtgDiff.toFixed(1)}` : drtgDiff.toFixed(1)}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums">
+                            <div className={`font-black ${netVal >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {netVal >= 0 ? `+${netVal.toFixed(1)}` : netVal.toFixed(1)}
+                            </div>
+                            {useNg && (
+                              <div className={`text-[10px] ${netDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {netDiff >= 0 ? `+${netDiff.toFixed(1)}` : netDiff.toFixed(1)}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-300">
+                            {efgVal.toFixed(1)}%
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-300">
+                            {tovVal.toFixed(1)}%
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-300">
+                            <div>{orbVal.toFixed(1)}%</div>
+                            {useNg && orbDiff !== 0 && (
+                              <div className={`text-[10px] ${orbDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {orbDiff >= 0 ? `+${orbDiff.toFixed(1)}` : orbDiff.toFixed(1)}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums text-emerald-300 font-semibold">
+                            {drbVal.toFixed(1)}%
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-300">
+                            {useNg ? `${ng.garbageTimePossPct.toFixed(1)}%` : team.fourFactorsOffense.ftr}
+                          </td>
+                          <td className="py-3 px-3 text-center font-mono tabular-nums">
+                            <span className="text-[10px] font-semibold bg-slate-800 text-indigo-300 px-2 py-0.5 rounded border border-slate-700">
+                              {team.shotSelection.moreyballRate}%
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

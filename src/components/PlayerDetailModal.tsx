@@ -120,10 +120,73 @@ export const PlayerDetailModal: React.FC<Props> = ({ player, onClose, onCompareW
             </div>
           </div>
 
+          {/* REAL ON/OFF COURT IMPACT (WOWY) & CONSISTENZA */}
+          <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-400" />
+                <span>Impatto Reale On/Off Court (WOWY) &amp; Costanza Rendimento</span>
+              </h3>
+              <span className="text-[10px] font-mono text-slate-400">
+                {player.realOnOff
+                  ? `Play-by-Play Reale · ${player.realOnOff.pbpGamesCount} gare (${player.realOnOff.onCourtMinutes} min tracciati)`
+                  : 'Dati Play-by-Play WOWY non disponibili per questa competizione'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono tabular-nums">
+              <div className="bg-slate-900 border border-slate-800/80 p-2.5 rounded-lg">
+                <div className="font-sans text-[11px] text-slate-400">On-Court NetRtg</div>
+                <div className={`text-base font-black ${(player.realOnOff?.onCourtNetRtg ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {player.realOnOff
+                    ? player.realOnOff.onCourtNetRtg >= 0
+                      ? `+${player.realOnOff.onCourtNetRtg}`
+                      : player.realOnOff.onCourtNetRtg
+                    : '—'}
+                </div>
+                <div className="font-sans text-[10px] text-slate-500">
+                  {player.realOnOff ? `ORtg ${player.realOnOff.onCourtOrtg} / DRtg ${player.realOnOff.onCourtDrtg}` : 'Solo EuroLeague/Cup PBP'}
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800/80 p-2.5 rounded-lg">
+                <div className="font-sans text-[11px] text-slate-400">Off-Court NetRtg</div>
+                <div className="text-base font-black text-slate-200">
+                  {player.realOnOff
+                    ? player.realOnOff.offCourtNetRtg >= 0
+                      ? `+${player.realOnOff.offCourtNetRtg}`
+                      : player.realOnOff.offCourtNetRtg
+                    : '—'}
+                </div>
+                <div className="font-sans text-[10px] text-slate-500">Squadra senza giocatore</div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800/80 p-2.5 rounded-lg">
+                <div className="font-sans text-[11px] text-slate-400">On/Off Net Swing</div>
+                <div className={`text-base font-black ${(player.realOnOff?.netSwing ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {player.realOnOff
+                    ? player.realOnOff.netSwing >= 0
+                      ? `+${player.realOnOff.netSwing}`
+                      : player.realOnOff.netSwing
+                    : '—'}
+                </div>
+                <div className="font-sans text-[10px] text-slate-500">Differenziale ON - OFF</div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800/80 p-2.5 rounded-lg">
+                <div className="font-sans text-[11px] text-slate-400">Volatilità GameScore (σ)</div>
+                <div className="text-base font-black text-amber-300">
+                  {player.volatilitySigma !== undefined ? `±${player.volatilitySigma}` : '—'}
+                </div>
+                <div className="font-sans text-[10px] text-slate-500">Deviazione standard gare</div>
+              </div>
+            </div>
+          </div>
+
           {/* NOVITÀ ANALITICA: Play Types Synergy, Genesi Punti & Shot Making */}
           <div className="space-y-3">
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400" /> Metriche Granulari Synergy & Shot Quality
+              <Zap className="w-4 h-4 text-amber-400" /> Metriche Granulari Synergy &amp; Shot Quality
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
@@ -196,8 +259,10 @@ export const PlayerDetailModal: React.FC<Props> = ({ player, onClose, onCompareW
               {/* Shot Quality & Clutch */}
               <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2">
                 <div className="font-bold text-rose-300 text-[11px] flex items-center justify-between">
-                  <span>Shot Making & Clutch</span>
-                  <span className="text-[10px] text-slate-500 font-mono">Modello FIBA</span>
+                  <span>Shot Making &amp; Clutch</span>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {metrics.clutchStats.source === 'pbp' ? `Clutch PBP (${metrics.clutchStats.clutchPossessions}p)` : 'Modello FIBA'}
+                  </span>
                 </div>
                 <div className="space-y-1 text-slate-300">
                   <div className="flex justify-between py-0.5 border-b border-slate-850">
@@ -217,7 +282,9 @@ export const PlayerDetailModal: React.FC<Props> = ({ player, onClose, onCompareW
                     </span>
                   </div>
                   <div className="flex justify-between py-0.5 border-b border-slate-850">
-                    <span className="text-slate-400">Clutch Net Rating:</span>
+                    <span className="text-slate-400">
+                      Clutch NetRtg ({metrics.clutchStats.source === 'pbp' ? 'PBP' : 'Stima'}):
+                    </span>
                     <span
                       className={`font-mono font-bold ${
                         metrics.clutchStats.clutchNetRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'

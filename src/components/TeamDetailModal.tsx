@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TeamStats, PlayerStats } from '../types/basketball';
 import { HalfCourtShotChart } from './HalfCourtShotChart';
 import { getOrComputeTeamMetrics } from '../utils/advancedAnalyticsCalculator';
-import { X, ShieldAlert, Crosshair, Zap, Activity, Flame, Target } from 'lucide-react';
+import { X, ShieldAlert, Crosshair, Zap, Activity, Flame, Target, Shield } from 'lucide-react';
 
 interface Props {
   team: TeamStats | null;
@@ -12,9 +12,24 @@ interface Props {
 }
 
 export const TeamDetailModal: React.FC<Props> = ({ team, players, onClose, onSelectPlayer }) => {
+  const [excludeGarbageTime, setExcludeGarbageTime] = useState<boolean>(false);
   if (!team) return null;
 
   const metrics = getOrComputeTeamMetrics(team);
+  const ng = team.nonGarbage;
+  const qs = team.quarterSplits;
+  const sit = team.situational;
+
+  const dispOrtg = excludeGarbageTime && ng ? ng.ortg : team.ortg;
+  const dispDrtg = excludeGarbageTime && ng ? ng.drtg : team.drtg;
+  const dispNet = excludeGarbageTime && ng ? ng.netRtg : team.netRtg;
+  const dispOrb = excludeGarbageTime && ng ? ng.orbPct : team.fourFactorsOffense.orbPct;
+  const rawDrb = Number((100 - team.fourFactorsDefense.orbPct).toFixed(1));
+  const dispDrb = excludeGarbageTime && ng ? ng.drbPct : (ng?.drbPct ?? rawDrb);
+
+  const deltaOrtg = Number((dispOrtg - team.ortg).toFixed(1));
+  const deltaDrtg = Number((dispDrtg - team.drtg).toFixed(1));
+  const deltaNet = Number((dispNet - team.netRtg).toFixed(1));
 
   const teamPlayers = players.filter(
     (p) => (p.teamId === team.id || p.team === team.name) && p.league === team.league
@@ -63,47 +78,199 @@ export const TeamDetailModal: React.FC<Props> = ({ team, players, onClose, onSel
 
         {/* Body Modal Scrollabile */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-          {/* Card Ratings e Ritmo */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
-              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-                <span>Offensive Rating (ORtg)</span>
-                <Zap className="w-3.5 h-3.5 text-indigo-400" />
-              </div>
-              <div className="text-2xl font-black text-indigo-400">{team.ortg}</div>
-              <div className="text-[10px] text-slate-400 font-semibold">Punti segnati su 100 possessi</div>
+          {/* Barra Toggle Garbage Time */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs">
+            <div className="flex items-center gap-2 text-slate-300">
+              <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                {excludeGarbageTime ? (
+                  <>
+                    <strong className="text-emerald-300">Possessi Competitivi (No Garbage Time)</strong>
+                    <span className="text-slate-400 ml-2 font-mono tabular-nums">
+                      · Garbage escluso: {ng?.garbageTimePossPct ?? 0}% · Fonte: {ng?.source === 'pbp' ? `Play-by-Play (${ng.gamesWithPbp} gare)` : 'Filtro Q4 ≥ 20pt'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <strong>Partita Intera (Raw Boxscore)</strong>
+                    <span className="text-slate-400 ml-2 font-mono tabular-nums">
+                      · Possessi competitivi: {ng?.competitivePossessions ?? '—'}/{ng?.totalPossessions ?? '—'}
+                    </span>
+                  </>
+                )}
+              </span>
             </div>
-
-            <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
-              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-                <span>Defensive Rating (DRtg)</span>
-                <ShieldAlert className="w-3.5 h-3.5 text-cyan-400" />
-              </div>
-              <div className="text-2xl font-black text-cyan-400">{team.drtg}</div>
-              <div className="text-[10px] text-slate-400 font-semibold">Punti subiti su 100 possessi</div>
-            </div>
-
-            <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
-              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-                <span>Net Rating</span>
-                <Activity className="w-3.5 h-3.5 text-emerald-400" />
-              </div>
-              <div
-                className={`text-2xl font-black ${
-                  team.netRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'
+            <div className="flex items-center p-0.5 bg-slate-900 border border-slate-800 rounded-lg">
+              <button
+                onClick={() => setExcludeGarbageTime(false)}
+                className={`px-2.5 py-1 rounded-md font-semibold cursor-pointer transition-colors whitespace-nowrap ${
+                  !excludeGarbageTime ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {team.netRtg >= 0 ? `+${team.netRtg}` : team.netRtg}
+                Partita Intera
+              </button>
+              <button
+                onClick={() => setExcludeGarbageTime(true)}
+                className={`px-2.5 py-1 rounded-md font-semibold cursor-pointer transition-colors whitespace-nowrap ${
+                  excludeGarbageTime ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Escludi Garbage Time
+              </button>
+            </div>
+          </div>
+
+          {/* Card Ratings e Rimbalzi */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>{excludeGarbageTime ? 'ORtg (No-G)' : 'Offensive Rtg'}</span>
+                <Zap className="w-3.5 h-3.5 text-indigo-400" />
               </div>
-              <div className="text-[10px] text-slate-400 font-semibold">Differenziale su 100 possessi</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-black font-mono tabular-nums text-indigo-400">{dispOrtg}</span>
+                {excludeGarbageTime && deltaOrtg !== 0 && (
+                  <span className={`text-xs font-mono tabular-nums font-bold ${deltaOrtg > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    ({deltaOrtg > 0 ? `+${deltaOrtg}` : deltaOrtg})
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-slate-400 font-semibold">Punti / 100 possessi</div>
             </div>
 
             <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
-              <div className="text-slate-400 text-xs mb-1">Ritmo di Gioco (Pace)</div>
-              <div className="text-2xl font-black text-amber-400">{team.pace}</div>
-              <div className="text-[10px] text-slate-400 font-semibold">Possessi medi per gara</div>
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>{excludeGarbageTime ? 'DRtg (No-G)' : 'Defensive Rtg'}</span>
+                <ShieldAlert className="w-3.5 h-3.5 text-cyan-400" />
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-black font-mono tabular-nums text-cyan-400">{dispDrtg}</span>
+                {excludeGarbageTime && deltaDrtg !== 0 && (
+                  <span className={`text-xs font-mono tabular-nums font-bold ${deltaDrtg < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    ({deltaDrtg > 0 ? `+${deltaDrtg}` : deltaDrtg})
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-slate-400 font-semibold">Subiti / 100 possessi</div>
+            </div>
+
+            <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>{excludeGarbageTime ? 'Net Rtg (No-G)' : 'Net Rating'}</span>
+                <Activity className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span
+                  className={`text-2xl font-black font-mono tabular-nums ${
+                    dispNet >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                >
+                  {dispNet >= 0 ? `+${dispNet}` : dispNet}
+                </span>
+                {excludeGarbageTime && deltaNet !== 0 && (
+                  <span className="text-xs font-mono tabular-nums text-slate-400">
+                    ({deltaNet > 0 ? `+${deltaNet}` : deltaNet})
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-slate-400 font-semibold">Diff / 100 possessi</div>
+            </div>
+
+            <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
+              <div className="text-slate-400 text-xs mb-1">{excludeGarbageTime ? 'ORB% / DRB% (No-G)' : 'ORB% / DRB%'}</div>
+              <div className="text-lg font-black font-mono tabular-nums text-white flex items-baseline gap-1.5">
+                <span className="text-cyan-400">{dispOrb}%</span>
+                <span className="text-slate-600 text-xs">/</span>
+                <span className="text-emerald-400">{dispDrb}%</span>
+              </div>
+              <div className="text-[10px] text-slate-400 font-semibold">Rimbalzi Off. / Dif.</div>
+            </div>
+
+            <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
+              <div className="text-slate-400 text-xs mb-1">Ritmo (Pace)</div>
+              <div className="text-2xl font-black font-mono tabular-nums text-amber-400">{team.pace}</div>
+              <div className="text-[10px] text-slate-400 font-semibold">Possessi / partita</div>
             </div>
           </div>
+
+          {/* QUARTER SPLITS & SITUAZIONALE REALE */}
+          {(qs || sit) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {qs && (
+                <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider">
+                      Quarter Splits (Diff. Medio) &amp; Aggiustamento Q3
+                    </h3>
+                    <span
+                      className={`text-xs font-mono tabular-nums font-bold ${
+                        qs.q3AdjustmentIndex >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      Q3 Adj: {qs.q3AdjustmentIndex >= 0 ? `+${qs.q3AdjustmentIndex}` : qs.q3AdjustmentIndex}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                    {[
+                      { label: 'Q1 Net', val: qs.q1Net, pts: qs.q1Pts },
+                      { label: 'Q2 Net', val: qs.q2Net, pts: qs.q2Pts },
+                      { label: 'Q3 Net', val: qs.q3Net, pts: qs.q3Pts },
+                      { label: 'Q4 Net', val: qs.q4Net, pts: qs.q4Pts },
+                    ].map((q) => (
+                      <div key={q.label} className="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
+                        <div className="text-[10px] text-slate-400">{q.label}</div>
+                        <div className={`font-mono tabular-nums font-bold text-sm ${q.val >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {q.val >= 0 ? `+${q.val}` : q.val}
+                        </div>
+                        <div className="text-[10px] font-mono tabular-nums text-slate-500">{q.pts} pts</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80 font-mono tabular-nums">
+                    <span>1° Tempo: <strong className={qs.half1Net >= 0 ? 'text-emerald-400' : 'text-rose-400'}>{qs.half1Net >= 0 ? `+${qs.half1Net}` : qs.half1Net}</strong></span>
+                    <span>2° Tempo: <strong className={qs.half2Net >= 0 ? 'text-emerald-400' : 'text-rose-400'}>{qs.half2Net >= 0 ? `+${qs.half2Net}` : qs.half2Net}</strong></span>
+                  </div>
+                </div>
+              )}
+
+              {sit && (
+                <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider">
+                      Momentum, Consistenza &amp; Top Opponents
+                    </h3>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {sit.pbpGamesCount > 0 ? `${sit.pbpGamesCount} gare PBP` : 'Boxscore Splits'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5 font-mono tabular-nums">
+                    <div className="flex justify-between py-1 border-b border-slate-800/80">
+                      <span className="font-sans text-slate-400">Kill Shots (10-0+):</span>
+                      <span className="font-bold text-amber-300">
+                        {sit.pbpGamesCount > 0 ? `${sit.killShotsTotal} (${sit.killShotsPerGame}/g)` : 'N/D PBP'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800/80">
+                      <span className="font-sans text-slate-400">Runs 10-0 Subiti:</span>
+                      <span className="font-bold text-rose-400">
+                        {sit.pbpGamesCount > 0 ? `${sit.runsConcededTotal} (${sit.runsConcededPerGame}/g)` : 'N/D PBP'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="font-sans text-slate-400">Volatilità NetRtg σ:</span>
+                      <span className="font-bold text-white">±{sit.volatilitySigma}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="font-sans text-slate-400">vs Top .500:</span>
+                      <span className={`font-bold ${sit.netRtgVsTop500 >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {sit.netRtgVsTop500 >= 0 ? `+${sit.netRtgVsTop500}` : sit.netRtgVsTop500} ({sit.winsVsTop500}V-{sit.lossesVsTop500}S)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* I FOUR FACTORS DI DEAN OLIVER */}
           <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
@@ -264,7 +431,9 @@ export const TeamDetailModal: React.FC<Props> = ({ team, players, onClose, onSel
                     </span>
                   </div>
                   <div className="flex justify-between py-0.5">
-                    <span className="text-slate-400">Clutch Record Stima:</span>
+                    <span className="text-slate-400">
+                      Clutch Record ({metrics.clutchStats.source === 'pbp' ? 'PBP Reale' : 'Stima'}):
+                    </span>
                     <span className="font-mono font-bold text-white">
                       {metrics.clutchStats.clutchRecord?.wins ?? 0}V - {metrics.clutchStats.clutchRecord?.losses ?? 0}S
                     </span>

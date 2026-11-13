@@ -32,7 +32,7 @@ interface Props {
   onCompareWithH2H: (type: 'players' | 'teams', id: string) => void;
 }
 
-export type TableViewMode = 'advanced' | 'playtypes' | 'origin_clutch' | 'shot_quality';
+export type TableViewMode = 'advanced' | 'situational' | 'playtypes' | 'origin_clutch' | 'shot_quality';
 
 export const AdvancedDataTable: React.FC<Props> = ({
   players,
@@ -43,6 +43,7 @@ export const AdvancedDataTable: React.FC<Props> = ({
 }) => {
   const [tableType, setTableType] = useState<'players' | 'teams'>('players');
   const [viewMode, setViewMode] = useState<TableViewMode>('advanced');
+  const [excludeGarbageTime, setExcludeGarbageTime] = useState<boolean>(false);
   const [leagueFilter, setLeagueFilter] = useState<League | 'ALL'>('ALL');
   const [posFilter, setPosFilter] = useState<string>('ALL');
   const [search, setSearch] = useState('');
@@ -88,11 +89,37 @@ export const AdvancedDataTable: React.FC<Props> = ({
     if (field === 'clutchEfgPct') return metrics.clutchStats.clutchEfgPct;
     if (field === 'clutchPts') return metrics.clutchStats.clutchPts;
     if (field === 'moreyballRate') return p.shotSelection?.moreyballRate || 0;
+    if (field === 'onCourtNetRtg') return p.realOnOff?.onCourtNetRtg ?? -999;
+    if (field === 'offCourtNetRtg') return p.realOnOff?.offCourtNetRtg ?? -999;
+    if (field === 'netSwing') return p.realOnOff?.netSwing ?? -999;
+    if (field === 'onCourtMinutes') return p.realOnOff?.onCourtMinutes ?? 0;
+    if (field === 'volatilitySigma') return p.volatilitySigma ?? 0;
     return (p as any)[field] ?? 0;
   };
 
   const extractTeamValue = (t: TeamStats, field: string): number => {
     const metrics = getOrComputeTeamMetrics(t);
+    if (excludeGarbageTime) {
+      if (field === 'ortg') return t.nonGarbage?.ortg ?? t.ortg;
+      if (field === 'drtg') return t.nonGarbage?.drtg ?? t.drtg;
+      if (field === 'netRtg') return t.nonGarbage?.netRtg ?? t.netRtg;
+      if (field === 'efgOff') return t.nonGarbage?.efgPct ?? t.fourFactorsOffense?.efgPct ?? 0;
+      if (field === 'orbOff') return t.nonGarbage?.orbPct ?? t.fourFactorsOffense?.orbPct ?? 0;
+      if (field === 'drbPct') return t.nonGarbage?.drbPct ?? Number((100 - (t.fourFactorsDefense?.orbPct ?? 26)).toFixed(1));
+    }
+    if (field === 'ngOrtg') return t.nonGarbage?.ortg ?? t.ortg;
+    if (field === 'ngDrtg') return t.nonGarbage?.drtg ?? t.drtg;
+    if (field === 'ngNetRtg') return t.nonGarbage?.netRtg ?? t.netRtg;
+    if (field === 'ngOrbPct') return t.nonGarbage?.orbPct ?? t.fourFactorsOffense?.orbPct ?? 0;
+    if (field === 'ngDrbPct') return t.nonGarbage?.drbPct ?? Number((100 - (t.fourFactorsDefense?.orbPct ?? 26)).toFixed(1));
+    if (field === 'garbageTimePossPct') return t.nonGarbage?.garbageTimePossPct ?? 0;
+    if (field === 'q3AdjustmentIndex') return t.quarterSplits?.q3AdjustmentIndex ?? 0;
+    if (field === 'killShotsPerGame') return t.situational?.killShotsPerGame ?? 0;
+    if (field === 'runsConcededPerGame') return t.situational?.runsConcededPerGame ?? 0;
+    if (field === 'volatilitySigma') return t.situational?.volatilitySigma ?? 0;
+    if (field === 'netRtgVsTop500') return t.situational?.netRtgVsTop500 ?? t.netRtg;
+    if (field === 'orbOff') return t.fourFactorsOffense?.orbPct || 0;
+    if (field === 'drbPct') return t.nonGarbage?.drbPct ?? Number((100 - (t.fourFactorsDefense?.orbPct ?? 26)).toFixed(1));
     if (field === 'xefgPct') return metrics.shotQuality.xefgPct;
     if (field === 'shotMakingDiff') return metrics.shotQuality.shotMakingDiff;
     if (field === 'shotQualityRating') return metrics.shotQuality.shotQualityRating;
@@ -130,7 +157,7 @@ export const AdvancedDataTable: React.FC<Props> = ({
         const valB = extractTeamValue(b, sortField);
         return sortAsc ? valA - valB : valB - valA;
       });
-  }, [teams, leagueFilter, search, sortField, sortAsc]);
+  }, [teams, leagueFilter, search, sortField, sortAsc, excludeGarbageTime]);
 
   // Filtro Giocatori
   const filteredPlayers = useMemo(() => {
@@ -196,6 +223,10 @@ export const AdvancedDataTable: React.FC<Props> = ({
         'Fastbreak',
         '2ndChance',
         'ClutchNetRtg',
+        'OnCourt_NetRtg',
+        'OffCourt_NetRtg',
+        'OnOff_Swing',
+        'Volatility_Sigma',
       ];
       csvData = (rows as PlayerStats[]).map((p) => {
         const m = getOrComputePlayerMetrics(p);
@@ -229,6 +260,10 @@ export const AdvancedDataTable: React.FC<Props> = ({
           String(m.scoreOrigin.fastbreakPoints),
           String(m.scoreOrigin.secondChancePoints),
           String(m.clutchStats.clutchNetRtg),
+          String(p.realOnOff?.onCourtNetRtg ?? ''),
+          String(p.realOnOff?.offCourtNetRtg ?? ''),
+          String(p.realOnOff?.netSwing ?? ''),
+          String(p.volatilitySigma ?? ''),
         ];
       });
     } else {
@@ -241,6 +276,16 @@ export const AdvancedDataTable: React.FC<Props> = ({
         'ORtg',
         'DRtg',
         'NetRtg',
+        'NoGarbage_ORtg',
+        'NoGarbage_DRtg',
+        'NoGarbage_NetRtg',
+        'NoGarbage_ORB%',
+        'NoGarbage_DRB%',
+        'GarbageTime%',
+        'Q3_Coach_Adj',
+        'KillShots_G',
+        'Volatility_Sigma',
+        'NetRtg_vs_Top500',
         'PPG',
         'OppPPG',
         'eFG% Off',
@@ -267,6 +312,16 @@ export const AdvancedDataTable: React.FC<Props> = ({
           String(t.ortg),
           String(t.drtg),
           String(t.netRtg),
+          String(t.nonGarbage?.ortg ?? t.ortg),
+          String(t.nonGarbage?.drtg ?? t.drtg),
+          String(t.nonGarbage?.netRtg ?? t.netRtg),
+          String(t.nonGarbage?.orbPct ?? t.fourFactorsOffense.orbPct),
+          String(t.nonGarbage?.drbPct ?? Number((100 - t.fourFactorsDefense.orbPct).toFixed(1))),
+          String(t.nonGarbage?.garbageTimePossPct ?? 0),
+          String(t.quarterSplits?.q3AdjustmentIndex ?? 0),
+          String(t.situational?.killShotsPerGame ?? 0),
+          String(t.situational?.volatilitySigma ?? 0),
+          String(t.situational?.netRtgVsTop500 ?? t.netRtg),
           String(t.ppg),
           String(t.oppPpg),
           String(t.fourFactorsOffense.efgPct),
@@ -347,11 +402,11 @@ export const AdvancedDataTable: React.FC<Props> = ({
               </button>
             </div>
 
-            {/* View Mode Tabs (Statistiche Avanzate / Play Types / Genesi & Clutch / Shot Quality) */}
-            <div className="flex items-center p-1 bg-slate-900 rounded-xl border border-slate-800 text-xs gap-1">
+            {/* View Mode Tabs (Statistiche Avanzate / Situazionale / Play Types / Genesi & Clutch / Shot Quality) */}
+            <div className="flex flex-wrap items-center p-1 bg-slate-900 rounded-xl border border-slate-800 text-xs gap-1">
               <button
                 onClick={() => setViewMode('advanced')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                   viewMode === 'advanced' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -359,8 +414,17 @@ export const AdvancedDataTable: React.FC<Props> = ({
                 <span>Base & Rating</span>
               </button>
               <button
+                onClick={() => setViewMode('situational')}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                  viewMode === 'situational' ? 'bg-emerald-600/25 text-emerald-300 border border-emerald-500/40' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Situazionale & Momentum</span>
+              </button>
+              <button
                 onClick={() => setViewMode('playtypes')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                   viewMode === 'playtypes' ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -369,7 +433,7 @@ export const AdvancedDataTable: React.FC<Props> = ({
               </button>
               <button
                 onClick={() => setViewMode('origin_clutch')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                   viewMode === 'origin_clutch' ? 'bg-amber-600/30 text-amber-300 border border-amber-500/40' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -378,7 +442,7 @@ export const AdvancedDataTable: React.FC<Props> = ({
               </button>
               <button
                 onClick={() => setViewMode('shot_quality')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                   viewMode === 'shot_quality' ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -483,6 +547,28 @@ export const AdvancedDataTable: React.FC<Props> = ({
               <span className="font-mono text-white font-bold w-6">{minMpg}m</span>
             </div>
           )}
+
+          {/* Toggle Garbage Time per Squadre */}
+          {tableType === 'teams' && (
+            <div className="flex items-center p-1 bg-slate-900 rounded-xl border border-slate-800 ml-auto">
+              <button
+                onClick={() => setExcludeGarbageTime(false)}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  !excludeGarbageTime ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Partita Intera
+              </button>
+              <button
+                onClick={() => setExcludeGarbageTime(true)}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  excludeGarbageTime ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Escludi Garbage Time
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -492,6 +578,16 @@ export const AdvancedDataTable: React.FC<Props> = ({
           <Info className="w-4 h-4 text-purple-400 shrink-0" />
           <span>
             <strong>Nota metodologica:</strong> I valori di Play-Type (PnR, Spot-Up, Transizione, Isolamento) sono <strong>stime analitiche</strong> modellate sulla base delle coordinate di tiro reali, del ruolo del giocatore e dei dati di possesso ufficiali.
+          </span>
+        </div>
+      )}
+
+      {/* Nota Metodologica No-Garbage & Situazionale */}
+      {(excludeGarbageTime || viewMode === 'situational') && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-emerald-950/20 border border-emerald-500/25 rounded-xl text-xs text-emerald-200">
+          <Info className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>
+            <strong>Filtro Garbage Time & Metriche Reali:</strong> Esclude possessi negli ultimi 5&apos; di Q4 con scarto ≥ 15 pt (Play-by-Play EuroLeague/EuroCup) o l&apos;intero Q4 se scarto fine Q3 ≥ 20 pt (LBA / gare senza PBP). On/Off e Clutch mostrano dati reali PBP dove disponibili.
           </span>
         </div>
       )}
@@ -616,6 +712,29 @@ export const AdvancedDataTable: React.FC<Props> = ({
                       </th>
                       <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('moreyballRate')}>
                         Moreyball% {getSortIcon('moreyballRate')}
+                      </th>
+                    </>
+                  )}
+
+                  {viewMode === 'situational' && (
+                    <>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('onCourtNetRtg')}>
+                        On-Court Net {getSortIcon('onCourtNetRtg')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('offCourtNetRtg')}>
+                        Off-Court Net {getSortIcon('offCourtNetRtg')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('netSwing')}>
+                        On/Off Swing {getSortIcon('netSwing')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('onCourtMinutes')}>
+                        Min PBP {getSortIcon('onCourtMinutes')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('clutchNetRtg')}>
+                        Clutch NetRtg {getSortIcon('clutchNetRtg')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('volatilitySigma')}>
+                        Volatilità σ {getSortIcon('volatilitySigma')}
                       </th>
                     </>
                   )}
@@ -754,6 +873,54 @@ export const AdvancedDataTable: React.FC<Props> = ({
                         </>
                       )}
 
+                      {viewMode === 'situational' && (
+                        <>
+                          <td className="py-2.5 px-2 text-right tabular-nums">
+                            {p.realOnOff ? (
+                              <span className={`font-bold ${p.realOnOff.onCourtNetRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {p.realOnOff.onCourtNetRtg >= 0 ? `+${p.realOnOff.onCourtNetRtg}` : p.realOnOff.onCourtNetRtg}
+                              </span>
+                            ) : (
+                              <span className="text-slate-600">—</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-slate-300">
+                            {p.realOnOff ? (
+                              <span>
+                                {p.realOnOff.offCourtNetRtg >= 0 ? `+${p.realOnOff.offCourtNetRtg}` : p.realOnOff.offCourtNetRtg}
+                              </span>
+                            ) : (
+                              <span className="text-slate-600">—</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums">
+                            {p.realOnOff ? (
+                              <span className={`font-bold ${p.realOnOff.netSwing >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {p.realOnOff.netSwing >= 0 ? `+${p.realOnOff.netSwing}` : p.realOnOff.netSwing}
+                              </span>
+                            ) : (
+                              <span className="text-slate-600 font-sans text-[10px]">No PBP</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-slate-400">
+                            {p.realOnOff ? `${p.realOnOff.onCourtMinutes}m` : '—'}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <span className={`font-bold ${metrics.clutchStats.clutchNetRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {metrics.clutchStats.clutchNetRtg >= 0 ? `+${metrics.clutchStats.clutchNetRtg}` : metrics.clutchStats.clutchNetRtg}
+                              </span>
+                              <span className="text-[9px] font-sans text-slate-500">
+                                {metrics.clutchStats.source === 'pbp' ? 'PBP' : 'Stima'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-amber-300">
+                            {p.volatilitySigma !== undefined ? `±${p.volatilitySigma}` : '—'}
+                          </td>
+                        </>
+                      )}
+
                       <td className="py-2.5 px-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -833,22 +1000,59 @@ export const AdvancedDataTable: React.FC<Props> = ({
                         Pace {getSortIcon('pace')}
                       </th>
                       <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('ortg')}>
-                        Off. Rtg {getSortIcon('ortg')}
+                        {excludeGarbageTime ? 'ORtg (No-G)' : 'Off. Rtg'} {getSortIcon('ortg')}
                       </th>
                       <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('drtg')}>
-                        Def. Rtg {getSortIcon('drtg')}
+                        {excludeGarbageTime ? 'DRtg (No-G)' : 'Def. Rtg'} {getSortIcon('drtg')}
                       </th>
                       <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('netRtg')}>
-                        Net Rtg {getSortIcon('netRtg')}
+                        {excludeGarbageTime ? 'NetRtg (No-G)' : 'Net Rtg'} {getSortIcon('netRtg')}
                       </th>
-                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('ppg')}>
-                        PPG {getSortIcon('ppg')}
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('orbOff')}>
+                        ORB% {getSortIcon('orbOff')}
                       </th>
-                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('oppPpg')}>
-                        Opp. PPG {getSortIcon('oppPpg')}
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('drbPct')}>
+                        DRB% {getSortIcon('drbPct')}
                       </th>
-                      <th className="py-3 px-2 text-right">eFG% Off</th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('efgOff')}>
+                        eFG% Off {getSortIcon('efgOff')}
+                      </th>
                       <th className="py-3 px-2 text-right">Morey%</th>
+                    </>
+                  )}
+
+                  {viewMode === 'situational' && (
+                    <>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('ngOrtg')}>
+                        No-G ORtg {getSortIcon('ngOrtg')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('ngDrtg')}>
+                        No-G DRtg {getSortIcon('ngDrtg')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('ngNetRtg')}>
+                        No-G NetRtg {getSortIcon('ngNetRtg')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('ngOrbPct')}>
+                        No-G ORB% {getSortIcon('ngOrbPct')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('ngDrbPct')}>
+                        No-G DRB% {getSortIcon('ngDrbPct')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('garbageTimePossPct')}>
+                        Garbage% {getSortIcon('garbageTimePossPct')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('q3AdjustmentIndex')}>
+                        Q3 Coach Adj {getSortIcon('q3AdjustmentIndex')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('killShotsPerGame')}>
+                        Kill Shots/G {getSortIcon('killShotsPerGame')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('volatilitySigma')}>
+                        Volatilità σ {getSortIcon('volatilitySigma')}
+                      </th>
+                      <th className="py-3 px-2 text-right cursor-pointer hover:text-white" onClick={() => handleSort('netRtgVsTop500')}>
+                        Net vs &gt;.500 {getSortIcon('netRtgVsTop500')}
+                      </th>
                     </>
                   )}
 
@@ -948,28 +1152,92 @@ export const AdvancedDataTable: React.FC<Props> = ({
                         {wins} - {losses}
                       </td>
 
-                      {viewMode === 'advanced' && (
-                        <>
-                          <td className="py-2.5 px-2 text-right text-slate-300">{t.pace}</td>
-                          <td className="py-2.5 px-2 text-right font-bold text-sky-400">{t.ortg}</td>
-                          <td className="py-2.5 px-2 text-right text-slate-300">{t.drtg}</td>
-                          <td
-                            className={`py-2.5 px-2 text-right font-bold ${
-                              t.netRtg >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                            }`}
-                          >
-                            {t.netRtg >= 0 ? `+${t.netRtg}` : t.netRtg}
-                          </td>
-                          <td className="py-2.5 px-2 text-right text-white">{t.ppg}</td>
-                          <td className="py-2.5 px-2 text-right text-slate-400">{t.oppPpg}</td>
-                          <td className="py-2.5 px-2 text-right text-slate-300">
-                            {t.fourFactorsOffense.efgPct}%
-                          </td>
-                          <td className="py-2.5 px-2 text-right text-indigo-300">
-                            {t.shotSelection.moreyballRate}%
-                          </td>
-                        </>
-                      )}
+                      {viewMode === 'advanced' && (() => {
+                        const dispOrtg = excludeGarbageTime && t.nonGarbage ? t.nonGarbage.ortg : t.ortg;
+                        const dispDrtg = excludeGarbageTime && t.nonGarbage ? t.nonGarbage.drtg : t.drtg;
+                        const dispNet = excludeGarbageTime && t.nonGarbage ? t.nonGarbage.netRtg : t.netRtg;
+                        const dispOrb = excludeGarbageTime && t.nonGarbage ? t.nonGarbage.orbPct : t.fourFactorsOffense.orbPct;
+                        const rawDrb = Number((100 - t.fourFactorsDefense.orbPct).toFixed(1));
+                        const dispDrb = excludeGarbageTime && t.nonGarbage ? t.nonGarbage.drbPct : (t.nonGarbage?.drbPct ?? rawDrb);
+                        const dispEfg = excludeGarbageTime && t.nonGarbage ? t.nonGarbage.efgPct : t.fourFactorsOffense.efgPct;
+                        const netDelta = Number((dispNet - t.netRtg).toFixed(1));
+
+                        return (
+                          <>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-slate-300">{t.pace}</td>
+                            <td className="py-2.5 px-2 text-right tabular-nums font-bold text-sky-400">{dispOrtg}</td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-slate-300">{dispDrtg}</td>
+                            <td
+                              className={`py-2.5 px-2 text-right tabular-nums font-bold ${
+                                dispNet >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                              }`}
+                            >
+                              <span>{dispNet >= 0 ? `+${dispNet}` : dispNet}</span>
+                              {excludeGarbageTime && netDelta !== 0 && (
+                                <span className="ml-1 text-[10px] font-normal text-slate-400">
+                                  ({netDelta > 0 ? `+${netDelta}` : netDelta})
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-cyan-300">{dispOrb}%</td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-emerald-300">{dispDrb}%</td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-slate-300">{dispEfg}%</td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-indigo-300">
+                              {t.shotSelection.moreyballRate}%
+                            </td>
+                          </>
+                        );
+                      })()}
+
+                      {viewMode === 'situational' && (() => {
+                        const ng = t.nonGarbage;
+                        const qs = t.quarterSplits;
+                        const sit = t.situational;
+                        const ngNet = ng?.netRtg ?? t.netRtg;
+                        const q3Adj = qs?.q3AdjustmentIndex ?? 0;
+                        const netTop = sit?.netRtgVsTop500 ?? t.netRtg;
+                        const drbFallback = Number((100 - t.fourFactorsDefense.orbPct).toFixed(1));
+
+                        return (
+                          <>
+                            <td className="py-2.5 px-2 text-right tabular-nums font-bold text-sky-400">
+                              {ng?.ortg ?? t.ortg}
+                            </td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-slate-300">
+                              {ng?.drtg ?? t.drtg}
+                            </td>
+                            <td className={`py-2.5 px-2 text-right tabular-nums font-bold ${ngNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {ngNet >= 0 ? `+${ngNet}` : ngNet}
+                            </td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-cyan-300">
+                              {ng?.orbPct ?? t.fourFactorsOffense.orbPct}%
+                            </td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-emerald-300">
+                              {ng?.drbPct ?? drbFallback}%
+                            </td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-slate-400">
+                              {ng?.garbageTimePossPct ?? 0}%
+                            </td>
+                            <td className={`py-2.5 px-2 text-right tabular-nums font-bold ${q3Adj >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {q3Adj >= 0 ? `+${q3Adj}` : q3Adj}
+                            </td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-amber-300">
+                              {sit && sit.pbpGamesCount > 0 ? sit.killShotsPerGame.toFixed(2) : '—'}
+                            </td>
+                            <td className="py-2.5 px-2 text-right tabular-nums text-slate-300">
+                              {sit ? `±${sit.volatilitySigma}` : '—'}
+                            </td>
+                            <td className={`py-2.5 px-2 text-right tabular-nums font-bold ${netTop >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {netTop >= 0 ? `+${netTop}` : netTop}
+                              {sit && (sit.winsVsTop500 + sit.lossesVsTop500) > 0 && (
+                                <span className="ml-1 text-[10px] font-normal text-slate-400">
+                                  ({sit.winsVsTop500}-{sit.lossesVsTop500})
+                                </span>
+                              )}
+                            </td>
+                          </>
+                        );
+                      })()}
 
                       {viewMode === 'playtypes' && (
                         <>

@@ -3,6 +3,11 @@ import path from 'path';
 import { TeamStats, PlayerStats } from '../types/basketball';
 import { buildLbaSeasonData } from './lbaSeasonData';
 import { syncOfficialLbaRounds, buildOfficialLbaDataset } from './lbaSyncEngine';
+import {
+  loadPbpStore,
+  analyzeGamePlayByPlay,
+  calcPossessionsFromCounts,
+} from './pbpAnalyticsEngine';
 
 const ROOT_DIR = typeof process !== 'undefined' && typeof process.cwd === 'function' ? process.cwd() : '.';
 const STORE_PATH = path.join(ROOT_DIR, 'data_games_store.json');
@@ -264,8 +269,16 @@ export function rebuildDatasetFromStore(
     return totals;
   }
 
+  const pbpStore = loadPbpStore();
   let elCount = 0;
   let ecCount = 0;
+
+  const calcStdDev = (vals: number[]): number => {
+    if (vals.length < 2) return 0;
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const variance = vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length;
+    return Number(Math.sqrt(variance).toFixed(1));
+  };
 
   for (const [key, d] of entries) {
     if (!d || !d.Stats || d.Stats.length < 2) continue;
@@ -302,16 +315,28 @@ export function rebuildDatasetFromStore(
     const poss0 = Math.max(1, tot0.fga + 0.44 * tot0.fta - tot0.orb + tot0.tov);
     const poss1 = Math.max(1, tot1.fga + 0.44 * tot1.fta - tot1.orb + tot1.tov);
 
+    // Analisi Play-by-Play reale se presente nello store
+    const pbpRawGame = pbpStore[key];
+    const analyzedPbp = pbpRawGame ? analyzeGamePlayByPlay(key, d, pbpRawGame) : null;
+
+    // Estrai ByQuarter per Quarter Splits e fallback garbage time
+    const bq0 = d.ByQuarter?.find((q: any) => (q.Team || '').trim().toUpperCase() === t0Name) || d.ByQuarter?.[0];
+    const bq1 = d.ByQuarter?.find((q: any) => (q.Team || '').trim().toUpperCase() === t1Name) || d.ByQuarter?.[1];
+
     for (let i = 0; i < 2; i++) {
       const t = d.Stats[i];
       const myTot = i === 0 ? tot0 : tot1;
       const oppTot = i === 0 ? tot1 : tot0;
       const myPoss = i === 0 ? poss0 : poss1;
       const oppPoss = i === 0 ? poss1 : poss0;
+      const myBq = i === 0 ? bq0 : bq1;
+      const oppBq = i === 0 ? bq1 : bq0;
 
       const isWin = myTot.pts > oppTot.pts;
       const tName = (t.Team || '').trim();
+      const oppTeamName = (d.Stats[1 - i]?.Team || '').trim();
       const teamAggKey = `${league}___${tName}`;
+      const oppAggKey = `${league}___${oppTeamName}`;
 
       let tEntry = teamAgg.get(teamAggKey);
       if (!tEntry) {
@@ -343,6 +368,50 @@ export function rebuildDatasetFromStore(
           oppOrb: 0,
           oppDrb: 0,
           oppTov: 0,
+          // Quarter splits
+          q1Pts: 0,
+          q2Pts: 0,
+          q3Pts: 0,
+          q4Pts: 0,
+          q1Opp: 0,
+          q2Opp: 0,
+          q3Opp: 0,
+          q4Opp: 0,
+          qCount: 0,
+          // Non-garbage accumulators (PBP o fallback quarter-split)
+          ngPts: 0,
+          ngOppPts: 0,
+          ngPoss: 0,
+          ngOppPoss: 0,
+          ngOrb: 0,
+          ngDrb: 0,
+          ngOppOrb: 0,
+          ngOppDrb: 0,
+          ngFga: 0,
+          ngFgm: 0,
+          ngFg3m: 0,
+          ngTov: 0,
+          ngRefPossTotal: 0,
+          pbpGames: 0,
+          pbpRawPoss: 0,
+          pbpNgPoss: 0,
+          pbpPtsFor: 0,
+          pbpPtsAgainst: 0,
+          pbpPossFor: 0,
+          pbpPossAgainst: 0,
+          killShotsTotal: 0,
+          runsConcededTotal: 0,
+          clutchPts: 0,
+          clutchOppPts: 0,
+          clutchPoss: 0,
+          clutchOppPoss: 0,
+          clutchFga: 0,
+          clutchFgm: 0,
+          clutchFg3m: 0,
+          clutchGames: 0,
+          clutchWins: 0,
+          clutchLosses: 0,
+          gamesLog: [] as Array<{ oppAggKey: string; isWin: boolean; pts: number; oppPts: number; poss: number; oppPoss: number; gameNetRtg: number }>,
         };
         teamAgg.set(teamAggKey, tEntry);
       }
@@ -374,6 +443,119 @@ export function rebuildDatasetFromStore(
       tEntry.oppOrb += oppTot.orb;
       tEntry.oppDrb += oppTot.drb;
       tEntry.oppTov += oppTot.tov;
+
+      const gameNetRtg = (myTot.pts / myPoss) * 100 - (oppTot.pts / oppPoss) * 100;
+      tEntry.gamesLog.push({
+        oppAggKey,
+        isWin,
+        pts: myTot.pts,
+        oppPts: oppTot.pts,
+        poss: myPoss,
+        oppPoss,
+        gameNetRtg,
+      });
+
+      // Quarter Splits da ByQuarter
+      let hasQ4GarbageFallback = false;
+      let q3MyCum = 0;
+      let q3OppCum = 0;
+      if (myBq && oppBq && (Number(myBq.Quarter1) || 0) + (Number(myBq.Quarter2) || 0) > 0) {
+        const q1 = Number(myBq.Quarter1) || 0;
+        const q2 = Number(myBq.Quarter2) || 0;
+        const q3 = Number(myBq.Quarter3) || 0;
+        const q4 = Number(myBq.Quarter4) || 0;
+        const oq1 = Number(oppBq.Quarter1) || 0;
+        const oq2 = Number(oppBq.Quarter2) || 0;
+        const oq3 = Number(oppBq.Quarter3) || 0;
+        const oq4 = Number(oppBq.Quarter4) || 0;
+        tEntry.q1Pts += q1; tEntry.q2Pts += q2; tEntry.q3Pts += q3; tEntry.q4Pts += q4;
+        tEntry.q1Opp += oq1; tEntry.q2Opp += oq2; tEntry.q3Opp += oq3; tEntry.q4Opp += oq4;
+        tEntry.qCount += 1;
+
+        q3MyCum = q1 + q2 + q3;
+        q3OppCum = oq1 + oq2 + oq3;
+        if (Math.abs(q3MyCum - q3OppCum) >= 20) {
+          hasQ4GarbageFallback = true;
+        }
+      }
+
+      if (analyzedPbp) {
+        const pbpMy = analyzedPbp.teams[i];
+        const pbpOpp = analyzedPbp.teams[1 - i];
+        const rawP = Math.max(1, calcPossessionsFromCounts(pbpMy.raw));
+        const oppRawP = Math.max(1, calcPossessionsFromCounts(pbpOpp.raw));
+        const ngP = Math.max(1, calcPossessionsFromCounts(pbpMy.nonGarbage));
+        const oppNgP = Math.max(1, calcPossessionsFromCounts(pbpOpp.nonGarbage));
+
+        tEntry.pbpGames += 1;
+        tEntry.pbpRawPoss += rawP;
+        tEntry.pbpNgPoss += ngP;
+        tEntry.pbpPtsFor += pbpMy.raw.pts;
+        tEntry.pbpPtsAgainst += pbpOpp.raw.pts;
+        tEntry.pbpPossFor += rawP;
+        tEntry.pbpPossAgainst += oppRawP;
+
+        tEntry.ngPts += pbpMy.nonGarbage.pts;
+        tEntry.ngOppPts += pbpOpp.nonGarbage.pts;
+        tEntry.ngPoss += ngP;
+        tEntry.ngOppPoss += oppNgP;
+        tEntry.ngOrb += pbpMy.nonGarbage.orb;
+        tEntry.ngDrb += pbpMy.nonGarbage.drb;
+        tEntry.ngOppOrb += pbpOpp.nonGarbage.orb;
+        tEntry.ngOppDrb += pbpOpp.nonGarbage.drb;
+        tEntry.ngFga += pbpMy.nonGarbage.fga;
+        tEntry.ngFgm += pbpMy.nonGarbage.fgm;
+        tEntry.ngFg3m += pbpMy.nonGarbage.fg3m;
+        tEntry.ngTov += pbpMy.nonGarbage.tov;
+        tEntry.ngRefPossTotal += rawP;
+
+        tEntry.killShotsTotal += pbpMy.killShots;
+        tEntry.runsConcededTotal += pbpMy.runsConceded;
+
+        const cP = calcPossessionsFromCounts(pbpMy.clutch);
+        const cOppP = calcPossessionsFromCounts(pbpOpp.clutch);
+        if (cP >= 1 || cOppP >= 1) {
+          tEntry.clutchPts += pbpMy.clutch.pts;
+          tEntry.clutchOppPts += pbpOpp.clutch.pts;
+          tEntry.clutchPoss += cP;
+          tEntry.clutchOppPoss += cOppP;
+          tEntry.clutchFga += pbpMy.clutch.fga;
+          tEntry.clutchFgm += pbpMy.clutch.fgm;
+          tEntry.clutchFg3m += pbpMy.clutch.fg3m;
+          tEntry.clutchGames += 1;
+          if (isWin) tEntry.clutchWins += 1;
+          else tEntry.clutchLosses += 1;
+        }
+      } else if (hasQ4GarbageFallback) {
+        const share = 0.75;
+        tEntry.ngPts += q3MyCum;
+        tEntry.ngOppPts += q3OppCum;
+        tEntry.ngPoss += myPoss * share;
+        tEntry.ngOppPoss += oppPoss * share;
+        tEntry.ngOrb += myTot.orb * share;
+        tEntry.ngDrb += myTot.drb * share;
+        tEntry.ngOppOrb += oppTot.orb * share;
+        tEntry.ngOppDrb += oppTot.drb * share;
+        tEntry.ngFga += myTot.fga * share;
+        tEntry.ngFgm += myTot.fgm * share;
+        tEntry.ngFg3m += myTot.fg3m * share;
+        tEntry.ngTov += myTot.tov * share;
+        tEntry.ngRefPossTotal += myPoss;
+      } else {
+        tEntry.ngPts += myTot.pts;
+        tEntry.ngOppPts += oppTot.pts;
+        tEntry.ngPoss += myPoss;
+        tEntry.ngOppPoss += oppPoss;
+        tEntry.ngOrb += myTot.orb;
+        tEntry.ngDrb += myTot.drb;
+        tEntry.ngOppOrb += oppTot.orb;
+        tEntry.ngOppDrb += oppTot.drb;
+        tEntry.ngFga += myTot.fga;
+        tEntry.ngFgm += myTot.fgm;
+        tEntry.ngFg3m += myTot.fg3m;
+        tEntry.ngTov += myTot.tov;
+        tEntry.ngRefPossTotal += myPoss;
+      }
 
       // Aggrega singoli giocatori (Controlla i minuti PRIMA di creare il record!)
       for (const p of t.PlayersStats || []) {
@@ -413,38 +595,113 @@ export function rebuildDatasetFromStore(
             plusMinus: 0,
             orb: 0,
             drb: 0,
+            gsHistory: [] as number[],
+            // PBP On/Off & Clutch accumulators
+            pbpGames: 0,
+            onSec: 0,
+            onPtsFor: 0,
+            onPtsAgainst: 0,
+            onPossFor: 0,
+            onPossAgainst: 0,
+            clutchPts: 0,
+            clutchFga: 0,
+            clutchFgm: 0,
+            clutchFg3m: 0,
+            clutchFta: 0,
+            clutchOnPtsFor: 0,
+            clutchOnPtsAgainst: 0,
+            clutchOnPossFor: 0,
+            clutchOnPossAgainst: 0,
           };
           playerAgg.set(playerAggKey, pEntry);
         }
 
+        const gPts = Number(p.Points) || 0;
+        const gFg2a = Number(p.FieldGoalsAttempted2) || 0;
+        const gFg2m = Number(p.FieldGoalsMade2) || 0;
+        const gFg3a = Number(p.FieldGoalsAttempted3) || 0;
+        const gFg3m = Number(p.FieldGoalsMade3) || 0;
+        const gFga = gFg2a + gFg3a;
+        const gFgm = gFg2m + gFg3m;
+        const gFta = Number(p.FreeThrowsAttempted) || 0;
+        const gFtm = Number(p.FreeThrowsMade) || 0;
+        const gOrb = Number(p.OffensiveRebounds) || 0;
+        const gDrb = Number(p.DefensiveRebounds) || 0;
+        const gStl = Number(p.Steals) || 0;
+        const gAst = Number(p.Assistances) || 0;
+        const gPf = Number(p.FoulsCommited) || 0;
+        const gTov = Number(p.Turnovers) || 0;
+
+        const gameGs =
+          gPts +
+          0.4 * gFgm -
+          0.7 * gFga -
+          0.4 * (gFta - gFtm) +
+          0.7 * gOrb +
+          0.3 * gDrb +
+          gStl +
+          0.7 * gAst -
+          0.4 * gPf -
+          gTov;
+        pEntry.gsHistory.push(gameGs);
+
         pEntry.gp += 1;
         pEntry.totalSec += sec;
-        pEntry.pts += Number(p.Points) || 0;
+        pEntry.pts += gPts;
         pEntry.reb += Number(p.TotalRebounds) || 0;
-        pEntry.ast += Number(p.Assistances) || 0;
-        pEntry.stl += Number(p.Steals) || 0;
+        pEntry.ast += gAst;
+        pEntry.stl += gStl;
         pEntry.blk += Number(p.BlocksFavour) || 0;
-        pEntry.tov += Number(p.Turnovers) || 0;
-        pEntry.pf += Number(p.FoulsCommited) || 0;
-        pEntry.fga += (Number(p.FieldGoalsAttempted2) || 0) + (Number(p.FieldGoalsAttempted3) || 0);
-        pEntry.fgm += (Number(p.FieldGoalsMade2) || 0) + (Number(p.FieldGoalsMade3) || 0);
-        pEntry.fg2a += Number(p.FieldGoalsAttempted2) || 0;
-        pEntry.fg2m += Number(p.FieldGoalsMade2) || 0;
-        pEntry.fg3a += Number(p.FieldGoalsAttempted3) || 0;
-        pEntry.fg3m += Number(p.FieldGoalsMade3) || 0;
-        pEntry.fta += Number(p.FreeThrowsAttempted) || 0;
-        pEntry.ftm += Number(p.FreeThrowsMade) || 0;
+        pEntry.tov += gTov;
+        pEntry.pf += gPf;
+        pEntry.fga += gFga;
+        pEntry.fgm += gFgm;
+        pEntry.fg2a += gFg2a;
+        pEntry.fg2m += gFg2m;
+        pEntry.fg3a += gFg3a;
+        pEntry.fg3m += gFg3m;
+        pEntry.fta += gFta;
+        pEntry.ftm += gFtm;
         pEntry.pir += Number(p.Valuation) || 0;
         pEntry.plusMinus += Number(p.Plusminus) || 0;
-        pEntry.orb += Number(p.OffensiveRebounds) || 0;
-        pEntry.drb += Number(p.DefensiveRebounds) || 0;
+        pEntry.orb += gOrb;
+        pEntry.drb += gDrb;
+
+        if (analyzedPbp) {
+          const pPbp = analyzedPbp.teams[i].players[pId];
+          if (pPbp) {
+            pEntry.pbpGames += 1;
+            pEntry.onSec += pPbp.onSec;
+            pEntry.onPtsFor += pPbp.onPtsFor;
+            pEntry.onPtsAgainst += pPbp.onPtsAgainst;
+            pEntry.onPossFor += pPbp.onPossFor;
+            pEntry.onPossAgainst += pPbp.onPossAgainst;
+            pEntry.clutchPts += pPbp.clutchPts;
+            pEntry.clutchFga += pPbp.clutchFga;
+            pEntry.clutchFgm += pPbp.clutchFgm;
+            pEntry.clutchFg3m += pPbp.clutchFg3m;
+            pEntry.clutchFta += pPbp.clutchFta;
+            pEntry.clutchOnPtsFor += pPbp.clutchOnPtsFor;
+            pEntry.clutchOnPtsAgainst += pPbp.clutchOnPtsAgainst;
+            pEntry.clutchOnPossFor += pPbp.clutchOnPossFor;
+            pEntry.clutchOnPossAgainst += pPbp.clutchOnPossAgainst;
+          }
+        }
       }
+    }
+  }
+
+  // Identifica squadre sopra .500 per ciascuna lega
+  const top500TeamKeys = new Set<string>();
+  for (const [aggKey, t] of teamAgg) {
+    if (t.gp > 0 && t.wins >= t.losses) {
+      top500TeamKeys.add(aggKey);
     }
   }
 
   // Costruisci squadre EuroLeague ed EuroCup
   const builtEuroTeams: TeamStats[] = [];
-  for (const [tName, t] of teamAgg) {
+  for (const [tKey, t] of teamAgg) {
     const gp = Math.max(1, t.gp);
     const ppg = Number((t.ptsScored / gp).toFixed(1));
     const oppPpg = Number((t.ptsAllowed / gp).toFixed(1));
@@ -466,7 +723,73 @@ export function rebuildDatasetFromStore(
 
     const moreyball = t.fga > 0 ? Math.min(100, Math.round(((t.fg2a * 0.6 + t.fg3a) / t.fga) * 100)) : 76;
 
-    const actualName = t.name || tName;
+    // Non-Garbage Time (da Play-by-Play ove disponibile, altrimenti Quarter Split)
+    const ngOrtg = t.ngPoss > 0 ? Number(((t.ngPts / t.ngPoss) * 100).toFixed(1)) : ortg;
+    const ngDrtg = t.ngOppPoss > 0 ? Number(((t.ngOppPts / t.ngOppPoss) * 100).toFixed(1)) : drtg;
+    const ngNet = Number((ngOrtg - ngDrtg).toFixed(1));
+    const ngOrbPct = t.ngOrb + t.ngOppDrb > 0 ? clampPct((t.ngOrb / (t.ngOrb + t.ngOppDrb)) * 100) : orbOff;
+    const ngDrbPct = t.ngDrb + t.ngOppOrb > 0 ? clampPct((t.ngDrb / (t.ngDrb + t.ngOppOrb)) * 100) : clampPct(100 - orbDef);
+    const ngOppOrbPct = Number((100 - ngDrbPct).toFixed(1));
+    const ngEfgPct = t.ngFga > 0 ? clampPct(((t.ngFgm + 0.5 * t.ngFg3m) / t.ngFga) * 100) : efgOff;
+    const ngTovPct = t.ngPoss > 0 ? clampPct((t.ngTov / t.ngPoss) * 100) : tovOff;
+    const garbageTimePossPct =
+      t.ngRefPossTotal > 0
+        ? Number((Math.max(0, (t.ngRefPossTotal - t.ngPoss) / t.ngRefPossTotal) * 100).toFixed(1))
+        : 0;
+    const nonGarbageSource = t.pbpGames >= Math.max(1, Math.ceil(t.gp / 2)) ? 'pbp' : 'quarter_split';
+
+    // Quarter Splits & Q3 Coach Adjustment
+    const qDiv = Math.max(1, t.qCount);
+    const q1Net = Number(((t.q1Pts - t.q1Opp) / qDiv).toFixed(1));
+    const q2Net = Number(((t.q2Pts - t.q2Opp) / qDiv).toFixed(1));
+    const q3Net = Number(((t.q3Pts - t.q3Opp) / qDiv).toFixed(1));
+    const q4Net = Number(((t.q4Pts - t.q4Opp) / qDiv).toFixed(1));
+    const half1Net = Number((q1Net + q2Net).toFixed(1));
+    const half2Net = Number((q3Net + q4Net).toFixed(1));
+    const q3AdjustmentIndex = Number((q3Net - (q1Net + q2Net) / 2).toFixed(1));
+
+    // Situational: Kill Shots, Volatility Sigma, NetRtg vs >.500
+    const volatilitySigma = calcStdDev(t.gamesLog.map((g: any) => g.gameNetRtg));
+    const topGames = t.gamesLog.filter((g: any) => top500TeamKeys.has(g.oppAggKey));
+    let netRtgVsTop500 = netRtg;
+    let winsVsTop500 = 0;
+    let lossesVsTop500 = 0;
+    if (topGames.length > 0) {
+      const ptsT = topGames.reduce((s: number, g: any) => s + g.pts, 0);
+      const oppPtsT = topGames.reduce((s: number, g: any) => s + g.oppPts, 0);
+      const possT = topGames.reduce((s: number, g: any) => s + g.poss, 0);
+      const oppPossT = topGames.reduce((s: number, g: any) => s + g.oppPoss, 0);
+      netRtgVsTop500 = Number(
+        (((ptsT / Math.max(1, possT)) - (oppPtsT / Math.max(1, oppPossT))) * 100).toFixed(1)
+      );
+      winsVsTop500 = topGames.filter((g: any) => g.isWin).length;
+      lossesVsTop500 = topGames.length - winsVsTop500;
+    }
+
+    const pbpDiv = Math.max(1, t.pbpGames);
+    const killShotsPerGame = t.pbpGames > 0 ? Number((t.killShotsTotal / pbpDiv).toFixed(2)) : 0;
+    const runsConcededPerGame = t.pbpGames > 0 ? Number((t.runsConcededTotal / pbpDiv).toFixed(2)) : 0;
+
+    // Clutch reale PBP se presente con campione minimo (>= 5 possessi clutch)
+    const realTeamClutch =
+      t.pbpGames > 0 && t.clutchPoss >= 5
+        ? {
+            clutchNetRtg: Number(
+              (
+                (t.clutchPts / Math.max(1, t.clutchPoss)) * 100 -
+                (t.clutchOppPts / Math.max(1, t.clutchOppPoss)) * 100
+              ).toFixed(1)
+            ),
+            clutchEfgPct:
+              t.clutchFga > 0 ? clampPct(((t.clutchFgm + 0.5 * t.clutchFg3m) / t.clutchFga) * 100) : efgOff,
+            clutchPts: Number((t.clutchPts / Math.max(1, t.clutchGames)).toFixed(1)),
+            clutchRecord: { wins: t.clutchWins, losses: t.clutchLosses },
+            clutchPossessions: Math.round(t.clutchPoss),
+            source: 'pbp' as const,
+          }
+        : undefined;
+
+    const actualName = t.name || tKey;
     const teamId = actualName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
     const color = teamColorMap[actualName] || '#4f46e5';
 
@@ -504,6 +827,46 @@ export function rebuildDatasetFromStore(
         pps: t.fga > 0 ? Number((t.ptsScored / t.fga).toFixed(2)) : 1.2,
       },
       playStyle: `Stagione 2026/27 (${t.gp} gare): ${ortg} ORtg (Pts/100p), ${drtg} DRtg, Pace: ${pace} poss/gara.`,
+      ...(realTeamClutch ? { clutchStats: realTeamClutch } : {}),
+      nonGarbage: {
+        ortg: ngOrtg,
+        drtg: ngDrtg,
+        netRtg: ngNet,
+        orbPct: ngOrbPct,
+        drbPct: ngDrbPct,
+        oppOrbPct: ngOppOrbPct,
+        efgPct: ngEfgPct,
+        tovPct: ngTovPct,
+        garbageTimePossPct,
+        competitivePossessions: Math.round(t.ngPoss),
+        totalPossessions: Math.round(t.ngRefPossTotal),
+        gamesWithPbp: t.pbpGames,
+        source: nonGarbageSource,
+      },
+      quarterSplits: {
+        q1Net,
+        q2Net,
+        q3Net,
+        q4Net,
+        q1Pts: Number((t.q1Pts / qDiv).toFixed(1)),
+        q2Pts: Number((t.q2Pts / qDiv).toFixed(1)),
+        q3Pts: Number((t.q3Pts / qDiv).toFixed(1)),
+        q4Pts: Number((t.q4Pts / qDiv).toFixed(1)),
+        half1Net,
+        half2Net,
+        q3AdjustmentIndex,
+      },
+      situational: {
+        killShotsTotal: t.killShotsTotal,
+        killShotsPerGame,
+        runsConcededTotal: t.runsConcededTotal,
+        runsConcededPerGame,
+        volatilitySigma,
+        netRtgVsTop500,
+        winsVsTop500,
+        lossesVsTop500,
+        pbpGamesCount: t.pbpGames,
+      },
     });
   }
 
@@ -521,7 +884,10 @@ export function rebuildDatasetFromStore(
           lbaData.teams &&
           lbaData.teams.length === 16 &&
           lbaData.round === targetRound &&
-          lbaData.season === '2026/2027'
+          lbaData.season === '2026/2027' &&
+          lbaData.teams[0]?.nonGarbage &&
+          lbaData.teams[0]?.quarterSplits &&
+          lbaData.teams[0]?.situational
         ) {
           lbaTeams = lbaData.teams;
           lbaPlayers = lbaData.players;
@@ -683,6 +1049,97 @@ export function rebuildDatasetFromStore(
     const estimatedUsg =
       mpg > 0 ? clampPct((100 * (playerPlaysPerGame * (40 / mpg))) / (teamPace * 1.05)) : 18.0;
 
+    // Rimbalzi reali % basati su boxscore squadra
+    const teamEntry = teamAgg.get(`${p.league}___${p.team}`);
+    const playerMinTotal = p.totalSec / 60;
+    const teamTotalMinApprox = teamEntry ? teamEntry.gp * 200 : gp * 200;
+    const realPlayerOrbPct =
+      teamEntry && playerMinTotal > 0 && teamEntry.orb + teamEntry.oppDrb > 0
+        ? clampPct((p.orb * (teamTotalMinApprox / 5)) / (playerMinTotal * (teamEntry.orb + teamEntry.oppDrb)) * 100)
+        : 4.0;
+    const realPlayerDrbPct =
+      teamEntry && playerMinTotal > 0 && teamEntry.drb + teamEntry.oppOrb > 0
+        ? clampPct((p.drb * (teamTotalMinApprox / 5)) / (playerMinTotal * (teamEntry.drb + teamEntry.oppOrb)) * 100)
+        : 14.0;
+    const realPlayerTrbPct =
+      teamEntry && playerMinTotal > 0 && teamEntry.orb + teamEntry.drb + teamEntry.oppOrb + teamEntry.oppDrb > 0
+        ? clampPct(
+            (p.reb * (teamTotalMinApprox / 5)) /
+              (playerMinTotal * (teamEntry.orb + teamEntry.drb + teamEntry.oppOrb + teamEntry.oppDrb)) *
+              100
+          )
+        : 9.0;
+
+    // On/Off Court Reale (WOWY) dai Play-by-Play della squadra
+    let realOnOff: PlayerStats['realOnOff'] = undefined;
+    let realPlayerOrtg = tTeam ? tTeam.ortg : 114;
+    let realPlayerDrtg = tTeam ? tTeam.drtg : 110;
+    let realPlayerNetRtg = tTeam ? tTeam.netRtg : 4.0;
+
+    if (teamEntry && teamEntry.pbpGames > 0 && p.onPossFor >= 8 && p.onPossAgainst >= 8) {
+      const onOrtg = Number(((p.onPtsFor / Math.max(1, p.onPossFor)) * 100).toFixed(1));
+      const onDrtg = Number(((p.onPtsAgainst / Math.max(1, p.onPossAgainst)) * 100).toFixed(1));
+      const onNet = Number((onOrtg - onDrtg).toFixed(1));
+
+      const offPtsFor = Math.max(0, teamEntry.pbpPtsFor - p.onPtsFor);
+      const offPtsAgainst = Math.max(0, teamEntry.pbpPtsAgainst - p.onPtsAgainst);
+      const offPossFor = Math.max(0, teamEntry.pbpPossFor - p.onPossFor);
+      const offPossAgainst = Math.max(0, teamEntry.pbpPossAgainst - p.onPossAgainst);
+
+      const offNet =
+        offPossFor >= 8 && offPossAgainst >= 8
+          ? Number(
+              (
+                (offPtsFor / Math.max(1, offPossFor)) * 100 -
+                (offPtsAgainst / Math.max(1, offPossAgainst)) * 100
+              ).toFixed(1)
+            )
+          : tTeam
+          ? tTeam.netRtg
+          : 0;
+
+      realPlayerOrtg = onOrtg;
+      realPlayerDrtg = onDrtg;
+      realPlayerNetRtg = onNet;
+
+      realOnOff = {
+        onCourtNetRtg: onNet,
+        offCourtNetRtg: offNet,
+        netSwing: Number((onNet - offNet).toFixed(1)),
+        onCourtOrtg: onOrtg,
+        onCourtDrtg: onDrtg,
+        onCourtMinutes: Number((p.onSec / 60).toFixed(1)),
+        pbpGamesCount: teamEntry.pbpGames,
+        source: 'pbp',
+      };
+    }
+
+    // Clutch Reali PBP per giocatore
+    const realPlayerClutch =
+      p.pbpGames > 0 && p.clutchOnPossFor >= 4
+        ? {
+            clutchNetRtg: Number(
+              (
+                (p.clutchOnPtsFor / Math.max(1, p.clutchOnPossFor)) * 100 -
+                (p.clutchOnPtsAgainst / Math.max(1, p.clutchOnPossAgainst)) * 100
+              ).toFixed(1)
+            ),
+            clutchEfgPct:
+              p.clutchFga > 0
+                ? clampPct(((p.clutchFgm + 0.5 * p.clutchFg3m) / p.clutchFga) * 100)
+                : efgPct,
+            clutchPts: Number((p.clutchPts / Math.max(1, p.pbpGames)).toFixed(1)),
+            clutchUsgPct:
+              p.clutchOnPossFor > 0
+                ? clampPct(((p.clutchFga + 0.44 * p.clutchFta) / p.clutchOnPossFor) * 100)
+                : estimatedUsg,
+            clutchPossessions: Math.round(p.clutchOnPossFor),
+            source: 'pbp' as const,
+          }
+        : undefined;
+
+    const volatilitySigma = calcStdDev(p.gsHistory || []);
+
     builtEuroPlayers.push({
       id: pId,
       name: finalName,
@@ -717,17 +1174,20 @@ export function rebuildDatasetFromStore(
       astPct: mpg > 0 ? clampPct((ast / (mpg * 0.75)) * 100) : 0,
       astToRatio: tov > 0 ? Number((ast / tov).toFixed(2)) : ast,
       tovPct: playerPlaysPerGame > 0 ? clampPct((tov / playerPlaysPerGame) * 100) : 10.0,
-      orbPct: 4.0,
-      drbPct: 14.0,
-      trbPct: 9.0,
-      ortg: tTeam ? tTeam.ortg : 114,
-      drtg: tTeam ? tTeam.drtg : 110,
-      netRtg: tTeam ? tTeam.netRtg : 4.0,
+      orbPct: realPlayerOrbPct,
+      drbPct: realPlayerDrbPct,
+      trbPct: realPlayerTrbPct,
+      ortg: realPlayerOrtg,
+      drtg: realPlayerDrtg,
+      netRtg: realPlayerNetRtg,
       gameScore: gs,
       bpm: 4.0,
       ptsPer100,
       rebPer100,
       astPer100,
+      volatilitySigma,
+      ...(realOnOff ? { realOnOff } : {}),
+      ...(realPlayerClutch ? { clutchStats: realPlayerClutch } : {}),
       shotSelection: {
         rim: {
           fgaPct: 36,

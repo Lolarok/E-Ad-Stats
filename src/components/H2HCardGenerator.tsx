@@ -56,6 +56,9 @@ export const H2HCardGenerator: React.FC<Props> = ({
   const [team1Id, setTeam1Id] = useState<string>(initialTeam1Id || teams[0]?.id || '');
   const [team2Id, setTeam2Id] = useState<string>(initialTeam2Id || teams[1]?.id || '');
 
+  // Filtro Garbage Time per confronto squadre
+  const [excludeGarbageTime, setExcludeGarbageTime] = useState<boolean>(false);
+
   // Stato azioni di esportazione
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -90,15 +93,21 @@ export const H2HCardGenerator: React.FC<Props> = ({
   // Metriche Radar Squadre
   const teamMetrics = useMemo(() => {
     if (!t1 || !t2) return [];
+    const ortg1 = excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.ortg : t1.ortg;
+    const ortg2 = excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.ortg : t2.ortg;
+    const drtg1 = excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.drtg : t1.drtg;
+    const drtg2 = excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.drtg : t2.drtg;
+    const efg1 = excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.efgPct : (t1.fourFactorsOffense?.efgPct || 50);
+    const efg2 = excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.efgPct : (t2.fourFactorsOffense?.efgPct || 50);
     return [
-      { label: 'Off. Rating', val1: t1.ortg, val2: t2.ortg, max: 130, unit: '' },
-      { label: 'Def. Rating (Inv)', val1: Math.max(10, 140 - t1.drtg), val2: Math.max(10, 140 - t2.drtg), max: 45, unit: '' },
+      { label: excludeGarbageTime ? 'ORtg (No-G)' : 'Off. Rating', val1: ortg1, val2: ortg2, max: 130, unit: '' },
+      { label: excludeGarbageTime ? 'DRtg Inv (No-G)' : 'Def. Rating (Inv)', val1: Math.max(10, 140 - drtg1), val2: Math.max(10, 140 - drtg2), max: 45, unit: '' },
       { label: 'Pace (Ritmo)', val1: t1.pace, val2: t2.pace, max: 85, unit: '' },
-      { label: 'eFG% (Tiro)', val1: t1.fourFactorsOffense?.efgPct || 50, val2: t2.fourFactorsOffense?.efgPct || 50, max: 65, unit: '%' },
+      { label: 'eFG% (Tiro)', val1: efg1, val2: efg2, max: 65, unit: '%' },
       { label: 'Moreyball Rate', val1: t1.shotSelection?.moreyballRate || 75, val2: t2.shotSelection?.moreyballRate || 75, max: 95, unit: '%' },
       { label: 'FT Rate', val1: Math.round((t1.shotSelection?.ftr || 0.25) * 100), val2: Math.round((t2.shotSelection?.ftr || 0.25) * 100), max: 45, unit: '%' },
     ];
-  }, [t1, t2]);
+  }, [t1, t2, excludeGarbageTime]);
 
   // Metriche avanzate granulari (Play Types, Genesi Punti, Clutch, Shot Quality)
   const m1 = useMemo(() => {
@@ -343,6 +352,19 @@ export const H2HCardGenerator: React.FC<Props> = ({
             </button>
           </div>
 
+          {compareType === 'teams' && (
+            <button
+              onClick={() => setExcludeGarbageTime(!excludeGarbageTime)}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                excludeGarbageTime
+                  ? 'bg-emerald-600 text-white border-emerald-500'
+                  : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
+              }`}
+            >
+              {excludeGarbageTime ? 'No-Garbage Time: ON' : 'Escludi Garbage Time'}
+            </button>
+          )}
+
           {/* Azioni di Esportazione */}
           <button
             onClick={handlePrint}
@@ -581,14 +603,56 @@ export const H2HCardGenerator: React.FC<Props> = ({
 
             {(compareType === 'teams'
               ? [
-                  { label: 'Offensive Rating (ORtg)', v1: t1.ortg, v2: t2.ortg, max: 130, unit: '', higherBetter: true },
-                  { label: 'Defensive Rating (DRtg)', v1: t1.drtg, v2: t2.drtg, max: 130, unit: '', higherBetter: false },
-                  { label: 'Net Rating', v1: t1.netRtg, v2: t2.netRtg, max: 25, unit: '', higherBetter: true },
+                  {
+                    label: excludeGarbageTime ? 'ORtg (Escl. Garbage)' : 'Offensive Rating (ORtg)',
+                    v1: excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.ortg : t1.ortg,
+                    v2: excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.ortg : t2.ortg,
+                    max: 130,
+                    unit: '',
+                    higherBetter: true,
+                  },
+                  {
+                    label: excludeGarbageTime ? 'DRtg (Escl. Garbage)' : 'Defensive Rating (DRtg)',
+                    v1: excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.drtg : t1.drtg,
+                    v2: excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.drtg : t2.drtg,
+                    max: 130,
+                    unit: '',
+                    higherBetter: false,
+                  },
+                  {
+                    label: excludeGarbageTime ? 'Net Rtg (Escl. Garbage)' : 'Net Rating',
+                    v1: excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.netRtg : t1.netRtg,
+                    v2: excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.netRtg : t2.netRtg,
+                    max: 25,
+                    unit: '',
+                    higherBetter: true,
+                  },
                   { label: 'Pace (Possessi / Partita)', v1: t1.pace, v2: t2.pace, max: 85, unit: '', higherBetter: true },
-                  { label: 'eFG% (Percentuale Effettiva)', v1: t1.fourFactorsOffense.efgPct, v2: t2.fourFactorsOffense.efgPct, max: 65, unit: '%', higherBetter: true },
+                  {
+                    label: excludeGarbageTime ? 'eFG% (No-Garbage)' : 'eFG% (Percentuale Effettiva)',
+                    v1: excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.efgPct : t1.fourFactorsOffense.efgPct,
+                    v2: excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.efgPct : t2.fourFactorsOffense.efgPct,
+                    max: 65,
+                    unit: '%',
+                    higherBetter: true,
+                  },
+                  {
+                    label: excludeGarbageTime ? 'ORB% (No-Garbage)' : 'Offensive Rebound % (ORB%)',
+                    v1: excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.orbPct : t1.fourFactorsOffense.orbPct,
+                    v2: excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.orbPct : t2.fourFactorsOffense.orbPct,
+                    max: 45,
+                    unit: '%',
+                    higherBetter: true,
+                  },
+                  {
+                    label: excludeGarbageTime ? 'DRB% (No-Garbage)' : 'Defensive Rebound % (DRB%)',
+                    v1: excludeGarbageTime && t1.nonGarbage ? t1.nonGarbage.drbPct : (t1.nonGarbage?.drbPct ?? Number((100 - t1.fourFactorsDefense.orbPct).toFixed(1))),
+                    v2: excludeGarbageTime && t2.nonGarbage ? t2.nonGarbage.drbPct : (t2.nonGarbage?.drbPct ?? Number((100 - t2.fourFactorsDefense.orbPct).toFixed(1))),
+                    max: 85,
+                    unit: '%',
+                    higherBetter: true,
+                  },
                   { label: 'Moreyball Rate (Rim + 3PT)', v1: t1.shotSelection.moreyballRate, v2: t2.shotSelection.moreyballRate, max: 95, unit: '%', higherBetter: true },
-                  { label: 'Offensive Rebound % (ORB%)', v1: t1.fourFactorsOffense.orbPct, v2: t2.fourFactorsOffense.orbPct, max: 45, unit: '%', higherBetter: true },
-                  { label: 'Free Throw Rate (FTR)', v1: Math.round(t1.shotSelection.ftr * 100), v2: Math.round(t2.shotSelection.ftr * 100), max: 40, unit: '%', higherBetter: true },
                 ]
               : [
                   { label: 'True Shooting % (TS%)', v1: p1.tsPct, v2: p2.tsPct, max: 70, unit: '%', higherBetter: true },
@@ -738,6 +802,52 @@ export const H2HCardGenerator: React.FC<Props> = ({
               </div>
             </div>
           </div>
+
+          {/* Confronto Momentum & Impatto Reale */}
+          {compareType === 'teams' ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono tabular-nums pt-2">
+              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex justify-between items-center">
+                <span className="text-sky-400 font-bold">
+                  {(t1.quarterSplits?.q3AdjustmentIndex ?? 0) >= 0 ? `+${t1.quarterSplits?.q3AdjustmentIndex ?? 0}` : t1.quarterSplits?.q3AdjustmentIndex}
+                </span>
+                <span className="font-sans text-[11px] text-slate-300">Q3 Coach Adj.</span>
+                <span className="text-amber-400 font-bold">
+                  {(t2.quarterSplits?.q3AdjustmentIndex ?? 0) >= 0 ? `+${t2.quarterSplits?.q3AdjustmentIndex ?? 0}` : t2.quarterSplits?.q3AdjustmentIndex}
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex justify-between items-center">
+                <span className="text-sky-400 font-bold">
+                  {t1.situational?.pbpGamesCount ? `${t1.situational.killShotsPerGame}/g` : '—'}
+                </span>
+                <span className="font-sans text-[11px] text-slate-300">Kill Shots 10-0+</span>
+                <span className="text-amber-400 font-bold">
+                  {t2.situational?.pbpGamesCount ? `${t2.situational.killShotsPerGame}/g` : '—'}
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex justify-between items-center">
+                <span className="text-sky-400 font-bold">±{t1.situational?.volatilitySigma ?? 0}</span>
+                <span className="font-sans text-[11px] text-slate-300">Volatilità σ</span>
+                <span className="text-amber-400 font-bold">±{t2.situational?.volatilitySigma ?? 0}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono tabular-nums pt-2">
+              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex justify-between items-center">
+                <span className="text-sky-400 font-bold">
+                  {p1.realOnOff ? `${p1.realOnOff.netSwing >= 0 ? '+' : ''}${p1.realOnOff.netSwing}` : '—'}
+                </span>
+                <span className="font-sans text-[11px] text-slate-300">Real On/Off Swing (PBP)</span>
+                <span className="text-amber-400 font-bold">
+                  {p2.realOnOff ? `${p2.realOnOff.netSwing >= 0 ? '+' : ''}${p2.realOnOff.netSwing}` : '—'}
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex justify-between items-center">
+                <span className="text-sky-400 font-bold">±{p1.volatilitySigma ?? 0}</span>
+                <span className="font-sans text-[11px] text-slate-300">Volatilità GameScore σ</span>
+                <span className="text-amber-400 font-bold">±{p2.volatilitySigma ?? 0}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Punti di Forza e Chiavi Tattiche (Bottom Insights) */}

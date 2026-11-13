@@ -241,6 +241,23 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
       oppTov: 0,
       poss: 0,
       oppPoss: 0,
+      // Quarter splits
+      q1Pts: 0,
+      q2Pts: 0,
+      q3Pts: 0,
+      q4Pts: 0,
+      q1Opp: 0,
+      q2Opp: 0,
+      q3Opp: 0,
+      q4Opp: 0,
+      qCount: 0,
+      // Non-garbage quarter split accumulators
+      ngPts: 0,
+      ngOppPts: 0,
+      ngPoss: 0,
+      ngOppPoss: 0,
+      // Match log for volatility & vs >.500
+      gamesLog: [] as Array<{ oppName: string; isWin: boolean; pts: number; oppPts: number; poss: number; oppPoss: number; gameNetRtg: number }>,
     });
   });
 
@@ -315,13 +332,86 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
     teA.oppDrb += ht?.rimbalzi_d || 0;
     teA.oppTov += ht?.palle_p || 0;
 
-    const hPoss = hFga + 0.44 * (ht?.tl_t || 0) - (ht?.rimbalzi_o || 0) + (ht?.palle_p || 0);
-    const aPoss = aFga + 0.44 * (vt?.tl_t || 0) - (vt?.rimbalzi_o || 0) + (vt?.palle_p || 0);
+    const hPoss = Math.max(1, hFga + 0.44 * (ht?.tl_t || 0) - (ht?.rimbalzi_o || 0) + (ht?.palle_p || 0));
+    const aPoss = Math.max(1, aFga + 0.44 * (vt?.tl_t || 0) - (vt?.rimbalzi_o || 0) + (vt?.palle_p || 0));
     teH.poss += hPoss;
     teH.oppPoss += aPoss;
     teA.poss += aPoss;
     teA.oppPoss += hPoss;
+
+    // Quarter Splits & Non-Garbage Filter (esclusione Q4 se scarto a fine Q3 >= 20 punti)
+    const md = m.matchData || {};
+    const q1H = Number(md.q1_hs) || 0;
+    const q1A = Number(md.q1_vs) || 0;
+    const q2H = Number(md.q2_hs) || 0;
+    const q2A = Number(md.q2_vs) || 0;
+    const q3H = Number(md.q3_hs) || 0;
+    const q3A = Number(md.q3_vs) || 0;
+    const q4H = Number(md.q4_hs) || 0;
+    const q4A = Number(md.q4_vs) || 0;
+    const hasQuarters = q1H + q2H + q3H + q4H > 0;
+
+    let isQ4Garbage = false;
+    if (hasQuarters) {
+      teH.q1Pts += q1H; teH.q2Pts += q2H; teH.q3Pts += q3H; teH.q4Pts += q4H;
+      teH.q1Opp += q1A; teH.q2Opp += q2A; teH.q3Opp += q3A; teH.q4Opp += q4A;
+      teH.qCount += 1;
+
+      teA.q1Pts += q1A; teA.q2Pts += q2A; teA.q3Pts += q3A; teA.q4Pts += q4A;
+      teA.q1Opp += q1H; teA.q2Opp += q2H; teA.q3Opp += q3H; teA.q4Opp += q4H;
+      teA.qCount += 1;
+
+      const diffEndQ3 = Math.abs((q1H + q2H + q3H) - (q1A + q2A + q3A));
+      if (diffEndQ3 >= 20) {
+        isQ4Garbage = true;
+      }
+    }
+
+    if (isQ4Garbage) {
+      const hNgPts = q1H + q2H + q3H;
+      const aNgPts = q1A + q2A + q3A;
+      const compShare = 0.75;
+      teH.ngPts += hNgPts;
+      teH.ngOppPts += aNgPts;
+      teH.ngPoss += hPoss * compShare;
+      teH.ngOppPoss += aPoss * compShare;
+
+      teA.ngPts += aNgPts;
+      teA.ngOppPts += hNgPts;
+      teA.ngPoss += aPoss * compShare;
+      teA.ngOppPoss += hPoss * compShare;
+    } else {
+      teH.ngPts += hs;
+      teH.ngOppPts += as;
+      teH.ngPoss += hPoss;
+      teH.ngOppPoss += aPoss;
+
+      teA.ngPts += as;
+      teA.ngOppPts += hs;
+      teA.ngPoss += aPoss;
+      teA.ngOppPoss += hPoss;
+    }
+
+    const hGameNet = (hs / hPoss) * 100 - (as / aPoss) * 100;
+    const aGameNet = -hGameNet;
+    teH.gamesLog.push({ oppName: a, isWin: hs > as, pts: hs, oppPts: as, poss: hPoss, oppPoss: aPoss, gameNetRtg: hGameNet });
+    teA.gamesLog.push({ oppName: h, isWin: as > hs, pts: as, oppPts: hs, poss: aPoss, oppPoss: hPoss, gameNetRtg: aGameNet });
   });
+
+  // Identifica squadre sopra .500 per NetRtg vs Top Teams
+  const lbaTop500Teams = new Set<string>();
+  for (const [name, t] of teamAgg) {
+    if (t.gp > 0 && t.w >= t.l) {
+      lbaTop500Teams.add(name);
+    }
+  }
+
+  const calcStdDev = (vals: number[]): number => {
+    if (vals.length < 2) return 0;
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const variance = vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length;
+    return Number(Math.sqrt(variance).toFixed(1));
+  };
 
   const calculatedTeams: TeamStats[] = Array.from(teamAgg.values())
     .map((t) => {
@@ -341,6 +431,7 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
       const efgOff = t.fga > 0 ? Number((((t.fgm + 0.5 * t.fg3m) / t.fga) * 100).toFixed(1)) : 52.0;
       const tovOff = t.poss > 0 ? Number(((t.tov / t.poss) * 100).toFixed(1)) : 13.0;
       const orbOff = t.orb + t.oppDrb > 0 ? Number(((t.orb / (t.orb + t.oppDrb)) * 100).toFixed(1)) : 30.0;
+      const drbOff = t.drb + t.oppOrb > 0 ? Number(((t.drb / (t.drb + t.oppOrb)) * 100).toFixed(1)) : 72.0;
       const ftrOff = t.fga > 0 ? Number((t.fta / t.fga).toFixed(3)) : 0.28;
 
       const efgDef = t.oppFga > 0 ? Number((((t.oppFgm + 0.5 * t.oppFg3m) / t.oppFga) * 100).toFixed(1)) : 50.0;
@@ -349,6 +440,38 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
       const ftrDef = t.oppFga > 0 ? Number((t.oppFta / t.oppFga).toFixed(3)) : 0.26;
 
       const moreyball = t.fga > 0 ? Math.round(((t.fg2a * 0.6 + t.fg3a) / t.fga) * 100) : 80;
+
+      // Non-garbage quarter split
+      const ngOrtg = t.ngPoss > 0 ? Number(((t.ngPts / t.ngPoss) * 100).toFixed(1)) : ortg;
+      const ngDrtg = t.ngOppPoss > 0 ? Number(((t.ngOppPts / t.ngOppPoss) * 100).toFixed(1)) : drtg;
+      const ngNet = Number((ngOrtg - ngDrtg).toFixed(1));
+      const garbagePct = t.poss > 0 ? Number((Math.max(0, (t.poss - t.ngPoss) / t.poss) * 100).toFixed(1)) : 0;
+
+      // Quarter Splits & Q3 Adjustment
+      const qDiv = Math.max(1, t.qCount);
+      const q1Net = Number(((t.q1Pts - t.q1Opp) / qDiv).toFixed(1));
+      const q2Net = Number(((t.q2Pts - t.q2Opp) / qDiv).toFixed(1));
+      const q3Net = Number(((t.q3Pts - t.q3Opp) / qDiv).toFixed(1));
+      const q4Net = Number(((t.q4Pts - t.q4Opp) / qDiv).toFixed(1));
+      const half1Net = Number((q1Net + q2Net).toFixed(1));
+      const half2Net = Number((q3Net + q4Net).toFixed(1));
+      const q3AdjustmentIndex = Number((q3Net - (q1Net + q2Net) / 2).toFixed(1));
+
+      // Situational: Volatility Sigma & Top .500 performance
+      const volatilitySigma = calcStdDev(t.gamesLog.map((g: any) => g.gameNetRtg));
+      const topGames = t.gamesLog.filter((g: any) => lbaTop500Teams.has(g.oppName));
+      let netRtgVsTop500 = netRtg;
+      let winsVsTop500 = 0;
+      let lossesVsTop500 = 0;
+      if (topGames.length > 0) {
+        const ptsT = topGames.reduce((s: number, g: any) => s + g.pts, 0);
+        const oppPtsT = topGames.reduce((s: number, g: any) => s + g.oppPts, 0);
+        const possT = topGames.reduce((s: number, g: any) => s + g.poss, 0);
+        const oppPossT = topGames.reduce((s: number, g: any) => s + g.oppPoss, 0);
+        netRtgVsTop500 = Number((((ptsT / Math.max(1, possT)) - (oppPtsT / Math.max(1, oppPossT))) * 100).toFixed(1));
+        winsVsTop500 = topGames.filter((g: any) => g.isWin).length;
+        lossesVsTop500 = topGames.length - winsVsTop500;
+      }
 
       return {
         id: info.id,
@@ -383,6 +506,45 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
           pps: t.fga > 0 ? Number((t.pts / t.fga).toFixed(2)) : 1.15,
         },
         playStyle: `Stagione 2026/27 (${t.gp} gare disputate): ${ortg} ORtg (Pts/100p), ${drtg} DRtg, Pace: ${pace} poss/gara.`,
+        nonGarbage: {
+          ortg: ngOrtg,
+          drtg: ngDrtg,
+          netRtg: ngNet,
+          orbPct: orbOff,
+          drbPct: drbOff,
+          oppOrbPct: orbDef,
+          efgPct: efgOff,
+          tovPct: tovOff,
+          garbageTimePossPct: garbagePct,
+          competitivePossessions: Math.round(t.ngPoss),
+          totalPossessions: Math.round(t.poss),
+          gamesWithPbp: 0,
+          source: 'quarter_split' as const,
+        },
+        quarterSplits: {
+          q1Net,
+          q2Net,
+          q3Net,
+          q4Net,
+          q1Pts: Number((t.q1Pts / qDiv).toFixed(1)),
+          q2Pts: Number((t.q2Pts / qDiv).toFixed(1)),
+          q3Pts: Number((t.q3Pts / qDiv).toFixed(1)),
+          q4Pts: Number((t.q4Pts / qDiv).toFixed(1)),
+          half1Net,
+          half2Net,
+          q3AdjustmentIndex,
+        },
+        situational: {
+          killShotsTotal: 0,
+          killShotsPerGame: 0,
+          runsConcededTotal: 0,
+          runsConcededPerGame: 0,
+          volatilitySigma,
+          netRtgVsTop500,
+          winsVsTop500,
+          lossesVsTop500,
+          pbpGamesCount: 0,
+        },
       };
     })
     .sort((a, b) => b.record.wins - a.record.wins || b.ppg - b.oppPpg - (a.ppg - a.oppPpg));
@@ -414,21 +576,40 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
             pf: 0,
             pir: 0,
             plusMinus: 0,
+            gsHistory: [] as number[],
           });
         }
         const b = pBox.get(pid);
         // Validazione DNP / Minuti minimi: meno di 1 minuto o DNP a referto -> non conteggiare come gara attiva
         const totalGameSeconds = r.sec > 0 ? r.sec : (r.min || 0) * 60;
         if (totalGameSeconds > 60 && r.min >= 1) {
+          const gPts = r.pun || 0;
+          const gFgm = (r.t2_r || 0) + (r.t3_r || 0);
+          const gFga = (r.t2_t || 0) + (r.t3_t || 0);
+          const gFtm = r.tl_r || 0;
+          const gFta = r.tl_t || 0;
+          const gGs =
+            gPts +
+            0.4 * gFgm -
+            0.7 * gFga -
+            0.4 * (gFta - gFtm) +
+            0.7 * (r.rimbalzi_o || 0) +
+            0.3 * (r.rimbalzi_d || 0) +
+            (r.palle_r || 0) +
+            0.7 * (r.ass || 0) -
+            0.4 * (r.falli_c || 0) -
+            (r.palle_p || 0);
+          b.gsHistory.push(gGs);
+
           b.gp++;
           b.sec += totalGameSeconds;
-          b.pts += r.pun || 0;
+          b.pts += gPts;
           b.t2m += r.t2_r || 0;
           b.t2a += r.t2_t || 0;
           b.t3m += r.t3_r || 0;
           b.t3a += r.t3_t || 0;
-          b.ftm += r.tl_r || 0;
-          b.fta += r.tl_t || 0;
+          b.ftm += gFtm;
+          b.fta += gFta;
           b.orb += r.rimbalzi_o || 0;
           b.drb += r.rimbalzi_d || 0;
           b.reb += r.rimbalzi_t || 0;
@@ -468,6 +649,7 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
       pf: 0,
       pir: 0,
       plusMinus: 0,
+      gsHistory: [],
     };
 
     const canonicalTeamName = normalizeLbaTeamName(op.team_name);
@@ -533,6 +715,7 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
         ptsPer100: 0,
         rebPer100: 0,
         astPer100: 0,
+        volatilitySigma: 0,
         shotSelection: {
           rim: { fgaPct: 0, fgPct: 0, pps: 0, leagueAvgFgPct: 62 },
           paintNonRim: { fgaPct: 0, fgPct: 0, pps: 0, leagueAvgFgPct: 41 },
@@ -578,7 +761,7 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
     const threeAttemptRate = fga > 0 ? Number(((fg3a / fga) * 100).toFixed(1)) : 0;
     const moreyball = fga > 0 ? Math.round(((fg2a * 0.6 + fg3a) / fga) * 100) : 75;
 
-    const tTeam = calculatedTeams.find((t) => t.name === op.team_name);
+    const tTeam = calculatedTeams.find((t) => t.name === canonicalTeamName || t.name === op.team_name);
     const pace = tTeam ? tTeam.pace : 76.5;
 
     const ptsPer100 = mpg > 0 ? Number(((pts * 40 * 100) / (mpg * pace)).toFixed(1)) : 0;
@@ -599,6 +782,8 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
         tov
       ).toFixed(1)
     );
+
+    const volatilitySigma = calcStdDev(box.gsHistory || []);
 
     return {
       id: 'lba-' + op.id + '-' + (op.code ? op.code.toLowerCase() : ''),
@@ -645,6 +830,7 @@ export function calculateAndSaveLbaStore(allMatches: any[], roundNumber: number)
       ptsPer100,
       rebPer100,
       astPer100,
+      volatilitySigma,
       shotSelection: {
         rim: {
           fgaPct: 36,

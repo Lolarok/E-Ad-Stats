@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T23:42:43.730Z",
+  "lastUpdated": "2026-11-13T16:52:47.485Z",
   "round": 5,
   "season": "2026/2027",
   "league": "LBA Serie A",
@@ -49,7 +49,46 @@
         "ftr": 0.401,
         "pps": 1.46
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 125.9 ORtg (Pts/100p), 106.5 DRtg, Pace: 77.4 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 125.9 ORtg (Pts/100p), 106.5 DRtg, Pace: 77.4 poss/gara.",
+      "nonGarbage": {
+        "ortg": 125.9,
+        "drtg": 106.5,
+        "netRtg": 19.4,
+        "orbPct": 39.4,
+        "drbPct": 74.4,
+        "oppOrbPct": 25.6,
+        "efgPct": 56.4,
+        "tovPct": 16.3,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 387,
+        "totalPossessions": 387,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 0.8,
+        "q2Net": -5.3,
+        "q3Net": 3.5,
+        "q4Net": 10.3,
+        "q1Pts": 22.8,
+        "q2Pts": 18.8,
+        "q3Pts": 23.8,
+        "q4Pts": 25.3,
+        "half1Net": -4.5,
+        "half2Net": 13.8,
+        "q3AdjustmentIndex": 5.8
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 11.9,
+        "netRtgVsTop500": 15.8,
+        "winsVsTop500": 4,
+        "lossesVsTop500": 0,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-napoli-basketball",
@@ -96,7 +135,46 @@
         "ftr": 0.308,
         "pps": 1.42
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 120.6 ORtg (Pts/100p), 118.4 DRtg, Pace: 77.3 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 120.6 ORtg (Pts/100p), 118.4 DRtg, Pace: 77.3 poss/gara.",
+      "nonGarbage": {
+        "ortg": 120.6,
+        "drtg": 118.4,
+        "netRtg": 2.2,
+        "orbPct": 30.8,
+        "drbPct": 64.6,
+        "oppOrbPct": 35.4,
+        "efgPct": 58.2,
+        "tovPct": 16,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 386,
+        "totalPossessions": 386,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": -3.5,
+        "q2Net": 5,
+        "q3Net": 4.5,
+        "q4Net": 5.5,
+        "q1Pts": 20.8,
+        "q2Pts": 25.5,
+        "q3Pts": 23.8,
+        "q4Pts": 26,
+        "half1Net": 1.5,
+        "half2Net": 10,
+        "q3AdjustmentIndex": 3.8
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 21.5,
+        "netRtgVsTop500": -10.7,
+        "winsVsTop500": 1,
+        "lossesVsTop500": 1,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-nutribullet-treviso",
@@ -143,7 +221,46 @@
         "ftr": 0.474,
         "pps": 1.4
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 119.1 ORtg (Pts/100p), 115 DRtg, Pace: 80.3 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 119.1 ORtg (Pts/100p), 115 DRtg, Pace: 80.3 poss/gara.",
+      "nonGarbage": {
+        "ortg": 120.8,
+        "drtg": 114.1,
+        "netRtg": 6.7,
+        "orbPct": 34.3,
+        "drbPct": 63.4,
+        "oppOrbPct": 36.6,
+        "efgPct": 53.2,
+        "tovPct": 14.2,
+        "garbageTimePossPct": 4.9,
+        "competitivePossessions": 382,
+        "totalPossessions": 401,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 5,
+        "q2Net": -3.5,
+        "q3Net": 0.5,
+        "q4Net": -4.8,
+        "q1Pts": 27.5,
+        "q2Pts": 20,
+        "q3Pts": 22.3,
+        "q4Pts": 20,
+        "half1Net": 1.5,
+        "half2Net": -4.3,
+        "q3AdjustmentIndex": -0.3
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 20.4,
+        "netRtgVsTop500": -5,
+        "winsVsTop500": 2,
+        "lossesVsTop500": 1,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-armani-olimpia-milano",
@@ -190,7 +307,46 @@
         "ftr": 0.327,
         "pps": 1.41
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 120.4 ORtg (Pts/100p), 105.8 DRtg, Pace: 75.2 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 120.4 ORtg (Pts/100p), 105.8 DRtg, Pace: 75.2 poss/gara.",
+      "nonGarbage": {
+        "ortg": 119.8,
+        "drtg": 106.8,
+        "netRtg": 13,
+        "orbPct": 31.4,
+        "drbPct": 64.4,
+        "oppOrbPct": 35.6,
+        "efgPct": 56.9,
+        "tovPct": 16.7,
+        "garbageTimePossPct": 5.2,
+        "competitivePossessions": 356,
+        "totalPossessions": 376,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": -0.3,
+        "q2Net": 7,
+        "q3Net": -2.8,
+        "q4Net": 3.5,
+        "q1Pts": 21.8,
+        "q2Pts": 25.3,
+        "q3Pts": 17.3,
+        "q4Pts": 21.3,
+        "half1Net": 6.7,
+        "half2Net": 0.7,
+        "q3AdjustmentIndex": -6.2
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 19.1,
+        "netRtgVsTop500": 16.2,
+        "winsVsTop500": 2,
+        "lossesVsTop500": 2,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-umana-reyer-venezia",
@@ -237,7 +393,46 @@
         "ftr": 0.234,
         "pps": 1.3
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 114.6 ORtg (Pts/100p), 113.3 DRtg, Pace: 78.7 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 114.6 ORtg (Pts/100p), 113.3 DRtg, Pace: 78.7 poss/gara.",
+      "nonGarbage": {
+        "ortg": 114.6,
+        "drtg": 113.3,
+        "netRtg": 1.3,
+        "orbPct": 27.4,
+        "drbPct": 70.1,
+        "oppOrbPct": 29.9,
+        "efgPct": 56.1,
+        "tovPct": 15.5,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 394,
+        "totalPossessions": 394,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 2.3,
+        "q2Net": 1.3,
+        "q3Net": -1,
+        "q4Net": 0,
+        "q1Pts": 23,
+        "q2Pts": 21,
+        "q3Pts": 20.5,
+        "q4Pts": 20,
+        "half1Net": 3.6,
+        "half2Net": -1,
+        "q3AdjustmentIndex": -2.8
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 12.5,
+        "netRtgVsTop500": -12.9,
+        "winsVsTop500": 0,
+        "lossesVsTop500": 2,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-dolomiti-energia-trentino",
@@ -253,22 +448,22 @@
       },
       "wins": 3,
       "losses": 2,
-      "pace": 76.7,
-      "ortg": 108.2,
-      "drtg": 104.9,
-      "netRtg": 3.3,
+      "pace": 76.1,
+      "ortg": 109.1,
+      "drtg": 105.4,
+      "netRtg": 3.7,
       "ppg": 83,
       "oppPpg": 81.8,
       "fourFactorsOffense": {
         "efgPct": 52.2,
-        "tovPct": 19.8,
-        "orbPct": 32.5,
+        "tovPct": 20,
+        "orbPct": 33.2,
         "ftr": 0.311
       },
       "fourFactorsDefense": {
         "efgPct": 50.2,
         "tovPct": 16.2,
-        "orbPct": 28.4,
+        "orbPct": 29,
         "ftr": 0.349
       },
       "shotSelection": {
@@ -284,7 +479,46 @@
         "ftr": 0.311,
         "pps": 1.28
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 108.2 ORtg (Pts/100p), 104.9 DRtg, Pace: 76.7 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 109.1 ORtg (Pts/100p), 105.4 DRtg, Pace: 76.1 poss/gara.",
+      "nonGarbage": {
+        "ortg": 109.1,
+        "drtg": 105.4,
+        "netRtg": 3.7,
+        "orbPct": 33.2,
+        "drbPct": 71,
+        "oppOrbPct": 29,
+        "efgPct": 52.2,
+        "tovPct": 20,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 380,
+        "totalPossessions": 380,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 2,
+        "q2Net": -1.8,
+        "q3Net": 0,
+        "q4Net": 0.8,
+        "q1Pts": 22.8,
+        "q2Pts": 18.5,
+        "q3Pts": 19.8,
+        "q4Pts": 21,
+        "half1Net": 0.2,
+        "half2Net": 0.8,
+        "q3AdjustmentIndex": -0.1
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 9.8,
+        "netRtgVsTop500": 5.8,
+        "winsVsTop500": 1,
+        "lossesVsTop500": 1,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-tezenis-verona",
@@ -331,7 +565,46 @@
         "ftr": 0.347,
         "pps": 1.34
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 118.3 ORtg (Pts/100p), 116.9 DRtg, Pace: 76.1 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 118.3 ORtg (Pts/100p), 116.9 DRtg, Pace: 76.1 poss/gara.",
+      "nonGarbage": {
+        "ortg": 118.3,
+        "drtg": 116.9,
+        "netRtg": 1.4,
+        "orbPct": 38.5,
+        "drbPct": 74.5,
+        "oppOrbPct": 25.5,
+        "efgPct": 55,
+        "tovPct": 16.3,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 380,
+        "totalPossessions": 380,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": -0.8,
+        "q2Net": 3,
+        "q3Net": -2.3,
+        "q4Net": -1.8,
+        "q1Pts": 24,
+        "q2Pts": 25.3,
+        "q3Pts": 20.8,
+        "q4Pts": 19,
+        "half1Net": 2.2,
+        "half2Net": -4.1,
+        "q3AdjustmentIndex": -3.4
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 15.4,
+        "netRtgVsTop500": 3.8,
+        "winsVsTop500": 1,
+        "lossesVsTop500": 0,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-openjobmetis-varese",
@@ -378,7 +651,46 @@
         "ftr": 0.35,
         "pps": 1.31
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 107.7 ORtg (Pts/100p), 114.8 DRtg, Pace: 80.6 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 107.7 ORtg (Pts/100p), 114.8 DRtg, Pace: 80.6 poss/gara.",
+      "nonGarbage": {
+        "ortg": 107.7,
+        "drtg": 114.8,
+        "netRtg": -7.1,
+        "orbPct": 32.8,
+        "drbPct": 64.3,
+        "oppOrbPct": 35.7,
+        "efgPct": 53.2,
+        "tovPct": 20.3,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 403,
+        "totalPossessions": 403,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 2.5,
+        "q2Net": -2.5,
+        "q3Net": 0,
+        "q4Net": -3,
+        "q1Pts": 24,
+        "q2Pts": 18,
+        "q3Pts": 21.8,
+        "q4Pts": 19.8,
+        "half1Net": 0,
+        "half2Net": -3,
+        "q3AdjustmentIndex": 0
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 15.7,
+        "netRtgVsTop500": -25.9,
+        "winsVsTop500": 0,
+        "lossesVsTop500": 2,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-maxima-roma",
@@ -425,7 +737,46 @@
         "ftr": 0.426,
         "pps": 1.39
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 114.9 ORtg (Pts/100p), 113.4 DRtg, Pace: 74.8 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 114.9 ORtg (Pts/100p), 113.4 DRtg, Pace: 74.8 poss/gara.",
+      "nonGarbage": {
+        "ortg": 114.9,
+        "drtg": 113.4,
+        "netRtg": 1.5,
+        "orbPct": 27.4,
+        "drbPct": 68.5,
+        "oppOrbPct": 31.5,
+        "efgPct": 52.3,
+        "tovPct": 14.7,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 374,
+        "totalPossessions": 374,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": -4.3,
+        "q2Net": 2.3,
+        "q3Net": 0.5,
+        "q4Net": -3.8,
+        "q1Pts": 20.3,
+        "q2Pts": 22.5,
+        "q3Pts": 21.8,
+        "q4Pts": 20.8,
+        "half1Net": -2,
+        "half2Net": -3.3,
+        "q3AdjustmentIndex": 1.5
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 13.6,
+        "netRtgVsTop500": -14.3,
+        "winsVsTop500": 0,
+        "lossesVsTop500": 2,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-pallacanestro-trieste",
@@ -472,7 +823,46 @@
         "ftr": 0.405,
         "pps": 1.36
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 119.8 ORtg (Pts/100p), 113.5 DRtg, Pace: 74.3 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 119.8 ORtg (Pts/100p), 113.5 DRtg, Pace: 74.3 poss/gara.",
+      "nonGarbage": {
+        "ortg": 119.8,
+        "drtg": 113.5,
+        "netRtg": 6.3,
+        "orbPct": 32.8,
+        "drbPct": 63.1,
+        "oppOrbPct": 36.9,
+        "efgPct": 52.3,
+        "tovPct": 12.9,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 372,
+        "totalPossessions": 372,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": -3,
+        "q2Net": 3.5,
+        "q3Net": 1.8,
+        "q4Net": -2.5,
+        "q1Pts": 18,
+        "q2Pts": 25,
+        "q3Pts": 22.8,
+        "q4Pts": 22.5,
+        "half1Net": 0.5,
+        "half2Net": -0.7,
+        "q3AdjustmentIndex": 1.6
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 14.6,
+        "netRtgVsTop500": 0.3,
+        "winsVsTop500": 1,
+        "lossesVsTop500": 3,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-una-hotels-reggio-emilia",
@@ -519,7 +909,46 @@
         "ftr": 0.349,
         "pps": 1.28
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 108.9 ORtg (Pts/100p), 109.5 DRtg, Pace: 78.2 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 108.9 ORtg (Pts/100p), 109.5 DRtg, Pace: 78.2 poss/gara.",
+      "nonGarbage": {
+        "ortg": 108.9,
+        "drtg": 109.5,
+        "netRtg": -0.6,
+        "orbPct": 27.4,
+        "drbPct": 68.2,
+        "oppOrbPct": 31.8,
+        "efgPct": 51.5,
+        "tovPct": 16.1,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 391,
+        "totalPossessions": 391,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 1.5,
+        "q2Net": -3,
+        "q3Net": 2.8,
+        "q4Net": 3,
+        "q1Pts": 25,
+        "q2Pts": 19.3,
+        "q3Pts": 21.5,
+        "q4Pts": 20.5,
+        "half1Net": -1.5,
+        "half2Net": 5.8,
+        "q3AdjustmentIndex": 3.5
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 17.1,
+        "netRtgVsTop500": -12.8,
+        "winsVsTop500": 0,
+        "lossesVsTop500": 3,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-apu-udine",
@@ -566,7 +995,46 @@
         "ftr": 0.236,
         "pps": 1.14
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 104 ORtg (Pts/100p), 106.1 DRtg, Pace: 76.7 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 104 ORtg (Pts/100p), 106.1 DRtg, Pace: 76.7 poss/gara.",
+      "nonGarbage": {
+        "ortg": 104.8,
+        "drtg": 105.9,
+        "netRtg": -1.1,
+        "orbPct": 34,
+        "drbPct": 72.6,
+        "oppOrbPct": 27.4,
+        "efgPct": 47.6,
+        "tovPct": 17.2,
+        "garbageTimePossPct": 5,
+        "competitivePossessions": 365,
+        "totalPossessions": 384,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 0.3,
+        "q2Net": 4.5,
+        "q3Net": 1.5,
+        "q4Net": -3.8,
+        "q1Pts": 19.3,
+        "q2Pts": 19.8,
+        "q3Pts": 20,
+        "q4Pts": 17.3,
+        "half1Net": 4.8,
+        "half2Net": -2.3,
+        "q3AdjustmentIndex": -0.9
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 18.7,
+        "netRtgVsTop500": -14.8,
+        "winsVsTop500": 0,
+        "lossesVsTop500": 3,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-bc-roma",
@@ -613,7 +1081,46 @@
         "ftr": 0.269,
         "pps": 1.38
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 122.5 ORtg (Pts/100p), 121.2 DRtg, Pace: 81.3 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 122.5 ORtg (Pts/100p), 121.2 DRtg, Pace: 81.3 poss/gara.",
+      "nonGarbage": {
+        "ortg": 121,
+        "drtg": 124.2,
+        "netRtg": -3.2,
+        "orbPct": 34.3,
+        "drbPct": 71,
+        "oppOrbPct": 29,
+        "efgPct": 58.6,
+        "tovPct": 15.5,
+        "garbageTimePossPct": 4.5,
+        "competitivePossessions": 388,
+        "totalPossessions": 407,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 0.8,
+        "q2Net": -0.5,
+        "q3Net": -0.8,
+        "q4Net": 6,
+        "q1Pts": 28,
+        "q2Pts": 22.8,
+        "q3Pts": 20.3,
+        "q4Pts": 27,
+        "half1Net": 0.3,
+        "half2Net": 5.2,
+        "q3AdjustmentIndex": -1
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 25.5,
+        "netRtgVsTop500": -10.2,
+        "winsVsTop500": 0,
+        "lossesVsTop500": 4,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-bertram-derthona-tortona",
@@ -660,7 +1167,46 @@
         "ftr": 0.39,
         "pps": 1.36
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 114.3 ORtg (Pts/100p), 128.5 DRtg, Pace: 73.8 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 114.3 ORtg (Pts/100p), 128.5 DRtg, Pace: 73.8 poss/gara.",
+      "nonGarbage": {
+        "ortg": 117.2,
+        "drtg": 127.2,
+        "netRtg": -10,
+        "orbPct": 28,
+        "drbPct": 64.9,
+        "oppOrbPct": 35.1,
+        "efgPct": 52.7,
+        "tovPct": 14.9,
+        "garbageTimePossPct": 5,
+        "competitivePossessions": 351,
+        "totalPossessions": 369,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": 2.8,
+        "q2Net": -3,
+        "q3Net": -6,
+        "q4Net": -3.5,
+        "q1Pts": 26,
+        "q2Pts": 21.8,
+        "q3Pts": 18.8,
+        "q4Pts": 20.3,
+        "half1Net": -0.2,
+        "half2Net": -9.5,
+        "q3AdjustmentIndex": -5.9
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 22.4,
+        "netRtgVsTop500": -1.1,
+        "winsVsTop500": 1,
+        "lossesVsTop500": 2,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-longobardi-scafati-basket",
@@ -676,22 +1222,22 @@
       },
       "wins": 1,
       "losses": 4,
-      "pace": 76.5,
-      "ortg": 102.5,
-      "drtg": 117.8,
-      "netRtg": -15.3,
+      "pace": 76.1,
+      "ortg": 103,
+      "drtg": 118.7,
+      "netRtg": -15.7,
       "ppg": 78.4,
       "oppPpg": 90,
       "fourFactorsOffense": {
         "efgPct": 51.6,
         "tovPct": 17.3,
-        "orbPct": 24.5,
+        "orbPct": 25.1,
         "ftr": 0.311
       },
       "fourFactorsDefense": {
         "efgPct": 59.2,
-        "tovPct": 17.5,
-        "orbPct": 30.2,
+        "tovPct": 17.7,
+        "orbPct": 31.1,
         "ftr": 0.274
       },
       "shotSelection": {
@@ -707,7 +1253,46 @@
         "ftr": 0.311,
         "pps": 1.23
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 102.5 ORtg (Pts/100p), 117.8 DRtg, Pace: 76.5 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 103 ORtg (Pts/100p), 118.7 DRtg, Pace: 76.1 poss/gara.",
+      "nonGarbage": {
+        "ortg": 102.7,
+        "drtg": 120.2,
+        "netRtg": -17.5,
+        "orbPct": 25.1,
+        "drbPct": 68.9,
+        "oppOrbPct": 31.1,
+        "efgPct": 51.6,
+        "tovPct": 17.3,
+        "garbageTimePossPct": 5,
+        "competitivePossessions": 361,
+        "totalPossessions": 381,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": -4.5,
+        "q2Net": -3.8,
+        "q3Net": -0.8,
+        "q4Net": 0.8,
+        "q1Pts": 18.8,
+        "q2Pts": 19,
+        "q3Pts": 21.8,
+        "q4Pts": 17.8,
+        "half1Net": -8.3,
+        "half2Net": 0,
+        "q3AdjustmentIndex": 3.4
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 15.5,
+        "netRtgVsTop500": -11.4,
+        "winsVsTop500": 1,
+        "lossesVsTop500": 3,
+        "pbpGamesCount": 0
+      }
     },
     {
       "id": "lba-acqua-san-bernardo-cantu",
@@ -754,7 +1339,46 @@
         "ftr": 0.347,
         "pps": 1.19
       },
-      "playStyle": "Stagione 2026/27 (5 gare disputate): 97.2 ORtg (Pts/100p), 114.7 DRtg, Pace: 75.9 poss/gara."
+      "playStyle": "Stagione 2026/27 (5 gare disputate): 97.2 ORtg (Pts/100p), 114.7 DRtg, Pace: 75.9 poss/gara.",
+      "nonGarbage": {
+        "ortg": 97.2,
+        "drtg": 114.7,
+        "netRtg": -17.5,
+        "orbPct": 29.7,
+        "drbPct": 69.8,
+        "oppOrbPct": 30.2,
+        "efgPct": 47.6,
+        "tovPct": 19.8,
+        "garbageTimePossPct": 0,
+        "competitivePossessions": 380,
+        "totalPossessions": 380,
+        "gamesWithPbp": 0,
+        "source": "quarter_split"
+      },
+      "quarterSplits": {
+        "q1Net": -1.5,
+        "q2Net": -3.3,
+        "q3Net": -1.5,
+        "q4Net": -6.8,
+        "q1Pts": 19,
+        "q2Pts": 17.8,
+        "q3Pts": 18.8,
+        "q4Pts": 17,
+        "half1Net": -4.8,
+        "half2Net": -8.3,
+        "q3AdjustmentIndex": 0.9
+      },
+      "situational": {
+        "killShotsTotal": 0,
+        "killShotsPerGame": 0,
+        "runsConcededTotal": 0,
+        "runsConcededPerGame": 0,
+        "volatilitySigma": 9.9,
+        "netRtgVsTop500": -17.3,
+        "winsVsTop500": 0,
+        "lossesVsTop500": 2,
+        "pbpGamesCount": 0
+      }
     }
   ],
   "players": [
@@ -803,6 +1427,7 @@
       "ptsPer100": 27,
       "rebPer100": 14.6,
       "astPer100": 0,
+      "volatilitySigma": 5.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -885,6 +1510,7 @@
       "ptsPer100": 19.9,
       "rebPer100": 8,
       "astPer100": 2.1,
+      "volatilitySigma": 1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -967,6 +1593,7 @@
       "ptsPer100": 26.4,
       "rebPer100": 6.7,
       "astPer100": 3.7,
+      "volatilitySigma": 3.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1049,6 +1676,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1131,6 +1759,7 @@
       "ptsPer100": 33.7,
       "rebPer100": 8.9,
       "astPer100": 3.5,
+      "volatilitySigma": 8.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1213,6 +1842,7 @@
       "ptsPer100": 17.2,
       "rebPer100": 7.4,
       "astPer100": 3.9,
+      "volatilitySigma": 4.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1295,6 +1925,7 @@
       "ptsPer100": 20.7,
       "rebPer100": 4.3,
       "astPer100": 2.6,
+      "volatilitySigma": 3.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1377,6 +2008,7 @@
       "ptsPer100": 24,
       "rebPer100": 6.4,
       "astPer100": 6.4,
+      "volatilitySigma": 6.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1456,9 +2088,10 @@
       "netRtg": 7,
       "gameScore": 5.2,
       "bpm": 0.5,
-      "ptsPer100": 25,
-      "rebPer100": 9.7,
-      "astPer100": 2.2,
+      "ptsPer100": 23.8,
+      "rebPer100": 9.3,
+      "astPer100": 2.1,
+      "volatilitySigma": 2.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1493,7 +2126,7 @@
         "ftr": 0.6,
         "threePointAttemptRate": 5.5,
         "moreyballRate": 63,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 25 Pts/100 poss (64.7% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 23.8 Pts/100 poss (64.7% TS)."
       }
     },
     {
@@ -1541,6 +2174,7 @@
       "ptsPer100": 21.3,
       "rebPer100": 7.4,
       "astPer100": 4.4,
+      "volatilitySigma": 5.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1623,6 +2257,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -1705,6 +2340,7 @@
       "ptsPer100": 25.5,
       "rebPer100": 6.8,
       "astPer100": 3.7,
+      "volatilitySigma": 6.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1784,9 +2420,10 @@
       "netRtg": -6,
       "gameScore": 9.9,
       "bpm": 2.2,
-      "ptsPer100": 33,
-      "rebPer100": 7.8,
-      "astPer100": 4.5,
+      "ptsPer100": 32.3,
+      "rebPer100": 7.6,
+      "astPer100": 4.4,
+      "volatilitySigma": 2.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1821,7 +2458,7 @@
         "ftr": 0.217,
         "threePointAttemptRate": 48.2,
         "moreyballRate": 79,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 33 Pts/100 poss (48.9% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 32.3 Pts/100 poss (48.9% TS)."
       }
     },
     {
@@ -1869,6 +2506,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -1951,6 +2589,7 @@
       "ptsPer100": 30.2,
       "rebPer100": 5.6,
       "astPer100": 2.2,
+      "volatilitySigma": 6.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2030,9 +2669,10 @@
       "netRtg": 7,
       "gameScore": 5,
       "bpm": 0.7,
-      "ptsPer100": 15.8,
+      "ptsPer100": 15.9,
       "rebPer100": 12.6,
       "astPer100": 0.8,
+      "volatilitySigma": 4.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2067,7 +2707,7 @@
         "ftr": 0.258,
         "threePointAttemptRate": 25.8,
         "moreyballRate": 70,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 15.8 Pts/100 poss (56.5% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 15.9 Pts/100 poss (56.5% TS)."
       }
     },
     {
@@ -2115,6 +2755,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -2197,6 +2838,7 @@
       "ptsPer100": 24.4,
       "rebPer100": 7.4,
       "astPer100": 1.7,
+      "volatilitySigma": 5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2279,6 +2921,7 @@
       "ptsPer100": 13.8,
       "rebPer100": 7.7,
       "astPer100": 1.4,
+      "volatilitySigma": 3.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2358,9 +3001,10 @@
       "netRtg": 7,
       "gameScore": 9,
       "bpm": 1.4,
-      "ptsPer100": 33.5,
-      "rebPer100": 13.7,
-      "astPer100": 2.5,
+      "ptsPer100": 33.7,
+      "rebPer100": 13.8,
+      "astPer100": 2.6,
+      "volatilitySigma": 1.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2395,7 +3039,7 @@
         "ftr": 0.37,
         "threePointAttemptRate": 41.3,
         "moreyballRate": 77,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 33.5 Pts/100 poss (61.7% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 33.7 Pts/100 poss (61.7% TS)."
       }
     },
     {
@@ -2443,6 +3087,7 @@
       "ptsPer100": 29.3,
       "rebPer100": 16.5,
       "astPer100": 3.6,
+      "volatilitySigma": 7.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2525,6 +3170,7 @@
       "ptsPer100": 7.9,
       "rebPer100": 15.1,
       "astPer100": 0,
+      "volatilitySigma": 3.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2607,6 +3253,7 @@
       "ptsPer100": 24.5,
       "rebPer100": 8.5,
       "astPer100": 8.1,
+      "volatilitySigma": 2.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2689,6 +3336,7 @@
       "ptsPer100": 24.3,
       "rebPer100": 4.9,
       "astPer100": 9.7,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2771,6 +3419,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -2853,6 +3502,7 @@
       "ptsPer100": 37.9,
       "rebPer100": 4.7,
       "astPer100": 1.6,
+      "volatilitySigma": 6.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -2935,6 +3585,7 @@
       "ptsPer100": 24.6,
       "rebPer100": 8.1,
       "astPer100": 5.2,
+      "volatilitySigma": 6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3017,6 +3668,7 @@
       "ptsPer100": 21.2,
       "rebPer100": 12.8,
       "astPer100": 1,
+      "volatilitySigma": 2.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3099,6 +3751,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -3181,6 +3834,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -3263,6 +3917,7 @@
       "ptsPer100": 29.4,
       "rebPer100": 8.4,
       "astPer100": 4.2,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3345,6 +4000,7 @@
       "ptsPer100": 21.3,
       "rebPer100": 14.8,
       "astPer100": 2.6,
+      "volatilitySigma": 5.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3427,6 +4083,7 @@
       "ptsPer100": 29.3,
       "rebPer100": 10.2,
       "astPer100": 5.5,
+      "volatilitySigma": 2.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3506,9 +4163,10 @@
       "netRtg": -6,
       "gameScore": 7.2,
       "bpm": 1.6,
-      "ptsPer100": 25.3,
+      "ptsPer100": 25.5,
       "rebPer100": 9,
       "astPer100": 7.4,
+      "volatilitySigma": 5.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3543,7 +4201,7 @@
         "ftr": 0.3,
         "threePointAttemptRate": 52,
         "moreyballRate": 81,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 25.3 Pts/100 poss (54.8% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 25.5 Pts/100 poss (54.8% TS)."
       }
     },
     {
@@ -3588,9 +4246,10 @@
       "netRtg": -6,
       "gameScore": 6.9,
       "bpm": 1.4,
-      "ptsPer100": 16.6,
+      "ptsPer100": 16.7,
       "rebPer100": 7.4,
-      "astPer100": 12,
+      "astPer100": 12.1,
+      "volatilitySigma": 5.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3625,7 +4284,7 @@
         "ftr": 0.333,
         "threePointAttemptRate": 55.6,
         "moreyballRate": 82,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 16.6 Pts/100 poss (43.6% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 16.7 Pts/100 poss (43.6% TS)."
       }
     },
     {
@@ -3673,6 +4332,7 @@
       "ptsPer100": 23.1,
       "rebPer100": 14.3,
       "astPer100": 0,
+      "volatilitySigma": 2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3755,6 +4415,7 @@
       "ptsPer100": 11.1,
       "rebPer100": 8.3,
       "astPer100": 6.3,
+      "volatilitySigma": 3.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3837,6 +4498,7 @@
       "ptsPer100": 32.2,
       "rebPer100": 10,
       "astPer100": 4.7,
+      "volatilitySigma": 8.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -3919,6 +4581,7 @@
       "ptsPer100": 16.9,
       "rebPer100": 4.6,
       "astPer100": 10.2,
+      "volatilitySigma": 1.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4001,6 +4664,7 @@
       "ptsPer100": 17.6,
       "rebPer100": 6.3,
       "astPer100": 0,
+      "volatilitySigma": 1.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4083,6 +4747,7 @@
       "ptsPer100": 18.4,
       "rebPer100": 4.4,
       "astPer100": 5.3,
+      "volatilitySigma": 6.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4165,6 +4830,7 @@
       "ptsPer100": 27.4,
       "rebPer100": 12.1,
       "astPer100": 1.4,
+      "volatilitySigma": 3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4247,6 +4913,7 @@
       "ptsPer100": 3.3,
       "rebPer100": 3.3,
       "astPer100": 0,
+      "volatilitySigma": 1.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4326,9 +4993,10 @@
       "netRtg": 7,
       "gameScore": 12.8,
       "bpm": 2.1,
-      "ptsPer100": 30.4,
-      "rebPer100": 8.1,
-      "astPer100": 10.1,
+      "ptsPer100": 29,
+      "rebPer100": 7.7,
+      "astPer100": 9.7,
+      "volatilitySigma": 3.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4363,7 +5031,7 @@
         "ftr": 0.64,
         "threePointAttemptRate": 28,
         "moreyballRate": 71,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 30.4 Pts/100 poss (58.5% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 29 Pts/100 poss (58.5% TS)."
       }
     },
     {
@@ -4411,6 +5079,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -4493,6 +5162,7 @@
       "ptsPer100": 30.6,
       "rebPer100": 7.4,
       "astPer100": 17.5,
+      "volatilitySigma": 5.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4572,9 +5242,10 @@
       "netRtg": -6,
       "gameScore": 3.6,
       "bpm": 0,
-      "ptsPer100": 11.8,
-      "rebPer100": 4.3,
-      "astPer100": 4.9,
+      "ptsPer100": 11.3,
+      "rebPer100": 4.1,
+      "astPer100": 4.7,
+      "volatilitySigma": 1.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4609,7 +5280,7 @@
         "ftr": 0.05,
         "threePointAttemptRate": 41.7,
         "moreyballRate": 77,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 11.8 Pts/100 poss (44.8% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 11.3 Pts/100 poss (44.8% TS)."
       }
     },
     {
@@ -4657,6 +5328,7 @@
       "ptsPer100": 39.9,
       "rebPer100": 9.5,
       "astPer100": 0,
+      "volatilitySigma": 2.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4739,6 +5411,7 @@
       "ptsPer100": 5.4,
       "rebPer100": 6.3,
       "astPer100": 6.3,
+      "volatilitySigma": 2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4818,9 +5491,10 @@
       "netRtg": -6,
       "gameScore": 0.4,
       "bpm": -0.8,
-      "ptsPer100": 34.9,
-      "rebPer100": 8.7,
+      "ptsPer100": 35,
+      "rebPer100": 8.8,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4855,7 +5529,7 @@
         "ftr": 0.4,
         "threePointAttemptRate": 60,
         "moreyballRate": 84,
-        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 34.9 Pts/100 poss (34% TS)."
+        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 35 Pts/100 poss (34% TS)."
       }
     },
     {
@@ -4903,6 +5577,7 @@
       "ptsPer100": 19.3,
       "rebPer100": 9.3,
       "astPer100": 5,
+      "volatilitySigma": 3.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -4985,6 +5660,7 @@
       "ptsPer100": 5.4,
       "rebPer100": 7,
       "astPer100": 2.9,
+      "volatilitySigma": 1.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5064,9 +5740,10 @@
       "netRtg": -6,
       "gameScore": 7.9,
       "bpm": 1.2,
-      "ptsPer100": 19.1,
-      "rebPer100": 14.1,
-      "astPer100": 4.1,
+      "ptsPer100": 18.2,
+      "rebPer100": 13.4,
+      "astPer100": 4,
+      "volatilitySigma": 3.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5101,7 +5778,7 @@
         "ftr": 0.879,
         "threePointAttemptRate": 39.4,
         "moreyballRate": 76,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 19.1 Pts/100 poss (50.3% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 18.2 Pts/100 poss (50.3% TS)."
       }
     },
     {
@@ -5149,6 +5826,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -5228,9 +5906,10 @@
       "netRtg": 7,
       "gameScore": 6.9,
       "bpm": 0.8,
-      "ptsPer100": 23.4,
-      "rebPer100": 13.9,
-      "astPer100": 1,
+      "ptsPer100": 22.3,
+      "rebPer100": 13.3,
+      "astPer100": 0.9,
+      "volatilitySigma": 2.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5265,7 +5944,7 @@
         "ftr": 0.923,
         "threePointAttemptRate": 0,
         "moreyballRate": 60,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 23.4 Pts/100 poss (64.3% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 22.3 Pts/100 poss (64.3% TS)."
       }
     },
     {
@@ -5310,9 +5989,10 @@
       "netRtg": -6,
       "gameScore": 2.2,
       "bpm": -0.8,
-      "ptsPer100": 9.3,
-      "rebPer100": 4.7,
+      "ptsPer100": 8.9,
+      "rebPer100": 4.4,
       "astPer100": 0.9,
+      "volatilitySigma": 2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5347,7 +6027,7 @@
         "ftr": 0.333,
         "threePointAttemptRate": 66.7,
         "moreyballRate": 87,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 9.3 Pts/100 poss (43.6% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 8.9 Pts/100 poss (43.6% TS)."
       }
     },
     {
@@ -5395,6 +6075,7 @@
       "ptsPer100": 17.5,
       "rebPer100": 3.4,
       "astPer100": 7.3,
+      "volatilitySigma": 4.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5477,6 +6158,7 @@
       "ptsPer100": 31.7,
       "rebPer100": 2.8,
       "astPer100": 8,
+      "volatilitySigma": 5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5559,6 +6241,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -5638,9 +6321,10 @@
       "netRtg": 7,
       "gameScore": 22.9,
       "bpm": 3.9,
-      "ptsPer100": 43.3,
-      "rebPer100": 18,
-      "astPer100": 3.6,
+      "ptsPer100": 41.2,
+      "rebPer100": 17.2,
+      "astPer100": 3.4,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5675,7 +6359,7 @@
         "ftr": 0.538,
         "threePointAttemptRate": 0,
         "moreyballRate": 60,
-        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 43.3 Pts/100 poss (74.6% TS)."
+        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 41.2 Pts/100 poss (74.6% TS)."
       }
     },
     {
@@ -5723,6 +6407,7 @@
       "ptsPer100": 17.3,
       "rebPer100": 5,
       "astPer100": 8.7,
+      "volatilitySigma": 4.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5805,6 +6490,7 @@
       "ptsPer100": 15.4,
       "rebPer100": 9.4,
       "astPer100": 3,
+      "volatilitySigma": 2.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5887,6 +6573,7 @@
       "ptsPer100": 30.5,
       "rebPer100": 2.9,
       "astPer100": 8.6,
+      "volatilitySigma": 5.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -5969,6 +6656,7 @@
       "ptsPer100": 8.5,
       "rebPer100": 0,
       "astPer100": 4.2,
+      "volatilitySigma": 0.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6051,6 +6739,7 @@
       "ptsPer100": 22.7,
       "rebPer100": 15.7,
       "astPer100": 0,
+      "volatilitySigma": 3.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6133,6 +6822,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -6215,6 +6905,7 @@
       "ptsPer100": 30,
       "rebPer100": 15,
       "astPer100": 2.2,
+      "volatilitySigma": 3.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6297,6 +6988,7 @@
       "ptsPer100": 21.3,
       "rebPer100": 18.7,
       "astPer100": 2,
+      "volatilitySigma": 1.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6379,6 +7071,7 @@
       "ptsPer100": 27.4,
       "rebPer100": 3.8,
       "astPer100": 12.4,
+      "volatilitySigma": 8.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6461,6 +7154,7 @@
       "ptsPer100": 22.1,
       "rebPer100": 4.3,
       "astPer100": 7.1,
+      "volatilitySigma": 3.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6543,6 +7237,7 @@
       "ptsPer100": 29,
       "rebPer100": 8.9,
       "astPer100": 7,
+      "volatilitySigma": 2.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6625,6 +7320,7 @@
       "ptsPer100": 16.7,
       "rebPer100": 6.9,
       "astPer100": 0,
+      "volatilitySigma": 0.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6704,9 +7400,10 @@
       "netRtg": 7,
       "gameScore": 8.2,
       "bpm": 1.2,
-      "ptsPer100": 30.8,
-      "rebPer100": 14.6,
-      "astPer100": 1.6,
+      "ptsPer100": 30.2,
+      "rebPer100": 14.3,
+      "astPer100": 1.5,
+      "volatilitySigma": 5.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6741,7 +7438,7 @@
         "ftr": 0.474,
         "threePointAttemptRate": 0,
         "moreyballRate": 60,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 30.8 Pts/100 poss (64.2% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 30.2 Pts/100 poss (64.2% TS)."
       }
     },
     {
@@ -6786,9 +7483,10 @@
       "netRtg": -6,
       "gameScore": 4.6,
       "bpm": 0.7,
-      "ptsPer100": 20,
-      "rebPer100": 7.4,
-      "astPer100": 4.4,
+      "ptsPer100": 19.6,
+      "rebPer100": 7.2,
+      "astPer100": 4.3,
+      "volatilitySigma": 4.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6823,7 +7521,7 @@
         "ftr": 0.174,
         "threePointAttemptRate": 41.3,
         "moreyballRate": 77,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 20 Pts/100 poss (46.4% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 19.6 Pts/100 poss (46.4% TS)."
       }
     },
     {
@@ -6871,6 +7569,7 @@
       "ptsPer100": 23,
       "rebPer100": 12.7,
       "astPer100": 1.4,
+      "volatilitySigma": 2.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -6953,6 +7652,7 @@
       "ptsPer100": 13.8,
       "rebPer100": 14.6,
       "astPer100": 0,
+      "volatilitySigma": 1.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7035,6 +7735,7 @@
       "ptsPer100": 14.4,
       "rebPer100": 4.2,
       "astPer100": 3.4,
+      "volatilitySigma": 2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7117,6 +7818,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -7199,6 +7901,7 @@
       "ptsPer100": 27.6,
       "rebPer100": 5,
       "astPer100": 2.5,
+      "volatilitySigma": 0.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7281,6 +7984,7 @@
       "ptsPer100": 9.9,
       "rebPer100": 3.2,
       "astPer100": 5.9,
+      "volatilitySigma": 2.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7363,6 +8067,7 @@
       "ptsPer100": 25.7,
       "rebPer100": 5.9,
       "astPer100": 4.6,
+      "volatilitySigma": 4.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7445,6 +8150,7 @@
       "ptsPer100": 25.1,
       "rebPer100": 12.1,
       "astPer100": 2.8,
+      "volatilitySigma": 0.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7527,6 +8233,7 @@
       "ptsPer100": 9.2,
       "rebPer100": 5.5,
       "astPer100": 9.2,
+      "volatilitySigma": 2.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7609,6 +8316,7 @@
       "ptsPer100": 32.8,
       "rebPer100": 1.8,
       "astPer100": 7.9,
+      "volatilitySigma": 4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7691,6 +8399,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -7773,6 +8482,7 @@
       "ptsPer100": 25,
       "rebPer100": 8.6,
       "astPer100": 5,
+      "volatilitySigma": 5.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7855,6 +8565,7 @@
       "ptsPer100": 0,
       "rebPer100": 8.1,
       "astPer100": 0,
+      "volatilitySigma": 0.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -7937,6 +8648,7 @@
       "ptsPer100": 22.4,
       "rebPer100": 9.9,
       "astPer100": 2.7,
+      "volatilitySigma": 2.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8019,6 +8731,7 @@
       "ptsPer100": 12.5,
       "rebPer100": 10.8,
       "astPer100": 3.3,
+      "volatilitySigma": 4.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8101,6 +8814,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -8183,6 +8897,7 @@
       "ptsPer100": 10.7,
       "rebPer100": 7.3,
       "astPer100": 6.7,
+      "volatilitySigma": 3.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8265,6 +8980,7 @@
       "ptsPer100": 17.1,
       "rebPer100": 10.2,
       "astPer100": 1.5,
+      "volatilitySigma": 1.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8347,6 +9063,7 @@
       "ptsPer100": 31.2,
       "rebPer100": 2.1,
       "astPer100": 3.7,
+      "volatilitySigma": 4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8429,6 +9146,7 @@
       "ptsPer100": 23.5,
       "rebPer100": 4.5,
       "astPer100": 6.2,
+      "volatilitySigma": 2.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8511,6 +9229,7 @@
       "ptsPer100": 16.9,
       "rebPer100": 11.3,
       "astPer100": 8.7,
+      "volatilitySigma": 5.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8593,6 +9312,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -8675,6 +9395,7 @@
       "ptsPer100": 32.4,
       "rebPer100": 3.7,
       "astPer100": 6.8,
+      "volatilitySigma": 7.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8757,6 +9478,7 @@
       "ptsPer100": 12.6,
       "rebPer100": 5,
       "astPer100": 8.6,
+      "volatilitySigma": 2.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8836,9 +9558,10 @@
       "netRtg": -6,
       "gameScore": 1.9,
       "bpm": -0.8,
-      "ptsPer100": 7.1,
+      "ptsPer100": 7.2,
       "rebPer100": 2.4,
       "astPer100": 2.4,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -8873,7 +9596,7 @@
         "ftr": 0,
         "threePointAttemptRate": 66.7,
         "moreyballRate": 87,
-        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 7.1 Pts/100 poss (50% TS)."
+        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 7.2 Pts/100 poss (50% TS)."
       }
     },
     {
@@ -8921,6 +9644,7 @@
       "ptsPer100": 27.5,
       "rebPer100": 6.1,
       "astPer100": 11.3,
+      "volatilitySigma": 7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9000,9 +9724,10 @@
       "netRtg": -6,
       "gameScore": 8.1,
       "bpm": 1.4,
-      "ptsPer100": 28.2,
+      "ptsPer100": 28.3,
       "rebPer100": 4,
-      "astPer100": 6,
+      "astPer100": 6.1,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9037,7 +9762,7 @@
         "ftr": 0.167,
         "threePointAttemptRate": 50,
         "moreyballRate": 80,
-        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 28.2 Pts/100 poss (54.3% TS)."
+        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 28.3 Pts/100 poss (54.3% TS)."
       }
     },
     {
@@ -9085,6 +9810,7 @@
       "ptsPer100": 26.7,
       "rebPer100": 4,
       "astPer100": 10.4,
+      "volatilitySigma": 4.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9165,8 +9891,9 @@
       "gameScore": 1.4,
       "bpm": -0.9,
       "ptsPer100": 10.5,
-      "rebPer100": 11.6,
+      "rebPer100": 11.7,
       "astPer100": 0,
+      "volatilitySigma": 1.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9249,6 +9976,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -9331,6 +10059,7 @@
       "ptsPer100": 10.7,
       "rebPer100": 5.3,
       "astPer100": 2.1,
+      "volatilitySigma": 3.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9413,6 +10142,7 @@
       "ptsPer100": 7.6,
       "rebPer100": 3.8,
       "astPer100": 0,
+      "volatilitySigma": 1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9495,6 +10225,7 @@
       "ptsPer100": 32.2,
       "rebPer100": 11.7,
       "astPer100": 3.9,
+      "volatilitySigma": 0.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9577,6 +10308,7 @@
       "ptsPer100": 20,
       "rebPer100": 9.3,
       "astPer100": 4,
+      "volatilitySigma": 2.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9659,6 +10391,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -9738,9 +10471,10 @@
       "netRtg": -6,
       "gameScore": 5.9,
       "bpm": 0.3,
-      "ptsPer100": 9.7,
+      "ptsPer100": 9.8,
       "rebPer100": 8.9,
       "astPer100": 2.7,
+      "volatilitySigma": 0.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9775,7 +10509,7 @@
         "ftr": 0,
         "threePointAttemptRate": 75,
         "moreyballRate": 90,
-        "shotStyleNotes": "LBA 2026/27 (2 gare disputate): 9.7 Pts/100 poss (45.8% TS)."
+        "shotStyleNotes": "LBA 2026/27 (2 gare disputate): 9.8 Pts/100 poss (45.8% TS)."
       }
     },
     {
@@ -9823,6 +10557,7 @@
       "ptsPer100": 28.6,
       "rebPer100": 16.2,
       "astPer100": 2.7,
+      "volatilitySigma": 4.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9905,6 +10640,7 @@
       "ptsPer100": 22.5,
       "rebPer100": 16.5,
       "astPer100": 3.5,
+      "volatilitySigma": 3.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -9987,6 +10723,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -10069,6 +10806,7 @@
       "ptsPer100": 20.2,
       "rebPer100": 11.2,
       "astPer100": 3.4,
+      "volatilitySigma": 4.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10151,6 +10889,7 @@
       "ptsPer100": 23,
       "rebPer100": 17.2,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10233,6 +10972,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -10315,6 +11055,7 @@
       "ptsPer100": 21,
       "rebPer100": 4.5,
       "astPer100": 2.5,
+      "volatilitySigma": 5.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10394,9 +11135,10 @@
       "netRtg": -6,
       "gameScore": 2.2,
       "bpm": 0,
-      "ptsPer100": 15.6,
+      "ptsPer100": 15.7,
       "rebPer100": 4.9,
       "astPer100": 3.4,
+      "volatilitySigma": 3.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10431,7 +11173,7 @@
         "ftr": 0.111,
         "threePointAttemptRate": 44.4,
         "moreyballRate": 78,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 15.6 Pts/100 poss (42.4% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 15.7 Pts/100 poss (42.4% TS)."
       }
     },
     {
@@ -10479,6 +11221,7 @@
       "ptsPer100": 21.9,
       "rebPer100": 5.9,
       "astPer100": 7.1,
+      "volatilitySigma": 1.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10561,6 +11304,7 @@
       "ptsPer100": 20.6,
       "rebPer100": 10.4,
       "astPer100": 2,
+      "volatilitySigma": 2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10640,9 +11384,10 @@
       "netRtg": 7,
       "gameScore": 16.1,
       "bpm": 2.4,
-      "ptsPer100": 35.6,
-      "rebPer100": 7,
-      "astPer100": 2.8,
+      "ptsPer100": 33.9,
+      "rebPer100": 6.6,
+      "astPer100": 2.7,
+      "volatilitySigma": 7.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10677,7 +11422,7 @@
         "ftr": 0.301,
         "threePointAttemptRate": 42.5,
         "moreyballRate": 77,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 35.6 Pts/100 poss (61.7% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 33.9 Pts/100 poss (61.7% TS)."
       }
     },
     {
@@ -10725,6 +11470,7 @@
       "ptsPer100": 33.3,
       "rebPer100": 7,
       "astPer100": 5.4,
+      "volatilitySigma": 6.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10807,6 +11553,7 @@
       "ptsPer100": 0,
       "rebPer100": 52.6,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10889,6 +11636,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -10971,6 +11719,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -11053,6 +11802,7 @@
       "ptsPer100": 30.4,
       "rebPer100": 5.9,
       "astPer100": 12.6,
+      "volatilitySigma": 10.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11135,6 +11885,7 @@
       "ptsPer100": 16.8,
       "rebPer100": 7.6,
       "astPer100": 1.5,
+      "volatilitySigma": 1.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11217,6 +11968,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -11296,9 +12048,10 @@
       "netRtg": -6,
       "gameScore": 7,
       "bpm": 1.1,
-      "ptsPer100": 20.7,
+      "ptsPer100": 20.9,
       "rebPer100": 7.1,
       "astPer100": 8.3,
+      "volatilitySigma": 5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11333,7 +12086,7 @@
         "ftr": 0.455,
         "threePointAttemptRate": 22.7,
         "moreyballRate": 69,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 20.7 Pts/100 poss (47.3% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 20.9 Pts/100 poss (47.3% TS)."
       }
     },
     {
@@ -11381,6 +12134,7 @@
       "ptsPer100": 27.2,
       "rebPer100": 6,
       "astPer100": 8.7,
+      "volatilitySigma": 4.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11463,6 +12217,7 @@
       "ptsPer100": 29.3,
       "rebPer100": 10.6,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11542,9 +12297,10 @@
       "netRtg": 7,
       "gameScore": 5.8,
       "bpm": 0.6,
-      "ptsPer100": 15.5,
-      "rebPer100": 15.1,
+      "ptsPer100": 15.6,
+      "rebPer100": 15.2,
       "astPer100": 1.9,
+      "volatilitySigma": 4.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11579,7 +12335,7 @@
         "ftr": 0.941,
         "threePointAttemptRate": 0,
         "moreyballRate": 60,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 15.5 Pts/100 poss (68.6% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 15.6 Pts/100 poss (68.6% TS)."
       }
     },
     {
@@ -11627,6 +12383,7 @@
       "ptsPer100": 20.7,
       "rebPer100": 8,
       "astPer100": 1.8,
+      "volatilitySigma": 7.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11709,6 +12466,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -11791,6 +12549,7 @@
       "ptsPer100": 27.6,
       "rebPer100": 15.3,
       "astPer100": 2,
+      "volatilitySigma": 2.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11870,9 +12629,10 @@
       "netRtg": -6,
       "gameScore": 5.5,
       "bpm": 0.5,
-      "ptsPer100": 18.5,
+      "ptsPer100": 18.6,
       "rebPer100": 6.8,
       "astPer100": 2.7,
+      "volatilitySigma": 3.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11907,7 +12667,7 @@
         "ftr": 0.235,
         "threePointAttemptRate": 47.1,
         "moreyballRate": 79,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 18.5 Pts/100 poss (48% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 18.6 Pts/100 poss (48% TS)."
       }
     },
     {
@@ -11952,9 +12712,10 @@
       "netRtg": 7,
       "gameScore": 1.9,
       "bpm": -0.7,
-      "ptsPer100": 15.2,
+      "ptsPer100": 15.3,
       "rebPer100": 5.4,
       "astPer100": 1.2,
+      "volatilitySigma": 0.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -11989,7 +12750,7 @@
         "ftr": 0.565,
         "threePointAttemptRate": 56.5,
         "moreyballRate": 83,
-        "shotStyleNotes": "LBA 2026/27 (3 gare disputate): 15.2 Pts/100 poss (64.4% TS)."
+        "shotStyleNotes": "LBA 2026/27 (3 gare disputate): 15.3 Pts/100 poss (64.4% TS)."
       }
     },
     {
@@ -12037,6 +12798,7 @@
       "ptsPer100": 23.1,
       "rebPer100": 5.9,
       "astPer100": 1.6,
+      "volatilitySigma": 3.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12119,6 +12881,7 @@
       "ptsPer100": 10.7,
       "rebPer100": 6.6,
       "astPer100": 0.8,
+      "volatilitySigma": 1.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12198,9 +12961,10 @@
       "netRtg": -6,
       "gameScore": -0.5,
       "bpm": -1.1,
-      "ptsPer100": 3.8,
-      "rebPer100": 4.5,
-      "astPer100": 0.8,
+      "ptsPer100": 3.6,
+      "rebPer100": 4.3,
+      "astPer100": 0.7,
+      "volatilitySigma": 2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12235,7 +12999,7 @@
         "ftr": 0.25,
         "threePointAttemptRate": 58.3,
         "moreyballRate": 83,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 3.8 Pts/100 poss (18.8% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 3.6 Pts/100 poss (18.8% TS)."
       }
     },
     {
@@ -12283,6 +13047,7 @@
       "ptsPer100": 14.9,
       "rebPer100": 11.1,
       "astPer100": 2.1,
+      "volatilitySigma": 6.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12365,6 +13130,7 @@
       "ptsPer100": 10.3,
       "rebPer100": 9.8,
       "astPer100": 2.2,
+      "volatilitySigma": 1.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12447,6 +13213,7 @@
       "ptsPer100": 25.2,
       "rebPer100": 9.7,
       "astPer100": 11.7,
+      "volatilitySigma": 0.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12526,9 +13293,10 @@
       "netRtg": 7,
       "gameScore": 12.3,
       "bpm": 2.3,
-      "ptsPer100": 27.4,
+      "ptsPer100": 27.6,
       "rebPer100": 4.3,
-      "astPer100": 12,
+      "astPer100": 12.1,
+      "volatilitySigma": 8.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12563,7 +13331,7 @@
         "ftr": 0.348,
         "threePointAttemptRate": 43.5,
         "moreyballRate": 77,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 27.4 Pts/100 poss (60.3% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 27.6 Pts/100 poss (60.3% TS)."
       }
     },
     {
@@ -12611,6 +13379,7 @@
       "ptsPer100": 30.4,
       "rebPer100": 8.2,
       "astPer100": 5.1,
+      "volatilitySigma": 7.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12693,6 +13462,7 @@
       "ptsPer100": 17.7,
       "rebPer100": 12.4,
       "astPer100": 2.7,
+      "volatilitySigma": 5.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12775,6 +13545,7 @@
       "ptsPer100": 21.7,
       "rebPer100": 2.3,
       "astPer100": 5.5,
+      "volatilitySigma": 4.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12854,9 +13625,10 @@
       "netRtg": 7,
       "gameScore": 6.6,
       "bpm": 0.8,
-      "ptsPer100": 20.9,
-      "rebPer100": 5.2,
+      "ptsPer100": 21,
+      "rebPer100": 5.3,
       "astPer100": 2.6,
+      "volatilitySigma": 4.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12891,7 +13663,7 @@
         "ftr": 0.222,
         "threePointAttemptRate": 48.9,
         "moreyballRate": 80,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 20.9 Pts/100 poss (56.7% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 21 Pts/100 poss (56.7% TS)."
       }
     },
     {
@@ -12936,9 +13708,10 @@
       "netRtg": -6,
       "gameScore": 3.4,
       "bpm": 0,
-      "ptsPer100": 19.1,
-      "rebPer100": 8.8,
+      "ptsPer100": 19.2,
+      "rebPer100": 8.9,
       "astPer100": 1.5,
+      "volatilitySigma": 4.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -12973,7 +13746,7 @@
         "ftr": 0.2,
         "threePointAttemptRate": 50.8,
         "moreyballRate": 81,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 19.1 Pts/100 poss (46% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 19.2 Pts/100 poss (46% TS)."
       }
     },
     {
@@ -13021,6 +13794,7 @@
       "ptsPer100": 21.7,
       "rebPer100": 9,
       "astPer100": 1.8,
+      "volatilitySigma": 9.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13103,6 +13877,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13182,9 +13957,10 @@
       "netRtg": 7,
       "gameScore": 8.4,
       "bpm": 1.2,
-      "ptsPer100": 30.1,
+      "ptsPer100": 30.3,
       "rebPer100": 6.5,
       "astPer100": 2.2,
+      "volatilitySigma": 4.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13219,7 +13995,7 @@
         "ftr": 0.4,
         "threePointAttemptRate": 21.1,
         "moreyballRate": 68,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 30.1 Pts/100 poss (62.7% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 30.3 Pts/100 poss (62.7% TS)."
       }
     },
     {
@@ -13264,9 +14040,10 @@
       "netRtg": 7,
       "gameScore": 3.6,
       "bpm": 0.3,
-      "ptsPer100": 15.1,
-      "rebPer100": 16.6,
-      "astPer100": 2.3,
+      "ptsPer100": 14.8,
+      "rebPer100": 16.2,
+      "astPer100": 2.2,
+      "volatilitySigma": 4.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13301,7 +14078,7 @@
         "ftr": 1.357,
         "threePointAttemptRate": 0,
         "moreyballRate": 60,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 15.1 Pts/100 poss (59.3% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 14.8 Pts/100 poss (59.3% TS)."
       }
     },
     {
@@ -13349,6 +14126,7 @@
       "ptsPer100": 14.1,
       "rebPer100": 16.9,
       "astPer100": 2.8,
+      "volatilitySigma": 2.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13431,6 +14209,7 @@
       "ptsPer100": 20.9,
       "rebPer100": 13.3,
       "astPer100": 2.2,
+      "volatilitySigma": 3.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13513,6 +14292,7 @@
       "ptsPer100": 15.1,
       "rebPer100": 13.7,
       "astPer100": 5.1,
+      "volatilitySigma": 5.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13592,9 +14372,10 @@
       "netRtg": 7,
       "gameScore": 13.9,
       "bpm": 2.7,
-      "ptsPer100": 39.5,
+      "ptsPer100": 39.7,
       "rebPer100": 8.3,
       "astPer100": 4.9,
+      "volatilitySigma": 2.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13629,7 +14410,7 @@
         "ftr": 0.195,
         "threePointAttemptRate": 63.6,
         "moreyballRate": 85,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 39.5 Pts/100 poss (62.8% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 39.7 Pts/100 poss (62.8% TS)."
       }
     },
     {
@@ -13677,6 +14458,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -13756,9 +14538,10 @@
       "netRtg": 7,
       "gameScore": 10.1,
       "bpm": 1.6,
-      "ptsPer100": 22.9,
-      "rebPer100": 15.6,
+      "ptsPer100": 23,
+      "rebPer100": 15.7,
       "astPer100": 0.8,
+      "volatilitySigma": 3.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13793,7 +14576,7 @@
         "ftr": 0.45,
         "threePointAttemptRate": 0,
         "moreyballRate": 60,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 22.9 Pts/100 poss (62.6% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 23 Pts/100 poss (62.6% TS)."
       }
     },
     {
@@ -13841,6 +14624,7 @@
       "ptsPer100": 0,
       "rebPer100": 6.5,
       "astPer100": 0,
+      "volatilitySigma": 0.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -13923,6 +14707,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -14005,6 +14790,7 @@
       "ptsPer100": 19.2,
       "rebPer100": 11.7,
       "astPer100": 3.5,
+      "volatilitySigma": 6.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14087,6 +14873,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -14169,6 +14956,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -14251,6 +15039,7 @@
       "ptsPer100": 2.9,
       "rebPer100": 5.8,
       "astPer100": 2.9,
+      "volatilitySigma": 2.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14333,6 +15122,7 @@
       "ptsPer100": 31.5,
       "rebPer100": 10.9,
       "astPer100": 3.3,
+      "volatilitySigma": 7.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14415,6 +15205,7 @@
       "ptsPer100": 20.4,
       "rebPer100": 2.2,
       "astPer100": 3.3,
+      "volatilitySigma": 2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14497,6 +15288,7 @@
       "ptsPer100": 10.6,
       "rebPer100": 7.5,
       "astPer100": 0.6,
+      "volatilitySigma": 2.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14579,6 +15371,7 @@
       "ptsPer100": 36.8,
       "rebPer100": 3.5,
       "astPer100": 4.1,
+      "volatilitySigma": 3.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14661,6 +15454,7 @@
       "ptsPer100": 21.1,
       "rebPer100": 12.5,
       "astPer100": 4.3,
+      "volatilitySigma": 3.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14743,6 +15537,7 @@
       "ptsPer100": 12.6,
       "rebPer100": 13.3,
       "astPer100": 0.7,
+      "volatilitySigma": 1.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14825,6 +15620,7 @@
       "ptsPer100": 16.9,
       "rebPer100": 5.6,
       "astPer100": 8.5,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14907,6 +15703,7 @@
       "ptsPer100": 11.5,
       "rebPer100": 11,
       "astPer100": 4.6,
+      "volatilitySigma": 4.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -14989,6 +15786,7 @@
       "ptsPer100": 41.3,
       "rebPer100": 5.7,
       "astPer100": 12.9,
+      "volatilitySigma": 3.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15068,9 +15866,10 @@
       "netRtg": 7,
       "gameScore": 13.6,
       "bpm": 2.2,
-      "ptsPer100": 41.2,
-      "rebPer100": 8.9,
-      "astPer100": 4.5,
+      "ptsPer100": 40.3,
+      "rebPer100": 8.7,
+      "astPer100": 4.4,
+      "volatilitySigma": 4.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15105,7 +15904,7 @@
         "ftr": 0.409,
         "threePointAttemptRate": 72.7,
         "moreyballRate": 89,
-        "shotStyleNotes": "LBA 2026/27 (2 gare disputate): 41.2 Pts/100 poss (71.3% TS)."
+        "shotStyleNotes": "LBA 2026/27 (2 gare disputate): 40.3 Pts/100 poss (71.3% TS)."
       }
     },
     {
@@ -15150,9 +15949,10 @@
       "netRtg": 7,
       "gameScore": 15.7,
       "bpm": 2.9,
-      "ptsPer100": 33.5,
-      "rebPer100": 6.4,
-      "astPer100": 9,
+      "ptsPer100": 31.9,
+      "rebPer100": 6.1,
+      "astPer100": 8.6,
+      "volatilitySigma": 3.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15187,7 +15987,7 @@
         "ftr": 0.352,
         "threePointAttemptRate": 31,
         "moreyballRate": 72,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 33.5 Pts/100 poss (61% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 31.9 Pts/100 poss (61% TS)."
       }
     },
     {
@@ -15235,6 +16035,7 @@
       "ptsPer100": 16.4,
       "rebPer100": 4.1,
       "astPer100": 7.7,
+      "volatilitySigma": 2.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15317,6 +16118,7 @@
       "ptsPer100": 23,
       "rebPer100": 4.1,
       "astPer100": 2.2,
+      "volatilitySigma": 7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15399,6 +16201,7 @@
       "ptsPer100": 25.9,
       "rebPer100": 11.2,
       "astPer100": 3.4,
+      "volatilitySigma": 3.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15481,6 +16284,7 @@
       "ptsPer100": 7.5,
       "rebPer100": 4.7,
       "astPer100": 0,
+      "volatilitySigma": 0.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15563,6 +16367,7 @@
       "ptsPer100": 17.8,
       "rebPer100": 10,
       "astPer100": 1.2,
+      "volatilitySigma": 4.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15642,9 +16447,10 @@
       "netRtg": 7,
       "gameScore": 5.4,
       "bpm": 0.2,
-      "ptsPer100": 15.4,
-      "rebPer100": 6.5,
-      "astPer100": 4.2,
+      "ptsPer100": 15.1,
+      "rebPer100": 6.4,
+      "astPer100": 4.1,
+      "volatilitySigma": 1.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15679,7 +16485,7 @@
         "ftr": 0.391,
         "threePointAttemptRate": 69.6,
         "moreyballRate": 88,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 15.4 Pts/100 poss (61.2% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 15.1 Pts/100 poss (61.2% TS)."
       }
     },
     {
@@ -15727,6 +16533,7 @@
       "ptsPer100": 30.7,
       "rebPer100": 14.2,
       "astPer100": 1.9,
+      "volatilitySigma": 4.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15809,6 +16616,7 @@
       "ptsPer100": 17.1,
       "rebPer100": 12.3,
       "astPer100": 12.3,
+      "volatilitySigma": 2.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15888,9 +16696,10 @@
       "netRtg": -6,
       "gameScore": 5.3,
       "bpm": 0.3,
-      "ptsPer100": 10.5,
-      "rebPer100": 4.9,
-      "astPer100": 14.6,
+      "ptsPer100": 10.2,
+      "rebPer100": 4.8,
+      "astPer100": 14.3,
+      "volatilitySigma": 2.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -15925,7 +16734,7 @@
         "ftr": 0.479,
         "threePointAttemptRate": 62.5,
         "moreyballRate": 85,
-        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 10.5 Pts/100 poss (37% TS)."
+        "shotStyleNotes": "LBA 2026/27 (4 gare disputate): 10.2 Pts/100 poss (37% TS)."
       }
     },
     {
@@ -15973,6 +16782,7 @@
       "ptsPer100": 12.5,
       "rebPer100": 15.5,
       "astPer100": 1,
+      "volatilitySigma": 2.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16055,6 +16865,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -16137,6 +16948,7 @@
       "ptsPer100": 19.3,
       "rebPer100": 3.6,
       "astPer100": 15.2,
+      "volatilitySigma": 3.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16219,6 +17031,7 @@
       "ptsPer100": 27.1,
       "rebPer100": 8,
       "astPer100": 5.3,
+      "volatilitySigma": 4.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16301,6 +17114,7 @@
       "ptsPer100": 20.8,
       "rebPer100": 8.3,
       "astPer100": 3.2,
+      "volatilitySigma": 2.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16383,6 +17197,7 @@
       "ptsPer100": 11.3,
       "rebPer100": 15.4,
       "astPer100": 0.8,
+      "volatilitySigma": 1.7,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16465,6 +17280,7 @@
       "ptsPer100": 8.2,
       "rebPer100": 4.1,
       "astPer100": 8.2,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16547,6 +17363,7 @@
       "ptsPer100": 22.3,
       "rebPer100": 13.8,
       "astPer100": 6.7,
+      "volatilitySigma": 3.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16629,6 +17446,7 @@
       "ptsPer100": 22.5,
       "rebPer100": 6.1,
       "astPer100": 9.7,
+      "volatilitySigma": 4.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16708,9 +17526,10 @@
       "netRtg": -6,
       "gameScore": 2.3,
       "bpm": -0.2,
-      "ptsPer100": 13.5,
-      "rebPer100": 8.1,
-      "astPer100": 2.2,
+      "ptsPer100": 13.2,
+      "rebPer100": 7.9,
+      "astPer100": 2.1,
+      "volatilitySigma": 2.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16745,7 +17564,7 @@
         "ftr": 0.286,
         "threePointAttemptRate": 46.4,
         "moreyballRate": 79,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 13.5 Pts/100 poss (39.7% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 13.2 Pts/100 poss (39.7% TS)."
       }
     },
     {
@@ -16793,6 +17612,7 @@
       "ptsPer100": 33.2,
       "rebPer100": 22,
       "astPer100": 3.5,
+      "volatilitySigma": 4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16875,6 +17695,7 @@
       "ptsPer100": 11.2,
       "rebPer100": 16,
       "astPer100": 3.7,
+      "volatilitySigma": 2.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -16957,6 +17778,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -17039,6 +17861,7 @@
       "ptsPer100": 25.9,
       "rebPer100": 18.8,
       "astPer100": 2.4,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -17121,6 +17944,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -17203,6 +18027,7 @@
       "ptsPer100": 24.6,
       "rebPer100": 8.8,
       "astPer100": 1.3,
+      "volatilitySigma": 3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -17285,6 +18110,7 @@
       "ptsPer100": 5.6,
       "rebPer100": 7.7,
       "astPer100": 3.4,
+      "volatilitySigma": 1.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -17364,9 +18190,10 @@
       "netRtg": 7,
       "gameScore": 6.5,
       "bpm": 0.4,
-      "ptsPer100": 14.1,
-      "rebPer100": 8.5,
-      "astPer100": 9.6,
+      "ptsPer100": 13.8,
+      "rebPer100": 8.4,
+      "astPer100": 9.3,
+      "volatilitySigma": 6.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -17401,7 +18228,7 @@
         "ftr": 0.588,
         "threePointAttemptRate": 29.4,
         "moreyballRate": 72,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 14.1 Pts/100 poss (65.4% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 13.8 Pts/100 poss (65.4% TS)."
       }
     },
     {
@@ -17449,6 +18276,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -17531,6 +18359,7 @@
       "ptsPer100": 26.1,
       "rebPer100": 10.4,
       "astPer100": 4.7,
+      "volatilitySigma": 5.3,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -17613,6 +18442,7 @@
       "ptsPer100": 61.5,
       "rebPer100": 8.8,
       "astPer100": 0,
+      "volatilitySigma": 2.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -17695,6 +18525,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -17777,6 +18608,7 @@
       "ptsPer100": 17.3,
       "rebPer100": 3.5,
       "astPer100": 3.5,
+      "volatilitySigma": 4.4,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -17859,6 +18691,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,
@@ -17941,6 +18774,7 @@
       "ptsPer100": 10.2,
       "rebPer100": 5.5,
       "astPer100": 2.4,
+      "volatilitySigma": 1.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18020,9 +18854,10 @@
       "netRtg": 7,
       "gameScore": 10.1,
       "bpm": 0.9,
-      "ptsPer100": 34,
-      "rebPer100": 5.9,
-      "astPer100": 3.8,
+      "ptsPer100": 33.2,
+      "rebPer100": 5.8,
+      "astPer100": 3.7,
+      "volatilitySigma": 6.9,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18057,7 +18892,7 @@
         "ftr": 0.308,
         "threePointAttemptRate": 64.1,
         "moreyballRate": 86,
-        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 34 Pts/100 poss (71.1% TS)."
+        "shotStyleNotes": "LBA 2026/27 (5 gare disputate): 33.2 Pts/100 poss (71.1% TS)."
       }
     },
     {
@@ -18105,6 +18940,7 @@
       "ptsPer100": 23.6,
       "rebPer100": 6.2,
       "astPer100": 7,
+      "volatilitySigma": 5.8,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18187,6 +19023,7 @@
       "ptsPer100": 26.7,
       "rebPer100": 4.8,
       "astPer100": 3.3,
+      "volatilitySigma": 2.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18269,6 +19106,7 @@
       "ptsPer100": 12.7,
       "rebPer100": 6.9,
       "astPer100": 2.6,
+      "volatilitySigma": 5.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18351,6 +19189,7 @@
       "ptsPer100": 25.5,
       "rebPer100": 9.3,
       "astPer100": 3,
+      "volatilitySigma": 3.1,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18433,6 +19272,7 @@
       "ptsPer100": 41.6,
       "rebPer100": 9.2,
       "astPer100": 3.7,
+      "volatilitySigma": 9.6,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18512,9 +19352,10 @@
       "netRtg": 7,
       "gameScore": 9.4,
       "bpm": 0.4,
-      "ptsPer100": 22,
-      "rebPer100": 11,
-      "astPer100": 2.8,
+      "ptsPer100": 21.5,
+      "rebPer100": 10.8,
+      "astPer100": 2.7,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18549,7 +19390,7 @@
         "ftr": 0,
         "threePointAttemptRate": 80,
         "moreyballRate": 92,
-        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 22 Pts/100 poss (80% TS)."
+        "shotStyleNotes": "LBA 2026/27 (1 gare disputate): 21.5 Pts/100 poss (80% TS)."
       }
     },
     {
@@ -18597,6 +19438,7 @@
       "ptsPer100": 32.8,
       "rebPer100": 12.3,
       "astPer100": 2.8,
+      "volatilitySigma": 4.5,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18679,6 +19521,7 @@
       "ptsPer100": 20.7,
       "rebPer100": 4.1,
       "astPer100": 10.7,
+      "volatilitySigma": 2.2,
       "shotSelection": {
         "rim": {
           "fgaPct": 36,
@@ -18761,6 +19604,7 @@
       "ptsPer100": 0,
       "rebPer100": 0,
       "astPer100": 0,
+      "volatilitySigma": 0,
       "shotSelection": {
         "rim": {
           "fgaPct": 0,

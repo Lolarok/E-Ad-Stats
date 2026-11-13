@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { syncOfficialLbaRounds, buildOfficialLbaDataset } from './lbaSyncEngine';
 import { syncOnlyMissingGames, rebuildDatasetFromStore } from './gamesStoreEngine';
+import { syncMissingPlayByPlayBatch, getPbpSyncStatus } from './pbpAnalyticsEngine';
 
 const ROOT_DIR = typeof process !== 'undefined' && typeof process.cwd === 'function' ? process.cwd() : '.';
 const CACHE_FILE = path.join(ROOT_DIR, 'data_cache.json');
@@ -208,6 +209,17 @@ class RoundSyncDaemonService {
 
       // 3. Controllo EuroLeague / EuroCup (partite mancanti o nuove concluse)
       const euroSyncRes = await syncOnlyMissingGames();
+
+      // 3b. Sincronizzazione progressiva throttled dei Play-by-Play mancanti (evita rate-limit 429)
+      try {
+        const pbpSt = getPbpSyncStatus();
+        if (pbpSt.missingPbpGames > 0) {
+          const pbpRes = await syncMissingPlayByPlayBatch(20, 450);
+          if (pbpRes.fetched > 0) {
+            this.log('info', `PBP Sync: acquisiti ${pbpRes.fetched} nuovi Play-by-Play (${pbpRes.status.cachedPbpGames}/${pbpRes.status.totalCompletedEuroGames}).`);
+          }
+        }
+      } catch (e) {}
 
       // 4. Ricostruzione dataset aggregato persistente
       const dataset = rebuildDatasetFromStore(targetLbaRound, true);

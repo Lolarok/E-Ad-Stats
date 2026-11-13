@@ -303,7 +303,13 @@ export function getOrComputePlayerMetrics(p: PlayerStats) {
       shotQuality: p.shotQuality,
     };
   }
-  return computePlayerAdvancedMetrics(p);
+  const computed = computePlayerAdvancedMetrics(p);
+  return {
+    playTypes: p.playTypes || computed.playTypes,
+    scoreOrigin: p.scoreOrigin || computed.scoreOrigin,
+    clutchStats: p.clutchStats || computed.clutchStats,
+    shotQuality: p.shotQuality || computed.shotQuality,
+  };
 }
 
 export function getOrComputeTeamMetrics(t: TeamStats) {
@@ -315,5 +321,11 @@ export function getOrComputeTeamMetrics(t: TeamStats) {
       shotQuality: t.shotQuality,
     };
   }
-  return computeTeamAdvancedMetrics(t);
+  const computed = computeTeamAdvancedMetrics(t);
+  return {
+    playTypes: t.playTypes || computed.playTypes,
+    scoreOrigin: t.scoreOrigin || computed.scoreOrigin,
+    clutchStats: t.clutchStats || computed.clutchStats,
+    shotQuality: t.shotQuality || computed.shotQuality,
+  };
 }

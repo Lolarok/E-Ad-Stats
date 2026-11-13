@@ -90,6 +90,21 @@ const AVAILABLE_METRICS: MetricOption[] = [
   { key: 'clutchStats.clutchNetRtg', label: 'Clutch Net Rating (Finali +/-)', category: 'clutch', min: -25, max: 30 },
   { key: 'clutchStats.clutchEfgPct', label: 'Clutch eFG% (Pressione)', category: 'clutch', min: 30, max: 70 },
   { key: 'clutchStats.clutchPts', label: 'Clutch Punti/Gara', category: 'clutch', min: 0, max: 18 },
+
+  // --- NO-GARBAGE TIME, PBP REALE & MOMENTUM ---
+  { key: 'nonGarbage.ortg', label: 'No-Garbage ORtg (Solo Poss. Competitivi)', category: 'efficiency', min: 95, max: 135, isTeamOnly: true },
+  { key: 'nonGarbage.drtg', label: 'No-Garbage DRtg (Solo Poss. Competitivi)', category: 'efficiency', min: 95, max: 135, isTeamOnly: true },
+  { key: 'nonGarbage.netRtg', label: 'No-Garbage Net Rating', category: 'efficiency', min: -20, max: 25, isTeamOnly: true },
+  { key: 'nonGarbage.orbPct', label: 'No-Garbage ORB% (Rimbalzo Offensivo)', category: 'efficiency', min: 15, max: 45, isTeamOnly: true },
+  { key: 'nonGarbage.drbPct', label: 'No-Garbage DRB% (Rimbalzo Difensivo)', category: 'efficiency', min: 55, max: 85, isTeamOnly: true },
+  { key: 'nonGarbage.garbageTimePossPct', label: 'Garbage Time Exposure %', category: 'efficiency', min: 0, max: 25, isTeamOnly: true },
+  { key: 'quarterSplits.q3AdjustmentIndex', label: 'Q3 Coach Adjustment (Q3 vs 1° Tempo)', category: 'efficiency', min: -12, max: 12, isTeamOnly: true },
+  { key: 'situational.killShotsPerGame', label: 'Kill Shots 10-0+ / Gara (PBP)', category: 'clutch', min: 0, max: 2.5, isTeamOnly: true },
+  { key: 'situational.volatilitySigma', label: 'Indice Volatilità σ (Costanza Squadra)', category: 'efficiency', min: 0, max: 25, isTeamOnly: true },
+  { key: 'situational.netRtgVsTop500', label: 'Net Rating vs Squadre ≥ .500', category: 'efficiency', min: -25, max: 25, isTeamOnly: true },
+  { key: 'realOnOff.netSwing', label: 'Real On/Off Net Swing (PBP)', category: 'efficiency', min: -25, max: 25, isPlayerOnly: true },
+  { key: 'realOnOff.onCourtNetRtg', label: 'On-Court Net Rating (PBP)', category: 'efficiency', min: -25, max: 25, isPlayerOnly: true },
+  { key: 'volatilitySigma', label: 'Volatilità σ GameScore (Costanza)', category: 'efficiency', min: 0, max: 15, isPlayerOnly: true },
 ];
 
 export const ScatterPlotExplorer: React.FC<Props> = ({
@@ -102,6 +117,7 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
 
   // Configurazione Scatter Plot
   const [entityType, setEntityType] = useState<'players' | 'teams'>('players');
+  const [excludeGarbageTime, setExcludeGarbageTime] = useState<boolean>(false);
   const [selectedLeague, setSelectedLeague] = useState<League | 'ALL'>('ALL');
   const [selectedPosition, setSelectedPosition] = useState<string>('ALL');
   const [scatterSearch, setScatterSearch] = useState('');
@@ -119,9 +135,20 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
   // Hover point
   const [hoveredPoint, setHoveredPoint] = useState<any | null>(null);
 
-  // Helper estrazione valore numerico nidificato con arricchimento dinamico
-  const getNestedValue = (obj: any, key: string): number => {
+  // Helper estrazione valore numerico nidificato con arricchimento dinamico e filtro No-Garbage
+  const resolveMetricKey = (rawKey: string): string => {
+    if (!excludeGarbageTime || entityType !== 'teams') return rawKey;
+    if (rawKey === 'ortg') return 'nonGarbage.ortg';
+    if (rawKey === 'drtg') return 'nonGarbage.drtg';
+    if (rawKey === 'netRtg') return 'nonGarbage.netRtg';
+    if (rawKey === 'fourFactorsOffense.efgPct') return 'nonGarbage.efgPct';
+    if (rawKey === 'fourFactorsOffense.orbPct') return 'nonGarbage.orbPct';
+    return rawKey;
+  };
+
+  const getNestedValue = (obj: any, rawKey: string): number => {
     if (!obj) return 0;
+    const key = resolveMetricKey(rawKey);
     let targetObj = obj;
     if (
       key.startsWith('playTypes.') ||
@@ -158,7 +185,11 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
       | 'scorer'
       | 'shot_selection'
       | 'playmaker'
+      | 'onoff_impact'
       | 'team_efficiency'
+      | 'team_no_garbage'
+      | 'q3_coach_adj'
+      | 'killshots_vol'
       | 'team_pace_net'
       | 'four_factors'
       | 'shot_making'
@@ -172,6 +203,11 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
       setXMetricKey('usgPct');
       setYMetricKey('tsPct');
       setBubbleMetricKey('pts');
+    } else if (preset === 'onoff_impact') {
+      setEntityType('players');
+      setXMetricKey('usgPct');
+      setYMetricKey('realOnOff.netSwing');
+      setBubbleMetricKey('mpg');
     } else if (preset === 'shot_making') {
       setEntityType('players');
       setXMetricKey('shotQuality.xefgPct');
@@ -197,6 +233,22 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
       setXMetricKey('ortg');
       setYMetricKey('drtg');
       setBubbleMetricKey('pace');
+    } else if (preset === 'team_no_garbage') {
+      setEntityType('teams');
+      setExcludeGarbageTime(true);
+      setXMetricKey('nonGarbage.ortg');
+      setYMetricKey('nonGarbage.drtg');
+      setBubbleMetricKey('pace');
+    } else if (preset === 'q3_coach_adj') {
+      setEntityType('teams');
+      setXMetricKey('quarterSplits.q3AdjustmentIndex');
+      setYMetricKey('nonGarbage.netRtg');
+      setBubbleMetricKey('ppg');
+    } else if (preset === 'killshots_vol') {
+      setEntityType('teams');
+      setXMetricKey('situational.killShotsPerGame');
+      setYMetricKey('situational.volatilitySigma');
+      setBubbleMetricKey('netRtg');
     } else if (preset === 'score_origin') {
       setEntityType('teams');
       setXMetricKey('scoreOrigin.pointsOffTurnovers');
@@ -265,8 +317,10 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
 
   // Calcolo min / max e medie dinamiche
   const { minX, maxX, minY, maxY, avgX, avgY, xLabel, yLabel } = useMemo(() => {
-    const xOption = AVAILABLE_METRICS.find((m) => m.key === xMetricKey);
-    const yOption = AVAILABLE_METRICS.find((m) => m.key === yMetricKey);
+    const resolvedX = resolveMetricKey(xMetricKey);
+    const resolvedY = resolveMetricKey(yMetricKey);
+    const xOption = AVAILABLE_METRICS.find((m) => m.key === resolvedX);
+    const yOption = AVAILABLE_METRICS.find((m) => m.key === resolvedY);
 
     const xVals = scatterData.map((d) => getNestedValue(d, xMetricKey)).filter((v) => !isNaN(v) && isFinite(v));
     const yVals = scatterData.map((d) => getNestedValue(d, yMetricKey)).filter((v) => !isNaN(v) && isFinite(v));
@@ -295,10 +349,10 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
       maxY: calcMaxY,
       avgX: calcAvgX,
       avgY: calcAvgY,
-      xLabel: xOption?.label || xMetricKey,
-      yLabel: yOption?.label || yMetricKey,
+      xLabel: xOption?.label || resolvedX,
+      yLabel: yOption?.label || resolvedY,
     };
-  }, [scatterData, xMetricKey, yMetricKey]);
+  }, [scatterData, xMetricKey, yMetricKey, excludeGarbageTime, entityType]);
 
   const getX = (val: number) => {
     return padding + ((val - minX) / Math.max(1, maxX - minX)) * (width - 2 * padding);
@@ -522,9 +576,59 @@ export const ScatterPlotExplorer: React.FC<Props> = ({
                       >
                         Playmaking: AST% vs AST/TO
                       </button>
+                      <button
+                        onClick={() => applyPreset('onoff_impact')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          yMetricKey === 'realOnOff.netSwing'
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        Real On/Off Swing (PBP)
+                      </button>
                     </>
                   ) : (
                     <>
+                      <button
+                        onClick={() => setExcludeGarbageTime(!excludeGarbageTime)}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                          excludeGarbageTime
+                            ? 'bg-emerald-600 text-white border-emerald-500'
+                            : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {excludeGarbageTime ? 'No-Garbage Time: ON' : 'Escludi Garbage Time'}
+                      </button>
+                      <button
+                        onClick={() => applyPreset('team_no_garbage')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          xMetricKey === 'nonGarbage.ortg' && yMetricKey === 'nonGarbage.drtg'
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        ORtg vs DRtg (No-Garbage)
+                      </button>
+                      <button
+                        onClick={() => applyPreset('q3_coach_adj')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          xMetricKey === 'quarterSplits.q3AdjustmentIndex'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        Q3 Coach Adj. vs NetRtg
+                      </button>
+                      <button
+                        onClick={() => applyPreset('killshots_vol')}
+                        className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                          xMetricKey === 'situational.killShotsPerGame'
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        Kill Shots vs Volatilità σ
+                      </button>
                       <button
                         onClick={() => applyPreset('team_pace_net')}
                         className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${

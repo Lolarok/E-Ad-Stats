@@ -76,7 +76,7 @@ export const RoundUpdater: React.FC<Props> = ({
   // Stato API-Sports Basketball
   const [apiSportsInfo, setApiSportsInfo] = useState<{ configured: boolean; message: string; requestsRemaining?: number; requestsLimit?: number } | null>(null);
 
-  // Stato Demone Background Server-Side
+  // Stato Demone Background Server-Side & Play-by-Play Coverage
   const [daemonStatus, setDaemonStatus] = useState<{
     isRunning: boolean;
     isSyncing: boolean;
@@ -87,10 +87,33 @@ export const RoundUpdater: React.FC<Props> = ({
     validationStats?: { totalValidatedMatches: number };
   } | null>(null);
 
+  const [pbpStatus, setPbpStatus] = useState<{
+    totalCompletedEuroGames: number;
+    cachedPbpGames: number;
+    missingPbpGames: number;
+    coveragePct: number;
+    isSyncing: boolean;
+    lastSyncAt: string | null;
+  } | null>(null);
+  const [isSyncingPbp, setIsSyncingPbp] = useState<boolean>(false);
+
   const fetchDaemonStatus = React.useCallback(() => {
     fetch('/api/daemon/status')
       .then((r) => r.json())
-      .then((data) => setDaemonStatus(data))
+      .then((data) => {
+        setDaemonStatus(data);
+        if (data?.pbpStatus) {
+          setPbpStatus(data.pbpStatus);
+        }
+      })
+      .catch(() => {});
+    fetch('/api/pbp/status')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && typeof data.cachedPbpGames === 'number') {
+          setPbpStatus(data);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -157,6 +180,43 @@ export const RoundUpdater: React.FC<Props> = ({
       setErrorMsg(`Errore esecuzione demone: ${err.message}`);
     } finally {
       setIsSyncingLba(false);
+    }
+  };
+
+  // Sincronizzazione batch Play-by-Play mancanti (EuroLeague + EuroCup)
+  const handleSyncPbp = async () => {
+    setIsSyncingPbp(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    try {
+      const res = await fetch('/api/pbp/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxGames: 25 }),
+      });
+      const data = await res.json();
+      if (data.status) {
+        setPbpStatus(data.status);
+      }
+      if (data.success) {
+        setSuccessMsg(
+          `Play-by-Play: ${data.newlyFetched > 0 ? `+${data.newlyFetched} nuove gare scaricate` : 'tutte le gare disponibili sono aggiornate'} (${data.status?.coveragePct ?? 100}% copertura).`
+        );
+        if (data.newlyFetched > 0 && onUpdateDataset) {
+          const latestRes = await fetch('/api/data/latest');
+          const latestData = await latestRes.json();
+          if (latestData.teams && latestData.players) {
+            onUpdateDataset(latestData.teams, latestData.players);
+          }
+        }
+      } else {
+        setErrorMsg(data.message || 'Errore durante la sincronizzazione Play-by-Play.');
+      }
+    } catch (err: any) {
+      setErrorMsg(`Errore sync Play-by-Play: ${err.message}`);
+    } finally {
+      setIsSyncingPbp(false);
+      fetchDaemonStatus();
     }
   };
 
@@ -445,7 +505,7 @@ export const RoundUpdater: React.FC<Props> = ({
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-[11px] text-slate-400">
+          <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400">
             <span>
               Ultimo controllo:{' '}
               <strong className="text-slate-200">
@@ -458,6 +518,25 @@ export const RoundUpdater: React.FC<Props> = ({
                 {daemonStatus?.validationStats?.totalValidatedMatches || 32} match ufficiali
               </strong>
             </span>
+            {pbpStatus && (
+              <span className="flex items-center gap-2 font-mono tabular-nums">
+                <span>
+                  PBP:{' '}
+                  <strong className={pbpStatus.coveragePct >= 95 ? 'text-emerald-400' : 'text-amber-300'}>
+                    {pbpStatus.cachedPbpGames}/{pbpStatus.totalCompletedEuroGames} gare ({pbpStatus.coveragePct}%)
+                  </strong>
+                </span>
+                {pbpStatus.missingPbpGames > 0 && (
+                  <button
+                    onClick={handleSyncPbp}
+                    disabled={isSyncingPbp}
+                    className="px-2 py-0.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/40 rounded font-sans font-bold text-[10px] whitespace-nowrap cursor-pointer disabled:opacity-50"
+                  >
+                    {isSyncingPbp ? 'Sync PBP...' : 'Sync PBP'}
+                  </button>
+                )}
+              </span>
+            )}
           </div>
         </div>
 

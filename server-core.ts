@@ -13,6 +13,11 @@ import { syncOfficialLbaRounds } from './src/utils/lbaSyncEngine';
 import { EUROCUP_SCHEDULE_ROUNDS, EUROCUP_GROUPS } from './src/utils/eurocupSeasonData';
 import { roundSyncDaemon } from './src/utils/roundSyncDaemon';
 import { getPbpSyncStatus, syncMissingPlayByPlayBatch } from './src/utils/pbpAnalyticsEngine';
+import {
+  recordTrafficEvent,
+  getTrafficDashboardSummary,
+  resetTrafficAnalytics,
+} from './src/utils/trafficAnalyticsEngine';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,10 +32,47 @@ export async function startServer() {
   const app = express();
   app.use(express.json());
 
-  // Inizializza il dataset dal games store persistente in memoria veloce
-  console.log('[Server Startup] Inizializzazione dataset dal database partite...');
-  let currentDataset = rebuildDatasetFromStore(5, false);
-  console.log(`[Server Startup] Caricate ${currentDataset.totalGames} gare ufficiali (${currentDataset.euroleagueGamesCount} EuroLeague, ${currentDataset.eurocupGamesCount} EuroCup, LBA Round 5).`);
+  let currentDataset: ReturnType<typeof rebuildDatasetFromStore> = {
+    teams: [],
+    players: [],
+    totalGames: 0,
+    euroleagueGamesCount: 0,
+    eurocupGamesCount: 0,
+  };
+
+  // Caricamento rapido dalla cache su disco per avvio istantaneo sulla porta 3000
+  try {
+    if (fs.existsSync(CACHE_FILE)) {
+      const cached = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf-8'));
+      if (Array.isArray(cached.teams) && Array.isArray(cached.players) && cached.teams.length > 0) {
+        currentDataset = {
+          teams: cached.teams,
+          players: cached.players,
+          totalGames: cached.totalGames || 0,
+          euroleagueGamesCount: cached.teams.some((t: any) => t.league === 'EuroLeague') ? 60 : 0,
+          eurocupGamesCount: cached.teams.some((t: any) => t.league === 'EuroCup') ? 64 : 0,
+        };
+      }
+    }
+  } catch (e) {}
+
+  const ensureDatasetReady = () => {
+    if (!currentDataset.teams || currentDataset.teams.length === 0) {
+      currentDataset = rebuildDatasetFromStore(5, false);
+    }
+    return currentDataset;
+  };
+
+  // Ricostruzione completa non bloccante dopo il bind della porta HTTP
+  setImmediate(() => {
+    try {
+      console.log('[Server Startup] Inizializzazione dataset dal database partite...');
+      currentDataset = rebuildDatasetFromStore(5, false);
+      console.log(`[Server Startup] Caricate ${currentDataset.totalGames} gare ufficiali (${currentDataset.euroleagueGamesCount} EuroLeague, ${currentDataset.eurocupGamesCount} EuroCup, LBA Round 5).`);
+    } catch (err) {
+      console.error('[Server Startup] Errore inizializzazione dataset:', err);
+    }
+  });
 
   // Avvio demone background autonomo per scansione e auto-aggiornamento continuo
   roundSyncDaemon.startDaemon(3 * 60 * 1000);
@@ -422,6 +464,52 @@ export async function startServer() {
     res.json(status);
   });
 
+  // API 9: Traffic & Contacts Analytics Endpoints
+  app.post('/api/traffic/event', (req, res) => {
+    try {
+      const payload = req.body || {};
+      if (!payload || !payload.type) {
+        return res.status(400).json({ ok: false, message: 'Missing event type' });
+      }
+      const forwarded = req.headers['x-forwarded-for'];
+      const clientIp = Array.isArray(forwarded)
+        ? forwarded[0]
+        : typeof forwarded === 'string'
+        ? forwarded.split(',')[0].trim()
+        : req.socket?.remoteAddress || '0.0.0.0';
+
+      const result = recordTrafficEvent({
+        payload,
+        userAgent: typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : '',
+        ip: clientIp,
+        acceptLanguage:
+          typeof req.headers['accept-language'] === 'string' ? req.headers['accept-language'] : '',
+        host: typeof req.headers.host === 'string' ? req.headers.host : '',
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ ok: false, message: err?.message || 'Traffic tracking error' });
+    }
+  });
+
+  app.get('/api/traffic/summary', (req, res) => {
+    try {
+      const daysParam = parseInt(String(req.query?.days || '14'), 10);
+      const validDays = daysParam === 7 || daysParam === 30 ? daysParam : 14;
+      res.json(getTrafficDashboardSummary(validDays));
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || 'Unable to compute traffic summary' });
+    }
+  });
+
+  app.post('/api/traffic/reset', (req, res) => {
+    try {
+      res.json(resetTrafficAnalytics());
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || 'Unable to reset traffic counters' });
+    }
+  });
+
   // Controllo automatico periodico ogni 5 minuti
   setInterval(async () => {
     if (!isSyncInProgress) {
@@ -446,12 +534,25 @@ export async function startServer() {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
   } else {
-    const vite = await createViteServer({
-      server: { middlewareMode: true, hmr: false },
+    const vitePromise = createViteServer({
+      server: { middlewareMode: true, hmr: false, ws: false },
       appType: 'spa',
     });
-    app.use(vite.middlewares);
+    vitePromise.catch((err) => {
+      console.error('[Vite Startup Error]', err);
+    });
+    app.use(async (req, res, next) => {
+      try {
+        const vite = await vitePromise;
+        vite.middlewares(req, res, next);
+      } catch (err) {
+        next(err);
+      }
+    });
   }
+
+  // Assicura che currentDataset sia popolato anche in richieste sincrone immediate
+  ensureDatasetReady();
 
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[Server] Avviato con successo sulla porta ${PORT}`);

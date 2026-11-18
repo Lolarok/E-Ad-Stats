@@ -133,12 +133,12 @@ class RoundSyncDaemonService {
     this.statusMessage = 'Demone background attivo: scansione autonoma turni abilitata.';
     this.log('info', `Avvio demone background (intervallo: ${Math.round(intervalMs / 1000)}s).`);
 
-    // Esegui un ciclo iniziale ritardato di 2 secondi
+    // Esegui un ciclo iniziale ritardato di 10 secondi per non rallentare il boot del server
     setTimeout(() => {
       this.runCycle().catch((err) => {
         this.log('error', `Errore ciclo iniziale demone: ${err?.message || err}`);
       });
-    }, 2000);
+    }, 10000);
 
     // Imposta il timer periodico
     this.timer = setInterval(() => {

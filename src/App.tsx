@@ -9,6 +9,7 @@ import { PlayerDetailModal } from './components/PlayerDetailModal';
 import { TeamDetailModal } from './components/TeamDetailModal';
 import { RoundUpdater } from './components/RoundUpdater';
 import { LineupAnalytics } from './components/LineupAnalytics';
+import { TrafficAnalyticsDashboard } from './components/TrafficAnalyticsDashboard';
 import { ParsedGameReport, FullRoundSyncResult } from './utils/euroleagueFetcher';
 import {
   Search,
@@ -40,7 +41,8 @@ type TabView =
   | 'h2h'
   | 'scatter'
   | 'calculator'
-  | 'round_updater';
+  | 'round_updater'
+  | 'traffic';
 
 const STORAGE_PREFIX = 'eurobasket_2026_27_v47';
 const STORAGE_PLAYERS_KEY = `${STORAGE_PREFIX}_players`;
@@ -93,12 +95,84 @@ export default function App() {
   // Toggle Garbage Time su Tabella Squadre
   const [teamsExcludeGarbageTime, setTeamsExcludeGarbageTime] = useState<boolean>(false);
 
+  // Tracking anonimo visite, sessioni & interazioni reali
+  const trafficIdsRef = React.useRef<{ visitorId: string; sessionId: string } | null>(null);
+  const getTrafficIds = React.useCallback(() => {
+    if (trafficIdsRef.current) return trafficIdsRef.current;
+    let visitorId = '';
+    let sessionId = '';
+    try {
+      visitorId = localStorage.getItem('eb_anon_visitor_id') || '';
+      if (!visitorId) {
+        visitorId =
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `v_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        localStorage.setItem('eb_anon_visitor_id', visitorId);
+      }
+      sessionId = sessionStorage.getItem('eb_session_id') || '';
+      if (!sessionId) {
+        sessionId = `s_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        sessionStorage.setItem('eb_session_id', sessionId);
+      }
+    } catch {
+      visitorId = `v_${Date.now()}`;
+      sessionId = `s_${Date.now()}`;
+    }
+    trafficIdsRef.current = { visitorId, sessionId };
+    return trafficIdsRef.current;
+  }, []);
+
+  const sendTrafficEvent = React.useCallback(
+    (type: 'session_start' | 'tab_view' | 'heartbeat' | 'interaction', extra?: { tab?: string; action?: string }) => {
+      try {
+        const { visitorId, sessionId } = getTrafficIds();
+        fetch('/api/traffic/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type,
+            visitorId,
+            sessionId,
+            tab: extra?.tab,
+            action: extra?.action,
+            referrer: typeof document !== 'undefined' ? document.referrer : '',
+            lang: typeof navigator !== 'undefined' ? navigator.language : '',
+            screenWidth: typeof window !== 'undefined' ? window.innerWidth : undefined,
+          }),
+          keepalive: true,
+        }).catch(() => {});
+      } catch {}
+    },
+    [getTrafficIds]
+  );
+
+  useEffect(() => {
+    sendTrafficEvent('session_start', { tab: 'shot_selection' });
+    const hb = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        sendTrafficEvent('heartbeat');
+      }
+    }, 45000);
+    return () => clearInterval(hb);
+  }, [sendTrafficEvent]);
+
+  const isFirstTabRender = React.useRef(true);
+  useEffect(() => {
+    if (isFirstTabRender.current) {
+      isFirstTabRender.current = false;
+      return;
+    }
+    sendTrafficEvent('tab_view', { tab: currentTab });
+  }, [currentTab, sendTrafficEvent]);
+
   // Auto-Sync in background con API Ufficiale
   const [isAutoSyncing, setIsAutoSyncing] = useState(false);
   const [lastAutoSyncTime, setLastAutoSyncTime] = useState<string>('Pochi istanti fa');
 
   // Funzione per forzare sincronizzazione manuale o automatica
   const triggerManualSync = async () => {
+    sendTrafficEvent('interaction', { action: 'manual_sync_trigger' });
     setIsAutoSyncing(true);
     try {
       let syncMessage = '';
@@ -267,6 +341,18 @@ export default function App() {
   // Modali Dettaglio
   const [modalPlayer, setModalPlayer] = useState<PlayerStats | null>(null);
   const [modalTeam, setModalTeam] = useState<TeamStats | null>(null);
+
+  useEffect(() => {
+    if (modalPlayer) {
+      sendTrafficEvent('interaction', { action: 'player_modal_open' });
+    }
+  }, [modalPlayer, sendTrafficEvent]);
+
+  useEffect(() => {
+    if (modalTeam) {
+      sendTrafficEvent('interaction', { action: 'team_modal_open' });
+    }
+  }, [modalTeam, sendTrafficEvent]);
 
   // Unione dati del turno scaricato nel database
   const handleMergeGameData = (report: ParsedGameReport) => {
@@ -715,6 +801,18 @@ export default function App() {
             >
               <Calculator className="w-4 h-4" />
               <span>Calcolatore Box Score</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentTab('traffic')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all cursor-pointer ${
+                currentTab === 'traffic'
+                  ? 'bg-slate-800 text-emerald-400 font-bold shadow'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              <span>Accessi App</span>
             </button>
           </nav>
         </div>
@@ -1265,7 +1363,10 @@ export default function App() {
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <div className="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800">
                   <button
-                    onClick={() => setTeamsExcludeGarbageTime(false)}
+                    onClick={() => {
+                      setTeamsExcludeGarbageTime(false);
+                      sendTrafficEvent('interaction', { action: 'garbage_time_toggle' });
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors whitespace-nowrap cursor-pointer ${
                       !teamsExcludeGarbageTime
                         ? 'bg-indigo-600 text-white'
@@ -1275,7 +1376,10 @@ export default function App() {
                     Partita Intera
                   </button>
                   <button
-                    onClick={() => setTeamsExcludeGarbageTime(true)}
+                    onClick={() => {
+                      setTeamsExcludeGarbageTime(true);
+                      sendTrafficEvent('interaction', { action: 'garbage_time_toggle' });
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors whitespace-nowrap cursor-pointer ${
                       teamsExcludeGarbageTime
                         ? 'bg-emerald-600 text-white'
@@ -1492,6 +1596,11 @@ export default function App() {
         {/* TAB 6: CALCOLATORE BOX SCORE */}
         {/* ============================================================ */}
         {currentTab === 'calculator' && <BoxScoreCalculator />}
+
+        {/* ============================================================ */}
+        {/* TAB 7: DASHBOARD ACCESSI & CONTATTI APP */}
+        {/* ============================================================ */}
+        {currentTab === 'traffic' && <TrafficAnalyticsDashboard onNotify={showToast} />}
       </main>
 
       {/* Modale Dettaglio Giocatore */}

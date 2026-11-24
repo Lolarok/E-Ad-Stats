@@ -44,7 +44,7 @@ type TabView =
   | 'round_updater'
   | 'traffic';
 
-const STORAGE_PREFIX = 'eurobasket_2026_27_v47';
+const STORAGE_PREFIX = 'eurobasket_2026_27_v48';
 const STORAGE_PLAYERS_KEY = `${STORAGE_PREFIX}_players`;
 const STORAGE_TEAMS_KEY = `${STORAGE_PREFIX}_teams`;
 const STORAGE_SYNC_KEY = `${STORAGE_PREFIX}_last_sync`;
@@ -257,7 +257,7 @@ export default function App() {
   const [playersList, setPlayersList] = useState<PlayerStats[]>(() => {
     try {
       // Pulisci TUTTE le vecchie chiavi di versioni precedenti per forzare dati coerenti e privi di anomalie
-      ['v31', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46'].forEach((v) => {
+      ['v31', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47'].forEach((v) => {
         try {
           localStorage.removeItem(`eurobasket_2026_27_${v}_players`);
           localStorage.removeItem(`eurobasket_2026_27_${v}_teams`);

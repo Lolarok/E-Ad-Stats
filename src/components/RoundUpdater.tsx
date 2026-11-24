@@ -482,7 +482,9 @@ export const RoundUpdater: React.FC<Props> = ({
               ) : (
                 <Zap className="w-4 h-4" />
               )}
-              <span>⚡ Avvia Ciclo Demone (R5)</span>
+              <span>
+                ⚡ Avvia Ciclo Demone (LBA R{daemonStatus?.currentRoundLBA || 9})
+              </span>
             </button>
             <button
               onClick={handleAutoAdvanceRound}

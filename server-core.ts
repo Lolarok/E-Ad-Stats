@@ -9,7 +9,7 @@ import {
   loadGamesStore,
 } from './src/utils/gamesStoreEngine';
 import { buildLbaSeasonData, LBA_SCHEDULE_ROUNDS } from './src/utils/lbaSeasonData';
-import { syncOfficialLbaRounds } from './src/utils/lbaSyncEngine';
+import { syncOfficialLbaRounds, getLatestCompletedLbaRound } from './src/utils/lbaSyncEngine';
 import { EUROCUP_SCHEDULE_ROUNDS, EUROCUP_GROUPS } from './src/utils/eurocupSeasonData';
 import { roundSyncDaemon } from './src/utils/roundSyncDaemon';
 import { getPbpSyncStatus, syncMissingPlayByPlayBatch } from './src/utils/pbpAnalyticsEngine';
@@ -58,7 +58,7 @@ export async function startServer() {
 
   const ensureDatasetReady = () => {
     if (!currentDataset.teams || currentDataset.teams.length === 0) {
-      currentDataset = rebuildDatasetFromStore(5, false);
+      currentDataset = rebuildDatasetFromStore(getLatestCompletedLbaRound(), false);
     }
     return currentDataset;
   };
@@ -66,19 +66,21 @@ export async function startServer() {
   // Ricostruzione completa non bloccante dopo il bind della porta HTTP
   setImmediate(() => {
     try {
-      console.log('[Server Startup] Inizializzazione dataset dal database partite...');
-      currentDataset = rebuildDatasetFromStore(5, false);
-      console.log(`[Server Startup] Caricate ${currentDataset.totalGames} gare ufficiali (${currentDataset.euroleagueGamesCount} EuroLeague, ${currentDataset.eurocupGamesCount} EuroCup, LBA Round 5).`);
+      const latestLba = getLatestCompletedLbaRound();
+      console.log(`[Server Startup] Inizializzazione dataset dal database partite (LBA Round ${latestLba})...`);
+      currentDataset = rebuildDatasetFromStore(latestLba, false);
+      console.log(`[Server Startup] Caricate ${currentDataset.totalGames} gare ufficiali (${currentDataset.euroleagueGamesCount} EuroLeague, ${currentDataset.eurocupGamesCount} EuroCup, LBA Round ${latestLba}).`);
     } catch (err) {
       console.error('[Server Startup] Errore inizializzazione dataset:', err);
     }
   });
 
-  // Avvio demone background autonomo per scansione e auto-aggiornamento continuo
-  roundSyncDaemon.startDaemon(3 * 60 * 1000);
+  // Avvio demone background autonomo (scansione ogni 15 minuti per evitare rate-limit e restare aggiornati post-gara)
+  roundSyncDaemon.startDaemon(15 * 60 * 1000);
 
   // API 1: GET /api/data/latest -> serve i dati completi delle squadre e giocatori (Stagione 2026/27)
   app.get('/api/data/latest', async (req, res) => {
+    const latestLba = getLatestCompletedLbaRound();
     try {
       if (fs.existsSync(CACHE_FILE)) {
         const cached = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf-8'));
@@ -91,13 +93,13 @@ export async function startServer() {
           cached.teams[0]?.nonGarbage &&
           cached.teams[0]?.quarterSplits &&
           cached.teams[0]?.situational &&
-          (cached.lbaRound >= 5 || cached.teams.some((t: any) => t.name === 'Virtus Costa Bologna' && t.gp >= 5))
+          (cached.lbaRound || 0) >= latestLba
         ) {
           return res.json({
             status: 'ok',
             lastUpdated: cached.lastUpdated,
             totalGames: cached.totalGames,
-            lbaRound: cached.lbaRound || 5,
+            lbaRound: cached.lbaRound || latestLba,
             teamsCount: cached.teams.length,
             playersCount: cached.players.length,
             teams: cached.teams,
@@ -108,13 +110,13 @@ export async function startServer() {
       }
     } catch (e) {}
 
-    // Se la cache non è aggiornata, ricostruisci alla 5ª giornata
-    currentDataset = rebuildDatasetFromStore(5, true);
+    // Se la cache non è aggiornata all'ultima giornata su disco, ricostruisci
+    currentDataset = rebuildDatasetFromStore(latestLba, false);
     try {
       fs.writeFileSync(CACHE_FILE, JSON.stringify({
         lastUpdated: new Date().toISOString(),
         totalGames: currentDataset.totalGames,
-        lbaRound: 5,
+        lbaRound: latestLba,
         teams: currentDataset.teams,
         players: currentDataset.players,
         season: '2026/2027',
@@ -125,7 +127,7 @@ export async function startServer() {
       status: 'ok',
       lastUpdated: new Date().toISOString(),
       totalGames: currentDataset.totalGames,
-      lbaRound: 5,
+      lbaRound: latestLba,
       teamsCount: currentDataset.teams.length,
       playersCount: currentDataset.players.length,
       teams: currentDataset.teams,
@@ -162,17 +164,18 @@ export async function startServer() {
     });
   });
 
-  // API 3: POST /api/sync/trigger -> avvia sincronizzazione forzata LBA ed Euroleague
+  // API 3: POST /api/sync/trigger -> avvia sincronizzazione forzata LBA, EuroLeague, EuroCup & PBP
   app.post('/api/sync/trigger', async (req, res) => {
     if (isSyncInProgress) {
       return res.json({ success: false, message: 'Sincronizzazione già in corso.' });
     }
     isSyncInProgress = true;
     try {
-      const lbaSyncRes = await syncOfficialLbaRounds(5);
+      const lbaSyncRes = await syncOfficialLbaRounds();
       const euroSyncRes = await syncOnlyMissingGames();
-      const targetRound = Math.max(5, lbaSyncRes.completedRounds || 5);
-      currentDataset = rebuildDatasetFromStore(targetRound, true);
+      const pbpRes = await syncMissingPlayByPlayBatch(80, 80);
+      const targetRound = Math.max(getLatestCompletedLbaRound(), lbaSyncRes.completedRounds || 5);
+      currentDataset = rebuildDatasetFromStore(targetRound, false);
 
       try {
         fs.writeFileSync(CACHE_FILE, JSON.stringify({
@@ -190,16 +193,38 @@ export async function startServer() {
         lbaRound: targetRound,
         totalLbaMatches: targetRound * 8,
         newGamesCount: euroSyncRes.newGamesSynced + lbaSyncRes.newMatchesSynced,
+        newPbpCount: pbpRes.fetched,
         totalGames: currentDataset.totalGames,
         teams: currentDataset.teams,
         players: currentDataset.players,
-        message: `LBA Serie A sincronizzata con successo alla ${targetRound}ª Giornata!`,
+        message: `Dati aggiornati: LBA Giornata ${targetRound}, EuroLeague + EuroCup (${currentDataset.totalGames} gare ufficiali).`,
       });
     } catch (err: any) {
       console.error('Trigger sync error:', err);
       res.status(500).json({ success: false, message: err?.message || 'Errore durante la sincronizzazione.' });
     } finally {
       isSyncInProgress = false;
+    }
+  });
+
+  // API 3B: GET /api/sync/cron -> endpoint leggero richiamabile da Cloud Scheduler / cron-job.org per mantenere l'app online sempre aggiornata
+  app.get('/api/sync/cron', async (req, res) => {
+    try {
+      const cycleResult = await roundSyncDaemon.runCycle();
+      const latestLba = getLatestCompletedLbaRound();
+      currentDataset = rebuildDatasetFromStore(latestLba, false);
+      res.json({
+        ok: cycleResult.success,
+        message: cycleResult.message,
+        lbaRound: latestLba,
+        totalGames: currentDataset.totalGames,
+        euroleagueGames: currentDataset.euroleagueGamesCount,
+        eurocupGames: currentDataset.eurocupGamesCount,
+        pbpStatus: getPbpSyncStatus(),
+        syncedAt: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      res.status(500).json({ ok: false, message: err?.message || 'Cron sync error' });
     }
   });
 
@@ -230,18 +255,19 @@ export async function startServer() {
     res.json(getPbpSyncStatus());
   });
 
-  // API: POST /api/pbp/sync -> sincronizza un lotto throttled di Play-by-Play mancanti
+  // API: POST /api/pbp/sync -> sincronizza un lotto di Play-by-Play mancanti
   app.post('/api/pbp/sync', async (req, res) => {
     try {
-      const maxGames = Math.min(50, Math.max(5, parseInt(req.body?.maxGames || '25', 10) || 25));
-      const result = await syncMissingPlayByPlayBatch(maxGames, 450);
+      const maxGames = Math.min(120, Math.max(5, parseInt(req.body?.maxGames || '60', 10) || 60));
+      const result = await syncMissingPlayByPlayBatch(maxGames, 80);
+      const latestLba = getLatestCompletedLbaRound();
       if (result.fetched > 0) {
-        currentDataset = rebuildDatasetFromStore(roundSyncDaemon.getStatus().currentRoundLBA || 5, false);
+        currentDataset = rebuildDatasetFromStore(latestLba, false);
         try {
           fs.writeFileSync(CACHE_FILE, JSON.stringify({
             lastUpdated: new Date().toISOString(),
             totalGames: currentDataset.totalGames,
-            lbaRound: roundSyncDaemon.getStatus().currentRoundLBA || 5,
+            lbaRound: latestLba,
             teams: currentDataset.teams,
             players: currentDataset.players,
             season: '2026/2027',
@@ -250,6 +276,7 @@ export async function startServer() {
       }
       res.json({
         success: true,
+        newlyFetched: result.fetched,
         ...result,
         teams: result.fetched > 0 ? currentDataset.teams : undefined,
         players: result.fetched > 0 ? currentDataset.players : undefined,
@@ -263,7 +290,8 @@ export async function startServer() {
   app.post('/api/daemon/trigger', async (req, res) => {
     try {
       const cycleResult = await roundSyncDaemon.runCycle();
-      currentDataset = rebuildDatasetFromStore(roundSyncDaemon.getStatus().currentRoundLBA, true);
+      const latestLba = getLatestCompletedLbaRound();
+      currentDataset = rebuildDatasetFromStore(latestLba, false);
       res.json({
         success: cycleResult.success,
         message: cycleResult.message,
@@ -510,23 +538,7 @@ export async function startServer() {
     }
   });
 
-  // Controllo automatico periodico ogni 5 minuti
-  setInterval(async () => {
-    if (!isSyncInProgress) {
-      isSyncInProgress = true;
-      try {
-        const result = await syncOnlyMissingGames();
-        if (result.newGamesSynced > 0) {
-          currentDataset = rebuildDatasetFromStore();
-          console.log(`[Auto-Sync Cron] ${result.newGamesSynced} nuove partite registrate!`);
-        }
-      } catch (err) {
-        console.error('[Auto-Sync Cron] Errore:', err);
-      } finally {
-        isSyncInProgress = false;
-      }
-    }
-  }, 300000);
+  // Nota: la scansione periodica automatica è gestita centralmente da roundSyncDaemon (ogni 15 minuti) + GET /api/sync/cron.
 
   if (isProduction) {
     app.use(express.static(path.join(__dirname, 'dist')));

@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { syncOfficialLbaRounds, buildOfficialLbaDataset } from './lbaSyncEngine';
+import {
+  syncOfficialLbaRounds,
+  getLatestCompletedLbaRound,
+} from './lbaSyncEngine';
 import { syncOnlyMissingGames, rebuildDatasetFromStore } from './gamesStoreEngine';
 import { syncMissingPlayByPlayBatch, getPbpSyncStatus } from './pbpAnalyticsEngine';
 
@@ -86,9 +89,9 @@ class RoundSyncDaemonService {
   private isSyncing: boolean = false;
   private lastCheckTime: string | null = null;
   private lastSyncSuccessTime: string | null = null;
-  private currentRoundLBA: number = 5;
-  private currentRoundEuroLeague: number = 4;
-  private currentRoundEuroCup: number = 4;
+  private currentRoundLBA: number = getLatestCompletedLbaRound();
+  private currentRoundEuroLeague: number = 13;
+  private currentRoundEuroCup: number = 8;
   private statusMessage: string = 'Demone inizializzato in standby.';
   private history: DaemonLogEntry[] = [];
   private totalValidatedMatches: number = 0;
@@ -171,8 +174,8 @@ class RoundSyncDaemonService {
       const errorsList: string[] = [];
       let totalMatchesChecked = 0;
 
-      // 1. Scansione e validazione turni LBA (fino alla giornata corrente)
-      let targetLbaRound = this.currentRoundLBA || 5;
+      // 1. Scansione e validazione turni LBA (fino all'ultima giornata completata)
+      let targetLbaRound = Math.max(this.currentRoundLBA || 5, getLatestCompletedLbaRound());
       for (let day = 1; day <= targetLbaRound; day++) {
         const roundFilePath = path.join(ROOT_DIR, `official_round_${day}_completed.json`);
         if (fs.existsSync(roundFilePath)) {
@@ -200,33 +203,33 @@ class RoundSyncDaemonService {
         this.log('info', `Tutte le ${totalMatchesChecked} partite LBA verificate con successo.`);
       }
 
-      // 2. Controllo aggiornamenti online LBA (controlla sempre fino al turno successivo)
-      const lbaSyncRes = await syncOfficialLbaRounds(Math.min(30, targetLbaRound + 1));
+      // 2. Controllo aggiornamenti online LBA (scansiona fino a +2 turni avanti)
+      const lbaSyncRes = await syncOfficialLbaRounds(Math.min(30, targetLbaRound + 2));
       if (lbaSyncRes.completedRounds > targetLbaRound) {
         targetLbaRound = lbaSyncRes.completedRounds;
       }
       this.currentRoundLBA = targetLbaRound;
 
-      // 3. Controllo EuroLeague / EuroCup (partite mancanti o nuove concluse)
+      // 3. Controllo EuroLeague / EuroCup (partite mancanti o nuove concluse via IncrowdSports v2)
       const euroSyncRes = await syncOnlyMissingGames();
 
-      // 3b. Sincronizzazione progressiva throttled dei Play-by-Play mancanti (evita rate-limit 429)
+      // 3b. Sincronizzazione Play-by-Play mancanti (IncrowdSports v2 CDN)
       try {
         const pbpSt = getPbpSyncStatus();
         if (pbpSt.missingPbpGames > 0) {
-          const pbpRes = await syncMissingPlayByPlayBatch(20, 450);
+          const pbpRes = await syncMissingPlayByPlayBatch(80, 80);
           if (pbpRes.fetched > 0) {
             this.log('info', `PBP Sync: acquisiti ${pbpRes.fetched} nuovi Play-by-Play (${pbpRes.status.cachedPbpGames}/${pbpRes.status.totalCompletedEuroGames}).`);
           }
         }
       } catch (e) {}
 
-      // 4. Ricostruzione dataset aggregato persistente
-      const dataset = rebuildDatasetFromStore(targetLbaRound, true);
+      // 4. Ricostruzione dataset aggregato persistente (senza sovrascrivere .ts in runtime)
+      const dataset = rebuildDatasetFromStore(targetLbaRound, false);
 
-      // Aggiorna dinamicamente i conteggi dei turni ufficiali
-      this.currentRoundEuroLeague = Math.max(1, Math.floor((dataset.euroleagueGamesCount || 0) / 9));
-      this.currentRoundEuroCup = Math.max(1, Math.floor((dataset.eurocupGamesCount || 0) / 16));
+      // Aggiorna dinamicamente i conteggi dei turni ufficiali (EuroLeague 10 gare/turno, EuroCup 16 gare/turno)
+      this.currentRoundEuroLeague = Math.max(1, Math.round((dataset.euroleagueGamesCount || 0) / 10));
+      this.currentRoundEuroCup = Math.max(1, Math.round((dataset.eurocupGamesCount || 0) / 16));
 
       // 5. Scrittura cache client
       const cachePayload = {

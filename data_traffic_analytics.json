@@ -1,9 +1,19 @@
 {
   "startedAt": "2026-11-18T20:52:17.869Z",
   "totalPageViews": 0,
-  "totalSessions": 0,
-  "uniqueVisitors": [],
-  "daily": {},
+  "totalSessions": 1,
+  "uniqueVisitors": [
+    "6299b513-6e74-492f-8e72-cc0ea66c60ee"
+  ],
+  "daily": {
+    "2026-11-24": {
+      "pageViews": 0,
+      "sessions": 1,
+      "visitors": [
+        "6299b513-6e74-492f-8e72-cc0ea66c60ee"
+      ]
+    }
+  },
   "hourly": [
     0,
     0,
@@ -34,12 +44,35 @@
   "interactions": {},
   "devices": {
     "Desktop": 0,
-    "Mobile": 0,
+    "Mobile": 1,
     "Tablet": 0
   },
-  "browsers": {},
-  "osCounts": {},
-  "referrers": {},
-  "languages": {},
-  "recentSessions": []
+  "browsers": {
+    "Chrome": 1
+  },
+  "osCounts": {
+    "Android": 1
+  },
+  "referrers": {
+    "aistudio.google.com": 1
+  },
+  "languages": {
+    "Inglese (en)": 1
+  },
+  "recentSessions": [
+    {
+      "sessionId": "s_1795508438503_paxvqnp",
+      "visitorId": "6299b513-6e74-492f-8e72-cc0ea66c60ee",
+      "startedAt": 1795508664781,
+      "lastSeenAt": 1795509070617,
+      "pageViews": 0,
+      "interactionsCount": 0,
+      "currentTab": "shot_selection",
+      "device": "Mobile",
+      "browser": "Chrome",
+      "os": "Android",
+      "lang": "Inglese (en)",
+      "referrer": "aistudio.google.com"
+    }
+  ]
 }

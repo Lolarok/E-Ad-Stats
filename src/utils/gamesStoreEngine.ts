@@ -2,7 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { TeamStats, PlayerStats } from '../types/basketball';
 import { buildLbaSeasonData } from './lbaSeasonData';
-import { syncOfficialLbaRounds, buildOfficialLbaDataset } from './lbaSyncEngine';
+import {
+  syncOfficialLbaRounds,
+  buildOfficialLbaDataset,
+  getLatestCompletedLbaRound,
+} from './lbaSyncEngine';
 import {
   loadPbpStore,
   analyzeGamePlayByPlay,
@@ -31,12 +35,19 @@ export const OFFICIAL_EUROLEAGUE_TEAMS = new Set([
   'PANATHINAIKOS AKTOR ATHENS',
   'PARIS BASKETBALL',
   'BESIKTAS ISTANBUL',
+  'BESIKTAS FUZUL ISTANBUL',
   'VALENCIA BASKET',
   'FENERBAHCE TARFIN ISTANBUL',
   'VIRTUS BOLOGNA',
   'PARTIZAN MOZZART BET BELGRADE',
   'ARMANI OLIMPIA MILAN',
 ]);
+
+export function normalizeEuroTeamName(name: string): string {
+  const n = (name || '').trim().toUpperCase();
+  if (n === 'BESIKTAS FUZUL ISTANBUL') return 'BESIKTAS ISTANBUL';
+  return n;
+}
 
 export const OFFICIAL_EUROCUP_TEAMS = new Set([
   'ARIS THESSALONIKI',
@@ -107,9 +118,9 @@ function clampPct(val: number): number {
 }
 
 export async function syncLbaFromOfficialApi(targetRound?: number): Promise<{ teams: TeamStats[]; players: PlayerStats[] }> {
-  const roundToUse = targetRound || 5;
+  const syncRes = await syncOfficialLbaRounds(targetRound);
+  const roundToUse = targetRound || syncRes.completedRounds || getLatestCompletedLbaRound();
   try {
-    await syncOfficialLbaRounds(roundToUse);
     if (fs.existsSync(LBA_STORE_PATH)) {
       const data = JSON.parse(fs.readFileSync(LBA_STORE_PATH, 'utf-8'));
       if (data.teams && data.players && data.teams.length >= 16 && data.round === roundToUse) {
@@ -289,8 +300,8 @@ export function rebuildDatasetFromStore(
 
     const t0 = d.Stats[0];
     const t1 = d.Stats[1];
-    const t0Name = (t0?.Team || '').trim().toUpperCase();
-    const t1Name = (t1?.Team || '').trim().toUpperCase();
+    const t0Name = normalizeEuroTeamName(t0?.Team || '');
+    const t1Name = normalizeEuroTeamName(t1?.Team || '');
 
     if (!t0Name || !t1Name) continue;
 
@@ -320,8 +331,8 @@ export function rebuildDatasetFromStore(
     const analyzedPbp = pbpRawGame ? analyzeGamePlayByPlay(key, d, pbpRawGame) : null;
 
     // Estrai ByQuarter per Quarter Splits e fallback garbage time
-    const bq0 = d.ByQuarter?.find((q: any) => (q.Team || '').trim().toUpperCase() === t0Name) || d.ByQuarter?.[0];
-    const bq1 = d.ByQuarter?.find((q: any) => (q.Team || '').trim().toUpperCase() === t1Name) || d.ByQuarter?.[1];
+    const bq0 = d.ByQuarter?.find((q: any) => normalizeEuroTeamName(q.Team || '') === t0Name) || d.ByQuarter?.[0];
+    const bq1 = d.ByQuarter?.find((q: any) => normalizeEuroTeamName(q.Team || '') === t1Name) || d.ByQuarter?.[1];
 
     for (let i = 0; i < 2; i++) {
       const t = d.Stats[i];
@@ -333,8 +344,8 @@ export function rebuildDatasetFromStore(
       const oppBq = i === 0 ? bq1 : bq0;
 
       const isWin = myTot.pts > oppTot.pts;
-      const tName = (t.Team || '').trim();
-      const oppTeamName = (d.Stats[1 - i]?.Team || '').trim();
+      const tName = i === 0 ? t0Name : t1Name;
+      const oppTeamName = i === 0 ? t1Name : t0Name;
       const teamAggKey = `${league}___${tName}`;
       const oppAggKey = `${league}___${oppTeamName}`;
 
@@ -873,7 +884,7 @@ export function rebuildDatasetFromStore(
   // Aggiungi squadre e giocatori LBA Serie A ufficiali 2026/27
   let lbaTeams: TeamStats[] = [];
   let lbaPlayers: PlayerStats[] = [];
-  const targetRound = explicitLbaRound || 5;
+  const targetRound = explicitLbaRound || getLatestCompletedLbaRound();
 
   try {
     let needRegenerate = true;
@@ -1256,9 +1267,111 @@ export function rebuildDatasetFromStore(
   };
 }
 
+function formatSecondsToMinStr(totalSec: number): string {
+  const sec = Math.max(0, Math.round(Number(totalSec) || 0));
+  if (sec <= 0) return 'DNP';
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function convertIncrowdSideToStoreStat(side: any): GameStoreRecord['Stats'][0] {
+  const teamName = normalizeEuroTeamName(side?.name || '');
+  const teamCode = (side?.code || '').trim().toUpperCase();
+  const playersStats = (side?.players || []).map((p: any) => {
+    const rawCode = String(p?.code || '').trim();
+    const playerId = rawCode ? (rawCode.startsWith('P') ? rawCode : `P${rawCode}`) : '';
+    const st = p?.stats || {};
+    return {
+      Player_ID: playerId,
+      IsStarter: p?.startFive ? 1 : 0,
+      IsPlaying: p?.isPlaying ? 1 : 0,
+      Team: teamCode,
+      Dorsal: p?.dorsal != null ? String(p.dorsal) : '',
+      Player: p?.name || 'Unknown',
+      Minutes: formatSecondsToMinStr(st.timePlayed || 0),
+      Points: Number(st.points) || 0,
+      FieldGoalsMade2: Number(st.fieldGoalsMade2) || 0,
+      FieldGoalsAttempted2: Number(st.fieldGoalsAttempted2) || 0,
+      FieldGoalsMade3: Number(st.fieldGoalsMade3) || 0,
+      FieldGoalsAttempted3: Number(st.fieldGoalsAttempted3) || 0,
+      FreeThrowsMade: Number(st.freeThrowsMade) || 0,
+      FreeThrowsAttempted: Number(st.freeThrowsAttempted) || 0,
+      OffensiveRebounds: Number(st.offensiveRebounds) || 0,
+      DefensiveRebounds: Number(st.defensiveRebounds) || 0,
+      TotalRebounds: Number(st.totalRebounds) || 0,
+      Assistances: Number(st.assists ?? st.assistances) || 0,
+      Steals: Number(st.steals) || 0,
+      Turnovers: Number(st.turnovers) || 0,
+      BlocksFavour: Number(st.blocksFavour) || 0,
+      BlocksAgainst: Number(st.blocksAgainst) || 0,
+      FoulsCommited: Number(st.foulsCommited) || 0,
+      FoulsReceived: Number(st.foulsReceived) || 0,
+      Valuation: Number(st.valuation) || 0,
+      Plusminus: Number(st.plusMinus) || 0,
+    };
+  });
+
+  const tmrRaw = side?.tmr || {};
+  const totRaw = side?.stats || {};
+  return {
+    Team: teamName,
+    Coach: side?.coach?.name || '',
+    PlayersStats: playersStats,
+    tmr: {
+      Turnovers: Number(tmrRaw.turnovers) || 0,
+    },
+    totr: {
+      Points: Number(totRaw.points) || 0,
+      FieldGoalsMade2: Number(totRaw.fieldGoalsMade2) || 0,
+      FieldGoalsAttempted2: Number(totRaw.fieldGoalsAttempted2) || 0,
+      FieldGoalsMade3: Number(totRaw.fieldGoalsMade3) || 0,
+      FieldGoalsAttempted3: Number(totRaw.fieldGoalsAttempted3) || 0,
+      FreeThrowsMade: Number(totRaw.freeThrowsMade) || 0,
+      FreeThrowsAttempted: Number(totRaw.freeThrowsAttempted) || 0,
+      OffensiveRebounds: Number(totRaw.offensiveRebounds) || 0,
+      DefensiveRebounds: Number(totRaw.defensiveRebounds) || 0,
+      TotalRebounds: Number(totRaw.totalRebounds) || 0,
+      Assistances: Number(totRaw.assists ?? totRaw.assistances) || 0,
+      Steals: Number(totRaw.steals) || 0,
+      Turnovers: Number(totRaw.turnovers) || 0,
+    },
+  };
+}
+
+function convertIncrowdGameToStoreRecord(data: any): GameStoreRecord | null {
+  if (!data || data.status !== 'result' || !data.home || !data.away) return null;
+  const homeStat = convertIncrowdSideToStoreStat(data.home);
+  const awayStat = convertIncrowdSideToStoreStat(data.away);
+  if (!homeStat.PlayersStats.length || !awayStat.PlayersStats.length) return null;
+
+  const hq = data.home.quarters || {};
+  const aq = data.away.quarters || {};
+  return {
+    Live: false,
+    ByQuarter: [
+      {
+        Team: homeStat.Team,
+        Quarter1: Number(hq.q1) || 0,
+        Quarter2: Number(hq.q2) || 0,
+        Quarter3: Number(hq.q3) || 0,
+        Quarter4: Number(hq.q4) || 0,
+      },
+      {
+        Team: awayStat.Team,
+        Quarter1: Number(aq.q1) || 0,
+        Quarter2: Number(aq.q2) || 0,
+        Quarter3: Number(aq.q3) || 0,
+        Quarter4: Number(aq.q4) || 0,
+      },
+    ],
+    Stats: [homeStat, awayStat],
+  };
+}
+
 /**
- * Sincronizza rapidamente solo le gare mancanti con "Early-Stop"
- * (Se trova 4 gare consecutive non ancora disputate, interrompe la scansione evitando 40 secondi di attesa inutile!)
+ * Sincronizza tutte le partite concluse mancanti di EuroLeague, EuroCup (tramite CDN ufficiale
+ * EuroLeague Feeds v2 IncrowdSports, zero rate-limit 429) e LBA Serie A.
  */
 export async function syncOnlyMissingGames(): Promise<{
   newGamesSynced: number;
@@ -1271,120 +1384,101 @@ export async function syncOnlyMissingGames(): Promise<{
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // 1. Scansiona EuroLeague con uscita intelligente (Early-Stop su tutta la regular season da 34 turni)
-  let consecutiveEmptyEL = 0;
-  for (let g = 1; g <= 306; g++) {
-    const key = `E2026_${g}`;
-    if (store[key] && !store[key].Live) {
-      consecutiveEmptyEL = 0;
-      continue;
-    }
+  const competitions: Array<{
+    compCode: 'E' | 'U';
+    seasonCode: string;
+    officialTeams: Set<string>;
+    label: string;
+  }> = [
+    { compCode: 'E', seasonCode: 'E2026', officialTeams: OFFICIAL_EUROLEAGUE_TEAMS, label: 'EuroLeague' },
+    { compCode: 'U', seasonCode: 'U2026', officialTeams: OFFICIAL_EUROCUP_TEAMS, label: 'EuroCup' },
+  ];
 
-    if (consecutiveEmptyEL >= 4) {
-      // Abbiamo raggiunto i turni futuri non ancora disputati: inutile continuare!
-      break;
-    }
-
+  for (const comp of competitions) {
     try {
-      const res = await fetch(`https://live.euroleague.net/api/Boxscore?gamecode=${g}&seasoncode=E2026`, {
+      const listUrl = `https://feeds.incrowdsports.com/provider/euroleague-feeds/v2/competitions/${comp.compCode}/seasons/${comp.seasonCode}/games?limit=400`;
+      const listRes = await fetch(listUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (EuroBasketAnalytics/2.0)',
-          Accept: 'application/json, text/plain, */*',
+          Accept: 'application/json',
         },
-        signal: AbortSignal.timeout(2500),
+        signal: AbortSignal.timeout(8000),
       });
-      if (res.ok) {
-        const text = await res.text();
-        if (text.startsWith('{')) {
-          const d = JSON.parse(text);
-          if (d.Stats && d.Stats.length >= 2) {
-            const t0 = (d.Stats[0]?.Team || '').trim().toUpperCase();
-            const t1 = (d.Stats[1]?.Team || '').trim().toUpperCase();
-            if (OFFICIAL_EUROLEAGUE_TEAMS.has(t0) && OFFICIAL_EUROLEAGUE_TEAMS.has(t1)) {
-              store[key] = d;
-              newGamesCount++;
-              consecutiveEmptyEL = 0;
-              console.log(`[Auto-Sync Engine] Nuova gara EuroLeague scaricata: ${key}`);
-            } else {
-              consecutiveEmptyEL++;
-            }
-          } else {
-            consecutiveEmptyEL++;
-          }
-        } else {
-          consecutiveEmptyEL++;
+
+      if (!listRes.ok) {
+        console.warn(`[Auto-Sync Engine] Lista ${comp.label} HTTP ${listRes.status}`);
+        continue;
+      }
+
+      const listJson = await listRes.json();
+      const finishedGames = (listJson?.data || [])
+        .filter((g: any) => g && g.status === 'result' && typeof g.code === 'number')
+        .sort((a: any, b: any) => a.code - b.code);
+
+      const missingCodes: number[] = [];
+      for (const g of finishedGames) {
+        const key = `${comp.seasonCode}_${g.code}`;
+        if (!store[key] || store[key].Live) {
+          missingCodes.push(g.code);
         }
-      } else {
-        consecutiveEmptyEL++;
+      }
+
+      if (missingCodes.length > 0) {
+        console.log(`[Auto-Sync Engine] ${comp.label}: trovate ${missingCodes.length} nuove gare concluse da acquisire.`);
+      }
+
+      for (const code of missingCodes) {
+        const key = `${comp.seasonCode}_${code}`;
+        try {
+          const gameUrl = `https://feeds.incrowdsports.com/provider/euroleague-feeds/v2/competitions/${comp.compCode}/seasons/${comp.seasonCode}/games/${code}`;
+          const gameRes = await fetch(gameUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (EuroBasketAnalytics/2.0)',
+              Accept: 'application/json',
+            },
+            signal: AbortSignal.timeout(6000),
+          });
+          if (gameRes.ok) {
+            const gameJson = await gameRes.json();
+            const converted = convertIncrowdGameToStoreRecord(gameJson?.data);
+            if (converted) {
+              const t0 = normalizeEuroTeamName(converted.Stats[0]?.Team || '');
+              const t1 = normalizeEuroTeamName(converted.Stats[1]?.Team || '');
+              if (comp.officialTeams.has(t0) && comp.officialTeams.has(t1)) {
+                store[key] = converted;
+                newGamesCount++;
+                if (newGamesCount % 15 === 0) {
+                  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), 'utf-8');
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`[Auto-Sync Engine] Errore scaricamento ${key}:`, err);
+        }
+        await sleep(80);
       }
     } catch (err) {
-      consecutiveEmptyEL++;
+      console.error(`[Auto-Sync Engine] Errore scansione ${comp.label}:`, err);
     }
-    await sleep(180);
-  }
-
-  // 2. Scansiona EuroCup con uscita intelligente (Early-Stop su tutta la stagione da 18 turni)
-  let consecutiveEmptyEC = 0;
-  for (let g = 1; g <= 288; g++) {
-    const key = `U2026_${g}`;
-    if (store[key] && !store[key].Live) {
-      consecutiveEmptyEC = 0;
-      continue;
-    }
-
-    if (consecutiveEmptyEC >= 4) {
-      break;
-    }
-
-    try {
-      const res = await fetch(`https://live.euroleague.net/api/Boxscore?gamecode=${g}&seasoncode=U2026`, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (EuroBasketAnalytics/2.0)',
-          Accept: 'application/json, text/plain, */*',
-        },
-        signal: AbortSignal.timeout(2500),
-      });
-      if (res.ok) {
-        const text = await res.text();
-        if (text.startsWith('{')) {
-          const d = JSON.parse(text);
-          if (d.Stats && d.Stats.length >= 2) {
-            const t0 = (d.Stats[0]?.Team || '').trim().toUpperCase();
-            const t1 = (d.Stats[1]?.Team || '').trim().toUpperCase();
-            if (OFFICIAL_EUROCUP_TEAMS.has(t0) && OFFICIAL_EUROCUP_TEAMS.has(t1)) {
-              store[key] = d;
-              newGamesCount++;
-              consecutiveEmptyEC = 0;
-              console.log(`[Auto-Sync Engine] Nuova gara EuroCup scaricata: ${key}`);
-            } else {
-              consecutiveEmptyEC++;
-            }
-          } else {
-            consecutiveEmptyEC++;
-          }
-        } else {
-          consecutiveEmptyEC++;
-        }
-      } else {
-        consecutiveEmptyEC++;
-      }
-    } catch (err) {
-      consecutiveEmptyEC++;
-    }
-    await sleep(180);
-  }
-
-  // 3. Sincronizza LBA Serie A
-  try {
-    await syncLbaFromOfficialApi();
-  } catch (err) {
-    console.error('[Auto-Sync Engine] Errore sincronizzazione LBA:', err);
   }
 
   if (newGamesCount > 0) {
     fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), 'utf-8');
+    console.log(`[Auto-Sync Engine] Salvate ${newGamesCount} nuove gare ufficiali nello store.`);
   }
 
-  const { totalGames } = rebuildDatasetFromStore();
+  // Sincronizza LBA Serie A (rileva dinamicamente tutte le giornate completate)
+  let latestLbaRound = getLatestCompletedLbaRound();
+  try {
+    const lbaRes = await syncOfficialLbaRounds();
+    if (lbaRes.completedRounds > latestLbaRound) {
+      latestLbaRound = lbaRes.completedRounds;
+    }
+  } catch (err) {
+    console.error('[Auto-Sync Engine] Errore sincronizzazione LBA:', err);
+  }
+
+  const { totalGames } = rebuildDatasetFromStore(latestLbaRound, false);
   return { newGamesSynced: newGamesCount, totalGames };
 }

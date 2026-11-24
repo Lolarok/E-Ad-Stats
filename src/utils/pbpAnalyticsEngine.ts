@@ -564,12 +564,57 @@ export function analyzeGamePlayByPlay(
   };
 }
 
+function mapIncrowdPbpEvents(arr: any[]): PbpEvent[] {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .filter((ev) => ev && !ev.deleted)
+    .map((ev) => {
+      const rawPid = typeof ev.playerCode === 'string' ? ev.playerCode.trim() : '';
+      const pid = rawPid ? (rawPid.startsWith('P') ? rawPid : `P${rawPid}`) : null;
+      return {
+        NUMBEROFPLAY: typeof ev.playNumber === 'number' ? ev.playNumber : undefined,
+        CODETEAM: ev.teamCode ? String(ev.teamCode).trim().toUpperCase() : null,
+        PLAYER_ID: pid,
+        PLAYTYPE: ev.playType ? String(ev.playType).trim().toUpperCase() : null,
+        PLAYER: ev.playerName || null,
+        TEAM: ev.teamName || null,
+        DORSAL: ev.playerDorsal != null ? String(ev.playerDorsal) : null,
+        MINUTE: typeof ev.minute === 'number' ? ev.minute : undefined,
+        MARKERTIME: ev.markerTime || null,
+        POINTS_A: typeof ev.homeTeamPoints === 'number' ? ev.homeTeamPoints : null,
+        POINTS_B: typeof ev.awayTeamPoints === 'number' ? ev.awayTeamPoints : null,
+        PLAYINFO: ev.playInfo || null,
+      };
+    });
+}
+
+function convertIncrowdPbpToRecord(data: any): PbpGameRecord | null {
+  if (!data || !Array.isArray(data.q1) || data.q1.length === 0) return null;
+  const otEvents = Array.isArray(data.ot)
+    ? data.ot.flatMap((x: any) => (Array.isArray(x) ? x : x ? [x] : []))
+    : [];
+  return {
+    Live: false,
+    TeamA: (data.homeTeam?.name || '').trim().toUpperCase(),
+    TeamB: (data.awayTeam?.name || '').trim().toUpperCase(),
+    CodeTeamA: (data.homeTeam?.code || '').trim().toUpperCase(),
+    CodeTeamB: (data.awayTeam?.code || '').trim().toUpperCase(),
+    ActualQuarter: otEvents.length > 0 ? 5 : 4,
+    FirstQuarter: mapIncrowdPbpEvents(data.q1),
+    SecondQuarter: mapIncrowdPbpEvents(data.q2 || []),
+    ThirdQuarter: mapIncrowdPbpEvents(data.q3 || []),
+    ForthQuarter: mapIncrowdPbpEvents(data.q4 || []),
+    ExtraTime: mapIncrowdPbpEvents(otEvents),
+  };
+}
+
 /**
- * Scarica in modalità throttled e sicura un batch di Play-by-Play mancanti (evitando HTTP 429).
+ * Scarica un batch di Play-by-Play mancanti tramite CDN ufficiale EuroLeague Feeds v2 (IncrowdSports),
+ * con fallback automatico su live.euroleague.net.
  */
 export async function syncMissingPlayByPlayBatch(
-  maxToFetch: number = 30,
-  delayMs: number = 480
+  maxToFetch: number = 60,
+  delayMs: number = 120
 ): Promise<{
   fetched: number;
   failed: number;
@@ -578,11 +623,6 @@ export async function syncMissingPlayByPlayBatch(
 }> {
   if (isPbpSyncRunning) {
     return { fetched: 0, failed: 0, rateLimited: false, status: getPbpSyncStatus() };
-  }
-
-  // Rispetta un cooldown di 60 secondi dopo un 429
-  if (Date.now() - lastRateLimitAt < 60_000) {
-    return { fetched: 0, failed: 0, rateLimited: true, status: getPbpSyncStatus() };
   }
 
   isPbpSyncRunning = true;
@@ -611,49 +651,71 @@ export async function syncMissingPlayByPlayBatch(
     for (const key of slice) {
       const [seasonCode, gameCodeStr] = key.split('_');
       if (!seasonCode || !gameCodeStr) continue;
+      const compCode = seasonCode.startsWith('U') ? 'U' : 'E';
 
+      let saved = false;
+
+      // 1. Endpoint primario: EuroLeague Feeds v2 (IncrowdSports CDN)
       try {
-        const url = `https://live.euroleague.net/api/PlayByPlay?gamecode=${gameCodeStr}&seasoncode=${seasonCode}`;
-        const res = await fetch(url, {
+        const feedUrl = `https://feeds.incrowdsports.com/provider/euroleague-feeds/v2/competitions/${compCode}/seasons/${seasonCode}/games/${gameCodeStr}/play-by-play`;
+        const feedRes = await fetch(feedUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (EuroBasketAnalytics/2.0)',
-            Accept: 'application/json, text/plain, */*',
+            Accept: 'application/json',
           },
-          signal: AbortSignal.timeout(4500),
+          signal: AbortSignal.timeout(5000),
         });
-
-        if (res.status === 429) {
-          console.warn(`[PBP Sync] HTTP 429 rate-limit rilevato su ${key}. Pausa automatica.`);
-          lastRateLimitAt = Date.now();
-          rateLimited = true;
-          break;
-        }
-
-        if (res.ok) {
-          const text = await res.text();
-          if (text.trim().startsWith('{')) {
-            const parsed: PbpGameRecord = JSON.parse(text);
-            if ((parsed.FirstQuarter?.length || 0) > 0) {
-              pbpStore[key] = parsed;
-              fetched++;
-            } else {
-              failed++;
-            }
-          } else {
-            failed++;
+        if (feedRes.ok) {
+          const json = await feedRes.json();
+          const converted = convertIncrowdPbpToRecord(json?.data);
+          if (converted && (converted.FirstQuarter?.length || 0) > 0) {
+            pbpStore[key] = converted;
+            fetched++;
+            saved = true;
           }
-        } else {
-          failed++;
         }
-      } catch (err) {
+      } catch (e) {}
+
+      // 2. Fallback: live.euroleague.net (rispettando cooldown 429)
+      if (!saved && Date.now() - lastRateLimitAt >= 60_000) {
+        try {
+          const url = `https://live.euroleague.net/api/PlayByPlay?gamecode=${gameCodeStr}&seasoncode=${seasonCode}`;
+          const res = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (EuroBasketAnalytics/2.0)',
+              Accept: 'application/json, text/plain, */*',
+            },
+            signal: AbortSignal.timeout(4500),
+          });
+
+          if (res.status === 429) {
+            lastRateLimitAt = Date.now();
+            rateLimited = true;
+          } else if (res.ok) {
+            const text = await res.text();
+            if (text.trim().startsWith('{')) {
+              const parsed: PbpGameRecord = JSON.parse(text);
+              if ((parsed.FirstQuarter?.length || 0) > 0) {
+                pbpStore[key] = parsed;
+                fetched++;
+                saved = true;
+              }
+            }
+          }
+        } catch (err) {}
+      }
+
+      if (!saved) {
         failed++;
       }
 
-      if (fetched > 0 && fetched % 10 === 0) {
+      if (fetched > 0 && fetched % 15 === 0) {
         savePbpStore(pbpStore);
       }
 
-      await new Promise((r) => setTimeout(r, delayMs));
+      if (delayMs > 0) {
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
     }
 
     if (fetched > 0) {

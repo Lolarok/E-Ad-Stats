@@ -59,14 +59,35 @@ const TEAM_METADATA: Record<string, { id: string; shortName: string; color: stri
 };
 
 /**
+ * Rileva automaticamente l'ultima giornata LBA completata presente su disco (1..30).
+ */
+export function getLatestCompletedLbaRound(): number {
+  let highest = 5;
+  for (let day = 1; day <= 30; day++) {
+    const cachedFilePath = path.join(ROOT_DIR, `official_round_${day}_completed.json`);
+    if (fs.existsSync(cachedFilePath)) {
+      try {
+        const parsed = JSON.parse(fs.readFileSync(cachedFilePath, 'utf-8'));
+        if (Array.isArray(parsed) && parsed.length === 8) {
+          highest = day;
+        }
+      } catch (e) {}
+    }
+  }
+  return highest;
+}
+
+/**
  * Recupera da legabasket.it o dai file locali le partite concluse fino al turno richiesto.
  */
-export async function syncOfficialLbaRounds(maxDaysToScan: number = 5): Promise<LbaSyncResult> {
+export async function syncOfficialLbaRounds(maxDaysToScan?: number): Promise<LbaSyncResult> {
+  const effectiveMaxDays = Math.min(30, Math.max(maxDaysToScan || 0, getLatestCompletedLbaRound() + 2));
   const allMatches: any[] = [];
   let newMatchesSynced = 0;
   let maxCompletedRound = 1;
+  let consecutiveEmptyFuture = 0;
 
-  for (let day = 1; day <= maxDaysToScan; day++) {
+  for (let day = 1; day <= effectiveMaxDays; day++) {
     const cachedFilePath = path.join(ROOT_DIR, `official_round_${day}_completed.json`);
     let dayMatches: any[] = [];
 
@@ -141,8 +162,15 @@ export async function syncOfficialLbaRounds(maxDaysToScan: number = 5): Promise<
     if (dayMatches && dayMatches.length === 8) {
       allMatches.push(...dayMatches);
       maxCompletedRound = day;
+      consecutiveEmptyFuture = 0;
     } else if (dayMatches && dayMatches.length > 0) {
       allMatches.push(...dayMatches);
+      consecutiveEmptyFuture = 0;
+    } else {
+      consecutiveEmptyFuture++;
+      if (day > maxCompletedRound && consecutiveEmptyFuture >= 2) {
+        break;
+      }
     }
   }
 
@@ -162,13 +190,14 @@ export async function syncOfficialLbaRounds(maxDaysToScan: number = 5): Promise<
 /**
  * Calcola e restituisce sincronicamente il dataset LBA ufficiale a partire dalle partite completate.
  */
-export function buildOfficialLbaDataset(roundNumber: number = 5): {
+export function buildOfficialLbaDataset(roundNumber?: number): {
   teams: TeamStats[];
   players: PlayerStats[];
   round: number;
 } {
+  const effectiveRound = roundNumber || getLatestCompletedLbaRound();
   const allMatches: any[] = [];
-  for (let day = 1; day <= roundNumber; day++) {
+  for (let day = 1; day <= effectiveRound; day++) {
     const cachedFilePath = path.join(ROOT_DIR, `official_round_${day}_completed.json`);
     if (fs.existsSync(cachedFilePath)) {
       try {
@@ -181,7 +210,7 @@ export function buildOfficialLbaDataset(roundNumber: number = 5): {
   }
 
   if (allMatches.length > 0) {
-    calculateAndSaveLbaStore(allMatches, roundNumber);
+    calculateAndSaveLbaStore(allMatches, effectiveRound);
   }
 
   if (fs.existsSync(LBA_STORE_PATH)) {
@@ -190,12 +219,12 @@ export function buildOfficialLbaDataset(roundNumber: number = 5): {
       return {
         teams: data.teams || [],
         players: data.players || [],
-        round: data.round || roundNumber,
+        round: data.round || effectiveRound,
       };
     } catch (e) {}
   }
 
-  return { teams: [], players: [], round: roundNumber };
+  return { teams: [], players: [], round: effectiveRound };
 }
 
 /**

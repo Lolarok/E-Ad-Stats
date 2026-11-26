@@ -31,7 +31,11 @@ import {
   UserCheck,
   RefreshCw,
   ShieldCheck,
+  Cloud,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
+import { useFirebase } from './contexts/FirebaseContext';
 
 type TabView =
   | 'shot_selection'
@@ -78,6 +82,15 @@ function sanitizeTeamsList(teams: TeamStats[]): TeamStats[] {
 }
 
 export default function App() {
+  const {
+    user,
+    isAdmin,
+    isSyncingCloud,
+    loginWithGoogle,
+    logout,
+    saveSeasonToCloud,
+    restoreSeasonFromCloud,
+  } = useFirebase();
   const [currentTab, setCurrentTab] = useState<TabView>('shot_selection');
   const [selectedLeague, setSelectedLeague] = useState<League | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -204,7 +217,21 @@ export default function App() {
             localStorage.setItem(STORAGE_TEAMS_KEY, JSON.stringify(cleanTeams));
             localStorage.setItem(STORAGE_SYNC_KEY, serverData.lastUpdated || new Date().toISOString());
           } catch (e) {}
-          showToast(syncMessage || `⚡ Database 2026/27 sincronizzato dal demone: ${cleanTeams.length} squadre e ${serverData.players.length} giocatori (LBA 4ª Giornata consolidata)!`);
+          showToast(
+            syncMessage ||
+              `Database 2026/27 sincronizzato: ${cleanTeams.length} squadre e ${serverData.players.length} giocatori (LBA Giornata ${serverData.lbaRound || 9}).`
+          );
+          if (isAdmin) {
+            const saved = await saveSeasonToCloud({
+              teams: cleanTeams,
+              players: serverData.players,
+              lbaRound: serverData.lbaRound,
+              totalGames: serverData.totalGames,
+            });
+            if (saved) {
+              showToast(`Snapshot salvato su Firebase Firestore (${saved.totalGames} gare, LBA R${saved.lbaRound}).`);
+            }
+          }
         }
       }
     } catch (err) {
@@ -686,7 +713,7 @@ export default function App() {
                   <button
                     key={league}
                     onClick={() => setSelectedLeague(league)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                       selectedLeague === league
                         ? league === 'EuroLeague'
                           ? 'bg-amber-600 text-white shadow-sm'
@@ -702,6 +729,42 @@ export default function App() {
                   </button>
                 ))}
               </div>
+
+              {/* Account & Cloud Sync Firebase */}
+              {user ? (
+                <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 shrink-0">
+                  <Cloud className={`w-3.5 h-3.5 ${isSyncingCloud ? 'text-amber-400 animate-pulse' : isAdmin ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  <span className="text-[11px] font-semibold text-slate-200 max-w-[110px] truncate hidden sm:inline">
+                    {isAdmin ? 'Admin Cloud' : user.displayName || user.email}
+                  </span>
+                  <button
+                    onClick={() => void logout()}
+                    title="Disconnetti account Google"
+                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={async () => {
+                    const signedIn = await loginWithGoogle();
+                    if (signedIn) {
+                      showToast(`Accesso effettuato: ${signedIn.email}`);
+                      const snap = await restoreSeasonFromCloud();
+                      if (snap && snap.teams.length >= 50) {
+                        setTeamsList(sanitizeTeamsList(snap.teams));
+                        setPlayersList(snap.players);
+                      }
+                    }
+                  }}
+                  title="Accedi con Google per attivare la sincronizzazione cloud Firebase"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 hover:text-white transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Accedi</span>
+                </button>
+              )}
             </div>
           </div>
 

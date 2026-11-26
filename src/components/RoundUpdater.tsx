@@ -29,7 +29,12 @@ import {
   Trophy,
   Flame,
   ArrowRight,
+  Cloud,
+  CloudUpload,
+  CloudDownload,
+  LogIn,
 } from 'lucide-react';
+import { useFirebase } from '../contexts/FirebaseContext';
 
 interface Props {
   onMergeGameData: (report: ParsedGameReport) => void;
@@ -52,6 +57,17 @@ export const RoundUpdater: React.FC<Props> = ({
   playersCount,
   teamsCount,
 }) => {
+  const {
+    user,
+    isAdmin,
+    cloudMeta,
+    isSyncingCloud,
+    cloudError,
+    loginWithGoogle,
+    saveSeasonToCloud,
+    restoreSeasonFromCloud,
+  } = useFirebase();
+
   // Modalità: EuroCup, LBA, Sincronizzazione Intero Turno, Singola Partita
   const [activeMode, setActiveMode] = useState<'eurocup_round' | 'lba_round' | 'full_round' | 'single_game'>('eurocup_round');
 
@@ -537,6 +553,100 @@ export const RoundUpdater: React.FC<Props> = ({
                     {isSyncingPbp ? 'Sync PBP...' : 'Sync PBP'}
                   </button>
                 )}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Persistenza Cloud (Firebase Firestore) */}
+        <div className="p-3.5 bg-slate-900/90 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <Cloud className={`w-4 h-4 shrink-0 ${cloudMeta ? 'text-emerald-400' : 'text-indigo-400'}`} />
+            <div>
+              <div className="font-semibold text-slate-100">
+                Persistenza Cloud (Firebase Firestore)
+              </div>
+              <div className="text-[11px] text-slate-400 font-mono tabular-nums mt-0.5">
+                {cloudMeta
+                  ? `Snapshot salvato: LBA R${cloudMeta.lbaRound} · ${cloudMeta.totalGames} gare EL/EC · ${cloudMeta.teamsCount} squadre / ${cloudMeta.playersCount} giocatori${
+                      cloudMeta.updatedAtIso
+                        ? ` · ${new Date(cloudMeta.updatedAtIso).toLocaleString('it-IT', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}`
+                        : ''
+                    }`
+                  : 'Nessuno snapshot ancora salvato su Firestore: accedi come admin per pubblicare il dataset corrente.'}
+              </div>
+              {cloudError && (
+                <div className="text-[11px] text-rose-400 mt-0.5">{cloudError}</div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {!user ? (
+              <button
+                onClick={async () => {
+                  setErrorMsg(null);
+                  const signedIn = await loginWithGoogle();
+                  if (signedIn) {
+                    setSuccessMsg(`Accesso Google effettuato (${signedIn.email}). Sincronizzazione cloud attiva.`);
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Accedi con Google (Admin)</span>
+              </button>
+            ) : isAdmin ? (
+              <>
+                <button
+                  onClick={async () => {
+                    setErrorMsg(null);
+                    setSuccessMsg(null);
+                    const saved = await saveSeasonToCloud({
+                      teams: allTeams,
+                      players: allPlayers,
+                    });
+                    if (saved) {
+                      setSuccessMsg(
+                        `Snapshot salvato su Firebase Firestore: LBA R${saved.lbaRound}, ${saved.totalGames} gare EL/EC, ${saved.teamsCount} squadre, ${saved.playersCount} giocatori.`
+                      );
+                    }
+                  }}
+                  disabled={isSyncingCloud}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+                >
+                  <CloudUpload className="w-3.5 h-3.5" />
+                  <span>{isSyncingCloud ? 'Salvataggio...' : 'Salva su Firebase'}</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setErrorMsg(null);
+                    setSuccessMsg(null);
+                    const snap = await restoreSeasonFromCloud();
+                    if (snap && onUpdateDataset) {
+                      onUpdateDataset(snap.teams, snap.players);
+                      setSuccessMsg(
+                        `Dataset ripristinato da Firebase Firestore: LBA R${snap.meta.lbaRound}, ${snap.meta.totalGames} gare.`
+                      );
+                    } else {
+                      setErrorMsg('Nessuno snapshot cloud disponibile da ripristinare.');
+                    }
+                  }}
+                  disabled={isSyncingCloud || !cloudMeta}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs rounded-lg transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+                >
+                  <CloudDownload className="w-3.5 h-3.5" />
+                  <span>Ripristina da Cloud</span>
+                </button>
+              </>
+            ) : (
+              <span className="text-[11px] text-slate-400">
+                Connesso come {user.email} (sola lettura cloud)
               </span>
             )}
           </div>

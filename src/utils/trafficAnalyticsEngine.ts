@@ -480,3 +480,124 @@ export function resetTrafficAnalytics(): TrafficDashboardSummary {
   } catch (e) {}
   return getTrafficDashboardSummary(14);
 }
+
+export function exportRawTrafficStore(): TrafficStoreSchema {
+  const store = loadStore();
+  return {
+    ...store,
+    uniqueVisitors: store.uniqueVisitors.slice(-1000),
+    hourly: store.hourly.length === 24 ? [...store.hourly] : Array.from({ length: 24 }, () => 0),
+    recentSessions: store.recentSessions.slice(0, 50),
+  };
+}
+
+export function mergeOrHydrateTrafficStore(
+  incoming: Partial<TrafficStoreSchema>
+): TrafficDashboardSummary {
+  const store = loadStore();
+  if (!incoming || typeof incoming !== 'object') {
+    return getTrafficDashboardSummary(14);
+  }
+
+  // Keep earliest startedAt
+  if (typeof incoming.startedAt === 'string' && incoming.startedAt.length >= 10) {
+    if (!store.startedAt || incoming.startedAt < store.startedAt) {
+      store.startedAt = incoming.startedAt;
+    }
+  }
+
+  // Merge unique visitors set
+  if (Array.isArray(incoming.uniqueVisitors)) {
+    const mergedVisitors = new Set<string>([...store.uniqueVisitors, ...incoming.uniqueVisitors.map(String)]);
+    store.uniqueVisitors = Array.from(mergedVisitors).slice(-5000);
+  }
+
+  // Keep max cumulative totals so restarts never reset counters
+  if (typeof incoming.totalPageViews === 'number' && incoming.totalPageViews > store.totalPageViews) {
+    store.totalPageViews = incoming.totalPageViews;
+  }
+  if (typeof incoming.totalSessions === 'number' && incoming.totalSessions > store.totalSessions) {
+    store.totalSessions = incoming.totalSessions;
+  }
+
+  // Merge hourly distribution taking max per hour
+  if (Array.isArray(incoming.hourly) && incoming.hourly.length === 24) {
+    for (let h = 0; h < 24; h++) {
+      const incVal = Number(incoming.hourly[h] || 0);
+      if (incVal > (store.hourly[h] || 0)) {
+        store.hourly[h] = incVal;
+      }
+    }
+  }
+
+  // Merge daily buckets
+  if (incoming.daily && typeof incoming.daily === 'object') {
+    for (const [dateKey, bucket] of Object.entries(incoming.daily)) {
+      if (!bucket || typeof bucket !== 'object') continue;
+      const existing = store.daily[dateKey];
+      if (!existing) {
+        store.daily[dateKey] = {
+          pageViews: Number(bucket.pageViews || 0),
+          sessions: Number(bucket.sessions || 0),
+          visitors: Array.isArray(bucket.visitors) ? bucket.visitors.map(String).slice(-3000) : [],
+        };
+      } else {
+        existing.pageViews = Math.max(existing.pageViews, Number(bucket.pageViews || 0));
+        existing.sessions = Math.max(existing.sessions, Number(bucket.sessions || 0));
+        if (Array.isArray(bucket.visitors)) {
+          existing.visitors = Array.from(
+            new Set<string>([...existing.visitors, ...bucket.visitors.map(String)])
+          ).slice(-3000);
+        }
+      }
+    }
+  }
+
+  const mergeRecordMax = (
+    target: Record<string, number>,
+    source?: Record<string, number>
+  ) => {
+    if (!source || typeof source !== 'object') return;
+    for (const [k, v] of Object.entries(source)) {
+      const num = Number(v || 0);
+      if (num > (target[k] || 0)) {
+        target[k] = num;
+      }
+    }
+  };
+
+  mergeRecordMax(store.tabViews, incoming.tabViews);
+  mergeRecordMax(store.interactions, incoming.interactions);
+  mergeRecordMax(store.devices as unknown as Record<string, number>, incoming.devices as unknown as Record<string, number>);
+  mergeRecordMax(store.browsers, incoming.browsers);
+  mergeRecordMax(store.osCounts, incoming.osCounts);
+  mergeRecordMax(store.referrers, incoming.referrers);
+  mergeRecordMax(store.languages, incoming.languages);
+
+  // Merge recentSessions by sessionId
+  if (Array.isArray(incoming.recentSessions)) {
+    const byId = new Map<string, SessionRecord>();
+    for (const s of store.recentSessions) {
+      if (s && s.sessionId) byId.set(s.sessionId, s);
+    }
+    for (const raw of incoming.recentSessions) {
+      if (!raw || typeof raw.sessionId !== 'string') continue;
+      const prev = byId.get(raw.sessionId);
+      if (!prev || (raw.lastSeenAt || 0) > prev.lastSeenAt) {
+        byId.set(raw.sessionId, raw as SessionRecord);
+      }
+    }
+    store.recentSessions = Array.from(byId.values())
+      .sort((a, b) => b.lastSeenAt - a.lastSeenAt)
+      .slice(0, 100);
+  }
+
+  try {
+    const tmp = `${TRAFFIC_STORE_PATH}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(store, null, 2), 'utf-8');
+    fs.renameSync(tmp, TRAFFIC_STORE_PATH);
+  } catch (e) {}
+
+  return getTrafficDashboardSummary(14);
+}
+

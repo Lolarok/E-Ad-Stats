@@ -1,0 +1,281 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // PILLAR 1: GLOBAL SAFETY NET (Default Deny Catch-All)
+    // =========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // PHASE 3: HARDENED GLOBAL PRIMITIVES
+    // =========================================================================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'darioskerletic@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // =========================================================================
+    // PILLAR 2: STANDALONE VALIDATION BLUEPRINTS (Anti-Update-Gap)
+    // =========================================================================
+    function isValidAdminRecord(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'photoURL', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSeasonMeta(data) {
+      return data.keys().hasAll([
+          'season', 'status', 'lbaRound', 'euroleagueGamesCount', 'eurocupGamesCount',
+          'totalGames', 'teamsCount', 'playersCount', 'teamChunksCount', 'playerChunksCount',
+          'pbpCachedGames', 'pbpCoveragePct', 'sourceLastUpdated', 'updatedBy',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'season', 'status', 'lbaRound', 'euroleagueGamesCount', 'eurocupGamesCount',
+          'totalGames', 'teamsCount', 'playersCount', 'teamChunksCount', 'playerChunksCount',
+          'pbpCachedGames', 'pbpCoveragePct', 'sourceLastUpdated', 'updatedBy',
+          'createdAt', 'updatedAt'
+        ])
+        && data.season is string && data.season.size() >= 4 && data.season.size() <= 20 && data.season.matches('^[0-9]{4}/[0-9]{4}$')
+        && data.status is string && data.status.size() >= 6 && data.status.size() <= 12 && data.status in ['active', 'archived']
+        && data.lbaRound is number && data.lbaRound >= 1 && data.lbaRound <= 40
+        && data.euroleagueGamesCount is number && data.euroleagueGamesCount >= 0 && data.euroleagueGamesCount <= 500
+        && data.eurocupGamesCount is number && data.eurocupGamesCount >= 0 && data.eurocupGamesCount <= 500
+        && data.totalGames is number && data.totalGames >= 0 && data.totalGames <= 1000
+        && data.teamsCount is number && data.teamsCount >= 0 && data.teamsCount <= 200
+        && data.playersCount is number && data.playersCount >= 0 && data.playersCount <= 3000
+        && data.teamChunksCount is number && data.teamChunksCount >= 0 && data.teamChunksCount <= 20
+        && data.playerChunksCount is number && data.playerChunksCount >= 0 && data.playerChunksCount <= 30
+        && data.pbpCachedGames is number && data.pbpCachedGames >= 0 && data.pbpCachedGames <= 1000
+        && data.pbpCoveragePct is number && data.pbpCoveragePct >= 0 && data.pbpCoveragePct <= 100
+        && data.sourceLastUpdated is string && data.sourceLastUpdated.size() >= 10 && data.sourceLastUpdated.size() <= 64
+        && isValidId(data.updatedBy) && data.updatedBy == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSeasonChunk(data) {
+      return data.keys().hasAll([
+          'metaId', 'kind', 'chunkIndex', 'totalChunks', 'season', 'items',
+          'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'metaId', 'kind', 'chunkIndex', 'totalChunks', 'season', 'items',
+          'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.metaId)
+        && data.kind is string && data.kind.size() >= 5 && data.kind.size() <= 10 && data.kind in ['teams', 'players']
+        && data.chunkIndex is number && data.chunkIndex >= 0 && data.chunkIndex <= 30
+        && data.totalChunks is number && data.totalChunks >= 1 && data.totalChunks <= 30
+        && data.season is string && data.season.size() >= 4 && data.season.size() <= 20 && data.season.matches('^[0-9]{4}/[0-9]{4}$')
+        && data.items is list && data.items.size() <= 250 && (data.items.size() == 0 || data.items[0] is map)
+        && isValidId(data.updatedBy) && data.updatedBy == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTrafficSnapshot(data) {
+      return data.keys().hasAll([
+          'startedAt', 'totalPageViews', 'totalSessions', 'uniqueVisitors', 'daily',
+          'hourly', 'tabViews', 'interactions', 'devices', 'browsers', 'osCounts',
+          'referrers', 'languages', 'recentSessions', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'startedAt', 'totalPageViews', 'totalSessions', 'uniqueVisitors', 'daily',
+          'hourly', 'tabViews', 'interactions', 'devices', 'browsers', 'osCounts',
+          'referrers', 'languages', 'recentSessions', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.startedAt is string && data.startedAt.size() >= 10 && data.startedAt.size() <= 64
+        && data.totalPageViews is number && data.totalPageViews >= 0
+        && data.totalSessions is number && data.totalSessions >= 0
+        && data.uniqueVisitors is list && data.uniqueVisitors.size() <= 1000 && (data.uniqueVisitors.size() == 0 || data.uniqueVisitors[0] is string)
+        && data.daily is map
+        && data.hourly is list && data.hourly.size() == 24 && data.hourly[0] is number
+        && data.tabViews is map
+        && data.interactions is map
+        && data.devices is map
+        && data.browsers is map
+        && data.osCounts is map
+        && data.referrers is map
+        && data.languages is map
+        && data.recentSessions is list && data.recentSessions.size() <= 50 && (data.recentSessions.size() == 0 || data.recentSessions[0] is map)
+        && isValidId(data.updatedBy) && data.updatedBy == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // =========================================================================
+    // COLLECTION 1: /admins/{adminId}
+    // =========================================================================
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow create: if isAdmin()
+        && isValidId(adminId)
+        && isValidAdminRecord(incoming())
+        && incoming().uid == adminId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(adminId)
+        && isValidAdminRecord(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(adminId);
+    }
+
+    // =========================================================================
+    // COLLECTION 2: /users/{userId} (PII Isolated - No Blanket List)
+    // =========================================================================
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'photoURL', 'updatedAt']))
+        );
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // =========================================================================
+    // COLLECTION 3: /season_meta/{metaId}
+    // Public single-document get by known ID (non-PII sports catalog),
+    // strictly Admin-only writes with terminal state lock.
+    // =========================================================================
+    match /season_meta/{metaId} {
+      allow get: if isValidId(metaId);
+      allow create: if isAdmin()
+        && isValidId(metaId)
+        && isValidSeasonMeta(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(metaId)
+        && isValidSeasonMeta(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (
+            existing().status != 'archived'
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'season', 'lbaRound', 'euroleagueGamesCount', 'eurocupGamesCount',
+              'totalGames', 'teamsCount', 'playersCount', 'teamChunksCount',
+              'playerChunksCount', 'pbpCachedGames', 'pbpCoveragePct',
+              'sourceLastUpdated', 'updatedBy', 'updatedAt'
+            ])
+          ) ||
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedBy', 'updatedAt'])
+          )
+        );
+      allow delete: if isAdmin() && isValidId(metaId);
+    }
+
+    // =========================================================================
+    // COLLECTION 4: /season_chunks/{chunkId}
+    // Tied to existing parent season_meta/{metaId} (Master Gate).
+    // =========================================================================
+    match /season_chunks/{chunkId} {
+      allow get: if isValidId(chunkId);
+      allow create: if isAdmin()
+        && isValidId(chunkId)
+        && isValidSeasonChunk(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/season_meta/$(incoming().metaId));
+      allow update: if isAdmin()
+        && isValidId(chunkId)
+        && isValidSeasonChunk(incoming())
+        && incoming().metaId == existing().metaId
+        && incoming().kind == existing().kind
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/season_meta/$(existing().metaId))
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'chunkIndex', 'totalChunks', 'season', 'items', 'updatedBy', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(chunkId);
+    }
+
+    // =========================================================================
+    // COLLECTION 5: /traffic_snapshots/{snapshotId}
+    // Strictly Admin-only read/write backup of Accessi App analytics.
+    // =========================================================================
+    match /traffic_snapshots/{snapshotId} {
+      allow get: if isAdmin() && isValidId(snapshotId);
+      allow create: if isAdmin()
+        && isValidId(snapshotId)
+        && isValidTrafficSnapshot(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(snapshotId)
+        && isValidTrafficSnapshot(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'startedAt', 'totalPageViews', 'totalSessions', 'uniqueVisitors', 'daily',
+          'hourly', 'tabViews', 'interactions', 'devices', 'browsers', 'osCounts',
+          'referrers', 'languages', 'recentSessions', 'updatedBy', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(snapshotId);
+    }
+  }
+}

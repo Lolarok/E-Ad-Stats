@@ -1,0 +1,368 @@
+{
+  "entities": {
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted administrator registry entry for privileged snapshot and analytics management.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the administrator."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 160,
+          "description": "Verified email address of the administrator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin entry was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin entry was last updated."
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account profile containing PII (email and display name), strictly isolated to the owner or admin.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID matching the document ID."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "User display name from Google sign-in."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 160,
+          "description": "Verified user email address."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Optional profile avatar URL."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of initial profile creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last profile update."
+        }
+      },
+      "required": ["uid", "displayName", "email", "createdAt", "updatedAt"]
+    },
+    "SeasonSnapshotMeta": {
+      "title": "SeasonSnapshotMeta",
+      "description": "Metadata describing the latest synced 2026/2027 EuroLeague, EuroCup, and LBA Serie A statistical snapshot.",
+      "type": "object",
+      "properties": {
+        "season": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 20,
+          "pattern": "^[0-9]{4}/[0-9]{4}$",
+          "description": "Season label (e.g. 2026/2027)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "archived"],
+          "description": "Lifecycle status of the snapshot; archived snapshots are locked."
+        },
+        "lbaRound": {
+          "type": "number",
+          "description": "Latest completed LBA Serie A round number."
+        },
+        "euroleagueGamesCount": {
+          "type": "number",
+          "description": "Total completed EuroLeague games included."
+        },
+        "eurocupGamesCount": {
+          "type": "number",
+          "description": "Total completed EuroCup games included."
+        },
+        "totalGames": {
+          "type": "number",
+          "description": "Total completed EuroLeague + EuroCup games included."
+        },
+        "teamsCount": {
+          "type": "number",
+          "description": "Total team records stored across team chunks."
+        },
+        "playersCount": {
+          "type": "number",
+          "description": "Total player records stored across player chunks."
+        },
+        "teamChunksCount": {
+          "type": "number",
+          "description": "Number of documents in season_chunks storing teams."
+        },
+        "playerChunksCount": {
+          "type": "number",
+          "description": "Number of documents in season_chunks storing players."
+        },
+        "pbpCachedGames": {
+          "type": "number",
+          "description": "Number of EuroLeague/EuroCup games with Play-by-Play coverage."
+        },
+        "pbpCoveragePct": {
+          "type": "number",
+          "description": "Percentage of EuroLeague/EuroCup games covered by Play-by-Play."
+        },
+        "sourceLastUpdated": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 64,
+          "description": "ISO timestamp of the underlying server sync."
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the verified admin who persisted this snapshot."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when metadata document was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the latest metadata update."
+        }
+      },
+      "required": [
+        "season",
+        "status",
+        "lbaRound",
+        "euroleagueGamesCount",
+        "eurocupGamesCount",
+        "totalGames",
+        "teamsCount",
+        "playersCount",
+        "teamChunksCount",
+        "playerChunksCount",
+        "pbpCachedGames",
+        "pbpCoveragePct",
+        "sourceLastUpdated",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SeasonSnapshotChunk": {
+      "title": "SeasonSnapshotChunk",
+      "description": "Chunked native map array of TeamStats or PlayerStats belonging to a SeasonSnapshotMeta record.",
+      "type": "object",
+      "properties": {
+        "metaId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Parent SeasonSnapshotMeta document ID."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["teams", "players"],
+          "description": "Entity type contained in this chunk."
+        },
+        "chunkIndex": {
+          "type": "number",
+          "description": "Zero-based index of this chunk."
+        },
+        "totalChunks": {
+          "type": "number",
+          "description": "Total number of chunks for this kind."
+        },
+        "season": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 20,
+          "pattern": "^[0-9]{4}/[0-9]{4}$",
+          "description": "Season label (e.g. 2026/2027)."
+        },
+        "items": {
+          "type": "array",
+          "description": "Bounded native list of up to 250 TeamStats or PlayerStats maps."
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the verified admin who saved this chunk."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest update."
+        }
+      },
+      "required": [
+        "metaId",
+        "kind",
+        "chunkIndex",
+        "totalChunks",
+        "season",
+        "items",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TrafficSnapshot": {
+      "title": "TrafficSnapshot",
+      "description": "Persisted aggregated app traffic and anonymized usage telemetry snapshot for the Accessi App dashboard.",
+      "type": "object",
+      "properties": {
+        "startedAt": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 64,
+          "description": "ISO timestamp when tracking started."
+        },
+        "totalPageViews": {
+          "type": "number",
+          "description": "Cumulative page and tab views."
+        },
+        "totalSessions": {
+          "type": "number",
+          "description": "Cumulative visitor sessions."
+        },
+        "uniqueVisitors": {
+          "type": "array",
+          "description": "Bounded list of anonymized visitor hashes (up to 1000)."
+        },
+        "daily": {
+          "type": "object",
+          "description": "Map of YYYY-MM-DD daily aggregated metrics."
+        },
+        "hourly": {
+          "type": "array",
+          "description": "24-element numeric array representing hits per hour (0..23)."
+        },
+        "tabViews": {
+          "type": "object",
+          "description": "Map of tab identifier to view count."
+        },
+        "interactions": {
+          "type": "object",
+          "description": "Map of interaction action key to count."
+        },
+        "devices": {
+          "type": "object",
+          "description": "Breakdown map for Desktop, Mobile, and Tablet."
+        },
+        "browsers": {
+          "type": "object",
+          "description": "Breakdown map by browser family."
+        },
+        "osCounts": {
+          "type": "object",
+          "description": "Breakdown map by operating system."
+        },
+        "referrers": {
+          "type": "object",
+          "description": "Breakdown map by referrer host."
+        },
+        "languages": {
+          "type": "object",
+          "description": "Breakdown map by browser language."
+        },
+        "recentSessions": {
+          "type": "array",
+          "description": "Bounded list of up to 50 recent anonymized session records."
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the verified admin who synced this traffic snapshot."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of initial snapshot creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest update."
+        }
+      },
+      "required": [
+        "startedAt",
+        "totalPageViews",
+        "totalSessions",
+        "uniqueVisitors",
+        "daily",
+        "hourly",
+        "tabViews",
+        "interactions",
+        "devices",
+        "browsers",
+        "osCounts",
+        "referrers",
+        "languages",
+        "recentSessions",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Registry of additional administrators authorized to manage season snapshots and traffic backups."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Owner-isolated user profiles created on Google sign-in."
+    },
+    "/season_meta/{metaId}": {
+      "schema": { "$ref": "#/entities/SeasonSnapshotMeta" },
+      "description": "Metadata index for the published 2026/2027 EuroLeague, EuroCup, and LBA dataset snapshots."
+    },
+    "/season_chunks/{chunkId}": {
+      "schema": { "$ref": "#/entities/SeasonSnapshotChunk" },
+      "description": "Chunked native map arrays of TeamStats and PlayerStats tied to a valid season_meta parent."
+    },
+    "/traffic_snapshots/{snapshotId}": {
+      "schema": { "$ref": "#/entities/TrafficSnapshot" },
+      "description": "Admin-managed persistent backup of aggregated Accessi App traffic analytics."
+    }
+  }
+}

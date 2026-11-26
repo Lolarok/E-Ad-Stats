@@ -11,8 +11,12 @@ import {
   Smartphone,
   Tablet,
   Globe,
+  CloudUpload,
+  CloudDownload,
+  LogIn,
 } from 'lucide-react';
 import type { TrafficDashboardSummary } from '../utils/trafficAnalyticsEngine';
+import { useFirebase } from '../contexts/FirebaseContext';
 
 interface TrafficAnalyticsDashboardProps {
   onNotify?: (msg: string) => void;
@@ -36,6 +40,15 @@ function formatDateTime(ts: number): string {
 }
 
 export const TrafficAnalyticsDashboard: React.FC<TrafficAnalyticsDashboardProps> = ({ onNotify }) => {
+  const {
+    user,
+    isAdmin,
+    isSyncingCloud,
+    lastTrafficCloudSyncAt,
+    loginWithGoogle,
+    backupTrafficToCloud,
+    restoreTrafficFromCloud,
+  } = useFirebase();
   const [summary, setSummary] = useState<TrafficDashboardSummary | null>(null);
   const [daysWindow, setDaysWindow] = useState<7 | 14 | 30>(14);
   const [loading, setLoading] = useState<boolean>(true);
@@ -154,6 +167,17 @@ export const TrafficAnalyticsDashboard: React.FC<TrafficAnalyticsDashboardProps>
                 year: 'numeric',
               })}
             </span>
+            {lastTrafficCloudSyncAt && (
+              <>
+                {' '}· Cloud:{' '}
+                <span className="font-mono tabular-nums text-emerald-400">
+                  {new Date(lastTrafficCloudSyncAt).toLocaleTimeString('it-IT', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </>
+            )}
           </p>
         </div>
 
@@ -181,6 +205,53 @@ export const TrafficAnalyticsDashboard: React.FC<TrafficAnalyticsDashboardProps>
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Aggiorna</span>
           </button>
+
+          {isAdmin ? (
+            <>
+              <button
+                onClick={async () => {
+                  const res = await backupTrafficToCloud();
+                  if (res && onNotify) {
+                    onNotify(`Accessi salvati su Firebase (${res.totalPageViews} visite, ${res.totalSessions} sessioni).`);
+                  }
+                }}
+                disabled={isSyncingCloud}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+              >
+                <CloudUpload className="w-3.5 h-3.5" />
+                <span>{isSyncingCloud ? 'Sync...' : 'Salva Cloud'}</span>
+              </button>
+              <button
+                onClick={async () => {
+                  const ok = await restoreTrafficFromCloud();
+                  if (ok) {
+                    await fetchSummary(false);
+                    if (onNotify) onNotify('Storico accessi ripristinato da Firebase Firestore.');
+                  } else if (onNotify) {
+                    onNotify('Nessun backup accessi presente su Firebase.');
+                  }
+                }}
+                disabled={isSyncingCloud}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+              >
+                <CloudDownload className="w-3.5 h-3.5" />
+                <span>Ripristina</span>
+              </button>
+            </>
+          ) : !user ? (
+            <button
+              onClick={async () => {
+                const signedIn = await loginWithGoogle();
+                if (signedIn && onNotify) {
+                  onNotify(`Accesso Cloud effettuato: ${signedIn.email}`);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Cloud Backup</span>
+            </button>
+          ) : null}
 
           <button
             onClick={handleExportCsv}

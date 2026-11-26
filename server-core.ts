@@ -17,6 +17,8 @@ import {
   recordTrafficEvent,
   getTrafficDashboardSummary,
   resetTrafficAnalytics,
+  exportRawTrafficStore,
+  mergeOrHydrateTrafficStore,
 } from './src/utils/trafficAnalyticsEngine';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -30,7 +32,7 @@ let isSyncInProgress = false;
 
 export async function startServer() {
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: '15mb' }));
 
   let currentDataset: ReturnType<typeof rebuildDatasetFromStore> = {
     teams: [],
@@ -63,13 +65,81 @@ export async function startServer() {
     return currentDataset;
   };
 
-  // Ricostruzione completa non bloccante dopo il bind della porta HTTP
-  setImmediate(() => {
+  // Ricostruzione completa non bloccante dopo il bind della porta HTTP + check cloud Firestore
+  setImmediate(async () => {
     try {
       const latestLba = getLatestCompletedLbaRound();
       console.log(`[Server Startup] Inizializzazione dataset dal database partite (LBA Round ${latestLba})...`);
       currentDataset = rebuildDatasetFromStore(latestLba, false);
       console.log(`[Server Startup] Caricate ${currentDataset.totalGames} gare ufficiali (${currentDataset.euroleagueGamesCount} EuroLeague, ${currentDataset.eurocupGamesCount} EuroCup, LBA Round ${latestLba}).`);
+
+      // Cold-start cloud hydration: se su Firebase Firestore esiste uno snapshot più aggiornato, lo carica automaticamente
+      try {
+        const fbConfigPath = path.join(__dirname, 'firebase-applet-config.json');
+        if (fs.existsSync(fbConfigPath)) {
+          const fbConfig = JSON.parse(fs.readFileSync(fbConfigPath, 'utf-8'));
+          if (fbConfig?.projectId && fbConfig?.firestoreDatabaseId) {
+            const { initializeApp, getApps } = await import('firebase/app');
+            const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+            const fbApp = getApps().length > 0 ? getApps()[0] : initializeApp(fbConfig);
+            const fbDb = getFirestore(fbApp, fbConfig.firestoreDatabaseId);
+            const metaSnap = await getDoc(doc(fbDb, 'season_meta', 'current_2026_27'));
+            if (metaSnap.exists()) {
+              const meta = metaSnap.data();
+              const cloudGames = Number(meta.totalGames || 0);
+              const cloudLba = Number(meta.lbaRound || 0);
+              if (cloudGames > currentDataset.totalGames || cloudLba > latestLba) {
+                const teamCount = Number(meta.teamChunksCount || 0);
+                const playerCount = Number(meta.playerChunksCount || 0);
+                const [tSnaps, pSnaps] = await Promise.all([
+                  Promise.all(
+                    Array.from({ length: teamCount }, (_, i) =>
+                      getDoc(doc(fbDb, 'season_chunks', `current_2026_27_teams_${i}`))
+                    )
+                  ),
+                  Promise.all(
+                    Array.from({ length: playerCount }, (_, i) =>
+                      getDoc(doc(fbDb, 'season_chunks', `current_2026_27_players_${i}`))
+                    )
+                  ),
+                ]);
+                const cloudTeams = tSnaps.flatMap((s) => (s.exists() ? s.data().items || [] : []));
+                const cloudPlayers = pSnaps.flatMap((s) => (s.exists() ? s.data().items || [] : []));
+                if (cloudTeams.length >= 50 && cloudPlayers.length >= 500) {
+                  currentDataset = {
+                    teams: cloudTeams,
+                    players: cloudPlayers,
+                    totalGames: cloudGames,
+                    euroleagueGamesCount: Number(meta.euroleagueGamesCount || currentDataset.euroleagueGamesCount),
+                    eurocupGamesCount: Number(meta.eurocupGamesCount || currentDataset.eurocupGamesCount),
+                  };
+                  fs.writeFileSync(
+                    CACHE_FILE,
+                    JSON.stringify(
+                      {
+                        lastUpdated: String(meta.sourceLastUpdated || new Date().toISOString()),
+                        totalGames: cloudGames,
+                        lbaRound: Math.max(latestLba, cloudLba),
+                        teams: cloudTeams,
+                        players: cloudPlayers,
+                        season: '2026/2027',
+                      },
+                      null,
+                      2
+                    ),
+                    'utf-8'
+                  );
+                  console.log(
+                    `[Server Startup] Idratato snapshot da Firebase Firestore (${cloudGames} gare, LBA R${cloudLba}, ${cloudTeams.length} squadre, ${cloudPlayers.length} giocatori).`
+                  );
+                }
+              }
+            }
+          }
+        }
+      } catch (cloudErr: any) {
+        console.warn('[Server Startup] Check cloud Firestore saltato:', cloudErr?.message || cloudErr);
+      }
     } catch (err) {
       console.error('[Server Startup] Errore inizializzazione dataset:', err);
     }
@@ -535,6 +605,77 @@ export async function startServer() {
       res.json(resetTrafficAnalytics());
     } catch (err: any) {
       res.status(500).json({ error: err?.message || 'Unable to reset traffic counters' });
+    }
+  });
+
+  app.get('/api/traffic/raw', (req, res) => {
+    try {
+      res.json(exportRawTrafficStore());
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || 'Unable to export raw traffic store' });
+    }
+  });
+
+  app.post('/api/traffic/hydrate', (req, res) => {
+    try {
+      const incoming = req.body;
+      if (!incoming || typeof incoming !== 'object') {
+        return res.status(400).json({ ok: false, message: 'Invalid traffic payload' });
+      }
+      const summary = mergeOrHydrateTrafficStore(incoming);
+      res.json({ ok: true, summary });
+    } catch (err: any) {
+      res.status(500).json({ ok: false, error: err?.message || 'Unable to hydrate traffic store' });
+    }
+  });
+
+  // API 10: POST /api/cloud/hydrate -> riceve uno snapshot stagione da Firebase Firestore e aggiorna cache server
+  app.post('/api/cloud/hydrate', (req, res) => {
+    try {
+      const { teams, players, lbaRound, totalGames, euroleagueGamesCount, eurocupGamesCount, lastUpdated } =
+        req.body || {};
+      if (!Array.isArray(teams) || !Array.isArray(players) || teams.length < 50 || players.length < 500) {
+        return res.status(400).json({ ok: false, message: 'Snapshot non valido o incompleto.' });
+      }
+      const safeTotalGames = Math.max(0, Number(totalGames || 0));
+      const safeLbaRound = Math.max(1, Math.min(40, Number(lbaRound || getLatestCompletedLbaRound())));
+
+      currentDataset = {
+        teams: teams.slice(0, 200),
+        players: players.slice(0, 3000),
+        totalGames: safeTotalGames || currentDataset.totalGames,
+        euroleagueGamesCount: Number(euroleagueGamesCount || currentDataset.euroleagueGamesCount),
+        eurocupGamesCount: Number(eurocupGamesCount || currentDataset.eurocupGamesCount),
+      };
+
+      try {
+        fs.writeFileSync(
+          CACHE_FILE,
+          JSON.stringify(
+            {
+              lastUpdated: typeof lastUpdated === 'string' ? lastUpdated : new Date().toISOString(),
+              totalGames: currentDataset.totalGames,
+              lbaRound: safeLbaRound,
+              teams: currentDataset.teams,
+              players: currentDataset.players,
+              season: '2026/2027',
+            },
+            null,
+            2
+          ),
+          'utf-8'
+        );
+      } catch (e) {}
+
+      res.json({
+        ok: true,
+        totalGames: currentDataset.totalGames,
+        lbaRound: safeLbaRound,
+        teamsCount: currentDataset.teams.length,
+        playersCount: currentDataset.players.length,
+      });
+    } catch (err: any) {
+      res.status(500).json({ ok: false, message: err?.message || 'Errore idratazione cloud' });
     }
   });
 
